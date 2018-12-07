@@ -148,7 +148,7 @@ namespace RuntimeUnityEditor.Inspector
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Warning, "Inspector CacheFields crash: " + ex);
+                Logger.Log(LogLevel.Warning, "[Inspector] CacheFields crash: " + ex);
             }
         }
 
@@ -189,7 +189,7 @@ namespace RuntimeUnityEditor.Inspector
                     }
                     catch (Exception ex)
                     {
-                        Logger.Log(LogLevel.Error, "Failed to set value - " + ex.Message);
+                        Logger.Log(LogLevel.Error, "[Inspector] Failed to set value - " + ex.Message);
                     }
                 }
                 else
@@ -322,7 +322,7 @@ namespace RuntimeUnityEditor.Inspector
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, "[CheatTools] Inspector crash: " + ex);
+                Logger.Log(LogLevel.Error, "[Inspector] GUI crash: " + ex);
                 InspectorClear();
             }
 
@@ -407,7 +407,7 @@ namespace RuntimeUnityEditor.Inspector
             while (_inspectorStack.Count > 0 && _inspectorStack.Peek().Instance == null)
             {
                 var se = _inspectorStack.Pop();
-                Logger.Log(LogLevel.Message, $"[Cheat Tools] Inspected object \"{se.Name}\" has been destroyed");
+                Logger.Log(LogLevel.Message, $"[Inspector] Inspected object \"{se.Name}\" has been destroyed");
             }
 
             if (_inspectorStack.Count != 0)

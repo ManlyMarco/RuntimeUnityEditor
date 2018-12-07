@@ -20,12 +20,12 @@ namespace RuntimeUnityEditor
                 _dnSpyPath = value?.Trim(' ', '"');
 
                 IsAvailable = false;
-                if (_dnSpyPath != null)
+                if (!string.IsNullOrEmpty(_dnSpyPath))
                 {
                     if (File.Exists(_dnSpyPath) && _dnSpyPath.EndsWith("dnspy.exe", StringComparison.OrdinalIgnoreCase))
                         IsAvailable = true;
                     else
-                        Logger.Log(LogLevel.Error | LogLevel.Message, "[Cheat Tools] Invalid dnSpy path. The path has to point to 64bit dnSpy.exe");
+                        Logger.Log(LogLevel.Error | LogLevel.Message, "[DnSpyHelper] Invalid dnSpy path. The path has to point to 64bit dnSpy.exe");
                 }
             }
         }
@@ -59,12 +59,12 @@ namespace RuntimeUnityEditor
             try
             {
                 var refString = GetDnspyArgs(entry);
-                Logger.Log(LogLevel.Info, $"[Cheat Tools] Opening {DnSpyPath} {refString}");
+                Logger.Log(LogLevel.Info, $"[DnSpyHelper] Opening {DnSpyPath} {refString}");
                 Process.Start(DnSpyPath, refString);
             }
             catch (Exception e)
             {
-                Logger.Log(LogLevel.Error | LogLevel.Message, "[Cheat Tools] " + e.Message);
+                Logger.Log(LogLevel.Error | LogLevel.Message, "[DnSpyHelper] " + e.Message);
             }
         }
     }
