@@ -15,7 +15,7 @@ using Object = UnityEngine.Object;
 
 namespace RuntimeUnityEditor.ObjectTree
 {
-    public class ObjectTreeViewer
+    public sealed class ObjectTreeViewer
     {
         private readonly Action<InspectorStackEntry[]> _inspectorOpenCallback;
         private readonly HashSet<GameObject> _openedObjects = new HashSet<GameObject>();
@@ -31,6 +31,7 @@ namespace RuntimeUnityEditor.ObjectTree
         private readonly GUILayoutOption _drawVector3FieldHeight = GUILayout.Height(19);
         private readonly GUILayoutOption _drawVector3SliderHeight = GUILayout.Height(10);
         private readonly GUILayoutOption _drawVector3SliderWidth = GUILayout.Width(33);
+        private readonly int _windowId;
 
         public void SelectAndShowObject(Transform target)
         {
@@ -50,6 +51,7 @@ namespace RuntimeUnityEditor.ObjectTree
         public ObjectTreeViewer(Action<InspectorStackEntry[]> inspectorOpenCallback)
         {
             _inspectorOpenCallback = inspectorOpenCallback ?? throw new ArgumentNullException(nameof(inspectorOpenCallback));
+            _windowId = GetHashCode();
         }
 
         public bool Enabled
@@ -154,7 +156,7 @@ namespace RuntimeUnityEditor.ObjectTree
             if (Enabled)
             {
                 EditorUtilities.DrawSolidWindowBackground(_windowRect);
-                _windowRect = GUILayout.Window(593, _windowRect, WindowFunc, "Scene Object Browser");
+                _windowRect = GUILayout.Window(_windowId, _windowRect, WindowFunc, "Scene Object Browser");
             }
         }
 
@@ -182,34 +184,24 @@ namespace RuntimeUnityEditor.ObjectTree
                     SceneDumper.DumpObjects(_selectedTransform?.gameObject);
                 GUI.enabled = true;
 
-                if (GUILayout.Button("Open log", GUILayout.ExpandWidth(false)))
+                if (GUILayout.Button("Log", GUILayout.ExpandWidth(false)))
                     Process.Start(Path.Combine(Application.dataPath, "output_log.txt"));
 
-                GUILayout.BeginHorizontal(GUI.skin.box, GUILayout.ExpandWidth(false));
-                {
-                    GUILayout.Label("Speed", GUILayout.ExpandWidth(false));
+                GUILayout.FlexibleSpace();
 
-                    if (GUILayout.Button(">", GUILayout.ExpandWidth(false)))
-                        Time.timeScale = 1;
-                    if (GUILayout.Button("||", GUILayout.ExpandWidth(false)))
-                        Time.timeScale = 0;
+                GUILayout.Label("Time", GUILayout.ExpandWidth(false));
 
-                    if (float.TryParse(GUILayout.TextField(Time.timeScale.ToString("F2", CultureInfo.InvariantCulture), _drawVector3FieldWidth), out var newVal))
-                        Time.timeScale = newVal;
-                }
-                GUILayout.EndHorizontal();
-            }
-            GUILayout.EndHorizontal();
+                if (GUILayout.Button(">", GUILayout.ExpandWidth(false)))
+                    Time.timeScale = 1;
+                if (GUILayout.Button("||", GUILayout.ExpandWidth(false)))
+                    Time.timeScale = 0;
 
-            GUILayout.BeginHorizontal();
-            {
-                GUILayout.BeginHorizontal(GUI.skin.box, GUILayout.ExpandWidth(false));
-                {
-                    GL.wireframe = GUILayout.Toggle(GL.wireframe, "Wireframe");
-                }
-                GUILayout.EndHorizontal();
+                if (float.TryParse(GUILayout.TextField(Time.timeScale.ToString("F2", CultureInfo.InvariantCulture), _drawVector3FieldWidth), out var newVal))
+                    Time.timeScale = newVal;
 
                 GUILayout.FlexibleSpace();
+
+                GL.wireframe = GUILayout.Toggle(GL.wireframe, "Wireframe");
             }
             GUILayout.EndHorizontal();
         }
@@ -467,7 +459,7 @@ namespace RuntimeUnityEditor.ObjectTree
         private void DisplayObjectTree()
         {
             _treeScrollPosition = GUILayout.BeginScrollView(_treeScrollPosition, GUI.skin.box,
-                GUILayout.Height(_windowRect.height / 2), GUILayout.ExpandWidth(true));
+                GUILayout.Height(_windowRect.height / 3), GUILayout.ExpandWidth(true));
             {
                 _cachedRootGameObjects.RemoveAll(o => o == null);
                 _cachedRootGameObjects.AddRange(SceneManager.GetActiveScene().GetRootGameObjects().Except(_cachedRootGameObjects));

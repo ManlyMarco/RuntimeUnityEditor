@@ -12,7 +12,7 @@ using Logger = BepInEx.Logger;
 
 namespace RuntimeUnityEditor.Inspector
 {
-    public class Inspector
+    public sealed class Inspector
     {
         private const int InspectorRecordHeight = 25;
         private readonly Action<Transform> _treelistShowCallback;
@@ -37,10 +37,12 @@ namespace RuntimeUnityEditor.Inspector
         private readonly Stack<InspectorStackEntry> _inspectorStack = new Stack<InspectorStackEntry>();
 
         private InspectorStackEntry _nextToPush;
+        private readonly int _windowId;
 
         public Inspector(Action<Transform> treelistShowCallback)
         {
             _treelistShowCallback = treelistShowCallback ?? throw new ArgumentNullException(nameof(treelistShowCallback));
+            _windowId = GetHashCode();
         }
 
         private void CacheFields(object objectToOpen)
@@ -413,7 +415,7 @@ namespace RuntimeUnityEditor.Inspector
             if (_inspectorStack.Count != 0)
             {
                 EditorUtilities.DrawSolidWindowBackground(_inspectorWindowRect);
-                _inspectorWindowRect = GUILayout.Window(592, _inspectorWindowRect, InspectorWindow, "Inspector");
+                _inspectorWindowRect = GUILayout.Window(_windowId, _inspectorWindowRect, InspectorWindow, "Inspector");
             }
         }
 
