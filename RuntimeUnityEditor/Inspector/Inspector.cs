@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -34,9 +35,9 @@ namespace RuntimeUnityEditor.Inspector
 
         private readonly Dictionary<Type, bool> _canCovertCache = new Dictionary<Type, bool>();
         private readonly List<ICacheEntry> _fieldCache = new List<ICacheEntry>();
-        private readonly Stack<InspectorStackEntry> _inspectorStack = new Stack<InspectorStackEntry>();
+        private readonly Stack<InspectorStackEntryBase> _inspectorStack = new Stack<InspectorStackEntryBase>();
 
-        private InspectorStackEntry _nextToPush;
+        private InspectorStackEntryBase _nextToPush;
         private readonly int _windowId;
 
         public Inspector(Action<Transform> treelistShowCallback)
@@ -45,7 +46,30 @@ namespace RuntimeUnityEditor.Inspector
             _windowId = GetHashCode();
         }
 
-        private void CacheFields(object objectToOpen)
+        private static IEnumerable<ICacheEntry> MethodsToCacheEntries(object instance, Type instanceType, MethodInfo[] methodsToCheck)
+        {
+            var cacheItems = methodsToCheck
+                .Where(x => !x.IsConstructor && !x.IsSpecialName && x.GetParameters().Length == 0)
+                .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
+                .Where(x => x.Name != "MemberwiseClone" && x.Name != "obj_address") // Instant game crash
+                .Select(m =>
+                {
+                    if (m.ContainsGenericParameters)
+                        try
+                        {
+                            return m.MakeGenericMethod(instanceType);
+                        }
+                        catch (Exception)
+                        {
+                            return null;
+                        }
+                    return m;
+                }).Where(x => x != null)
+                .Select(m => new MethodCacheEntry(instance, m)).Cast<ICacheEntry>();
+            return cacheItems;
+        }
+
+        private void CacheAllMembers(object objectToOpen)
         {
             _inspectorScrollPos = Vector2.zero;
             _fieldCache.Clear();
@@ -53,29 +77,6 @@ namespace RuntimeUnityEditor.Inspector
             if (objectToOpen == null) return;
 
             var type = objectToOpen.GetType();
-
-            IEnumerable<ICacheEntry> CacheMethods(object instance, MethodInfo[] typesToCheck)
-            {
-                var cacheItems = typesToCheck
-                    .Where(x => !x.IsConstructor && !x.IsSpecialName && x.GetParameters().Length == 0)
-                    .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
-                    .Where(x => x.Name != "MemberwiseClone" && x.Name != "obj_address") // Instant game crash
-                    .Select(m =>
-                    {
-                        if (m.ContainsGenericParameters)
-                            try
-                            {
-                                return m.MakeGenericMethod(type);
-                            }
-                            catch (Exception)
-                            {
-                                return null;
-                            }
-                        return m;
-                    }).Where(x => x != null)
-                    .Select(m => new MethodCacheEntry(instance, m)).Cast<ICacheEntry>();
-                return cacheItems;
-            }
 
             try
             {
@@ -127,31 +128,50 @@ namespace RuntimeUnityEditor.Inspector
                                    BindingFlags.FlattenHierarchy)
                     .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
                     .Select(p => new PropertyCacheEntry(objectToOpen, p)).Cast<ICacheEntry>());
-
-                // Static members
-                _fieldCache.AddRange(type
-                    .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static |
-                               BindingFlags.FlattenHierarchy)
-                    .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
-                    .Select(f => new FieldCacheEntry(null, f)).Cast<ICacheEntry>());
-                _fieldCache.AddRange(type
-                    .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static |
-                                   BindingFlags.FlattenHierarchy)
-                    .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
-                    .Select(p => new PropertyCacheEntry(null, p)).Cast<ICacheEntry>());
-
-                // Methods
-                _fieldCache.AddRange(CacheMethods(objectToOpen,
+                _fieldCache.AddRange(MethodsToCacheEntries(objectToOpen, type,
                     type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance |
                                     BindingFlags.FlattenHierarchy)));
-                _fieldCache.AddRange(CacheMethods(null,
-                    type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static |
-                                    BindingFlags.FlattenHierarchy)));
+
+                CacheStaticMembersHelper(type);
             }
             catch (Exception ex)
             {
                 Logger.Log(LogLevel.Warning, "[Inspector] CacheFields crash: " + ex);
             }
+        }
+
+        private void CacheStaticMembers(Type type)
+        {
+            _inspectorScrollPos = Vector2.zero;
+            _fieldCache.Clear();
+
+            if (type == null) return;
+
+            try
+            {
+                CacheStaticMembersHelper(type);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(LogLevel.Warning, "[Inspector] CacheFields crash: " + ex);
+            }
+        }
+
+        private void CacheStaticMembersHelper(Type type)
+        {
+            _fieldCache.AddRange(type
+                .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static |
+                           BindingFlags.FlattenHierarchy)
+                .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
+                .Select(f => new FieldCacheEntry(null, f)).Cast<ICacheEntry>());
+            _fieldCache.AddRange(type
+                .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static |
+                               BindingFlags.FlattenHierarchy)
+                .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
+                .Select(p => new PropertyCacheEntry(null, p)).Cast<ICacheEntry>());
+            _fieldCache.AddRange(MethodsToCacheEntries(null, type,
+                type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static |
+                                BindingFlags.FlattenHierarchy)));
         }
 
         private bool CanCovert(string value, Type type)
@@ -217,26 +237,41 @@ namespace RuntimeUnityEditor.Inspector
             {
                 var val = field.EnterValue();
                 if (val != null)
-                    _nextToPush = new InspectorStackEntry(val, field.Name());
+                    _nextToPush = new InstanceStackEntry(val, field.Name());
             }
         }
 
         public void InspectorClear()
         {
             _inspectorStack.Clear();
-            CacheFields(null);
+            CacheAllMembers(null);
         }
 
         private void InspectorPop()
         {
             _inspectorStack.Pop();
-            CacheFields(_inspectorStack.Peek().Instance);
+            LoadStackEntry(_inspectorStack.Peek());
         }
 
-        public void InspectorPush(InspectorStackEntry o)
+        public void InspectorPush(InspectorStackEntryBase stackEntry)
         {
-            _inspectorStack.Push(o);
-            CacheFields(o.Instance);
+            _inspectorStack.Push(stackEntry);
+            LoadStackEntry(stackEntry);
+        }
+
+        private void LoadStackEntry(InspectorStackEntryBase stackEntry)
+        {
+            switch (stackEntry)
+            {
+                case InstanceStackEntry instanceStackEntry:
+                    CacheAllMembers(instanceStackEntry.Instance);
+                    break;
+                case StaticStackEntry staticStackEntry:
+                    CacheStaticMembers(staticStackEntry.StaticType);
+                    break;
+                default:
+                    throw new InvalidEnumArgumentException("Invalid stack entry type: " + stackEntry.GetType().FullName);
+            }
         }
 
         private void InspectorWindow(int id)
@@ -267,7 +302,7 @@ namespace RuntimeUnityEditor.Inspector
                                 if (GUILayout.Button(obj.Value))
                                 {
                                     InspectorClear();
-                                    InspectorPush(new InspectorStackEntry(obj.Key, obj.Value));
+                                    InspectorPush(new InstanceStackEntry(obj.Key, obj.Value));
                                 }
                             }
                         }
@@ -406,10 +441,10 @@ namespace RuntimeUnityEditor.Inspector
 
             if (Event.current.keyCode == KeyCode.Return) _userHasHitReturn = true;
 
-            while (_inspectorStack.Count > 0 && _inspectorStack.Peek().Instance == null)
+            while (_inspectorStack.Count > 0 && !_inspectorStack.Peek().EntryIsValid())
             {
                 var se = _inspectorStack.Pop();
-                Logger.Log(LogLevel.Message, $"[Inspector] Inspected object \"{se.Name}\" has been destroyed");
+                Logger.Log(LogLevel.Message, $"[Inspector] Removed invalid/removed stack object: \"{se.Name}\"");
             }
 
             if (_inspectorStack.Count != 0)
@@ -421,7 +456,7 @@ namespace RuntimeUnityEditor.Inspector
 
         public void UpdateWindowSize(Rect screenRect)
         {
-            var width = (int) Mathf.Min(850, screenRect.width);
+            var width = (int)Mathf.Min(850, screenRect.width);
 
             var height = screenRect.height;//(int)(screenRect.height / 3) * 2;
 

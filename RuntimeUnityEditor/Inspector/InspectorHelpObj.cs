@@ -7,10 +7,10 @@ namespace RuntimeUnityEditor.Inspector
         private InspectorHelpObj()
         { }
 
-        public static InspectorStackEntry Create()
+        public static InspectorStackEntryBase Create()
         {
             var obj = new InspectorHelpObj();
-            return new InspectorStackEntry(obj, "Inspector Help");
+            return new InstanceStackEntry(obj, "Inspector Help");
         }
 
         public string Help1 = "This window displays contents of game classes in real time. " +

@@ -17,7 +17,7 @@ namespace RuntimeUnityEditor.ObjectTree
 {
     public sealed class ObjectTreeViewer
     {
-        private readonly Action<InspectorStackEntry[]> _inspectorOpenCallback;
+        private readonly Action<InspectorStackEntryBase[]> _inspectorOpenCallback;
         private readonly HashSet<GameObject> _openedObjects = new HashSet<GameObject>();
         private Vector2 _propertiesScrollPosition;
         private Transform _selectedTransform;
@@ -48,7 +48,7 @@ namespace RuntimeUnityEditor.ObjectTree
             Enabled = true;
         }
 
-        public ObjectTreeViewer(Action<InspectorStackEntry[]> inspectorOpenCallback)
+        public ObjectTreeViewer(Action<InspectorStackEntryBase[]> inspectorOpenCallback)
         {
             _inspectorOpenCallback = inspectorOpenCallback ?? throw new ArgumentNullException(nameof(inspectorOpenCallback));
             _windowId = GetHashCode();
@@ -76,7 +76,7 @@ namespace RuntimeUnityEditor.ObjectTree
             _imagePreviewCache.Clear();
         }
 
-        private void OnInspectorOpen(params InspectorStackEntry[] items)
+        private void OnInspectorOpen(params InspectorStackEntryBase[] items)
         {
             _inspectorOpenCallback.Invoke(items);
         }
@@ -251,7 +251,7 @@ namespace RuntimeUnityEditor.ObjectTree
                     GUILayout.FlexibleSpace();
 
                     if (GUILayout.Button("Inspect"))
-                        OnInspectorOpen(new InspectorStackEntry(_selectedTransform.gameObject, _selectedTransform.gameObject.name));
+                        OnInspectorOpen(new InstanceStackEntry(_selectedTransform.gameObject, _selectedTransform.gameObject.name));
 
                     if (GUILayout.Button("X"))
                         Object.Destroy(_selectedTransform.gameObject);
@@ -314,8 +314,8 @@ namespace RuntimeUnityEditor.ObjectTree
 
                 if (GUILayout.Button(component.GetType().Name, GUI.skin.label))
                 {
-                    OnInspectorOpen(new InspectorStackEntry(component.transform, component.transform.name),
-                        new InspectorStackEntry(component, component.GetType().FullName));
+                    OnInspectorOpen(new InstanceStackEntry(component.transform, component.transform.name),
+                        new InstanceStackEntry(component, component.GetType().FullName));
                 }
 
                 switch (component)

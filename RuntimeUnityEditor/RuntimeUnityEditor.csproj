@@ -51,22 +51,24 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DnSpyHelper.cs" />
-    <Compile Include="Inspector\Entries\CallbackCacheEntey.cs" />
+    <Compile Include="Inspector\Entries\Contents\CallbackCacheEntey.cs" />
+    <Compile Include="Inspector\Entries\Inspector\InstanceStackEntry.cs" />
+    <Compile Include="Inspector\Entries\Inspector\StaticStackEntry.cs" />
     <Compile Include="Inspector\Inspector.cs" />
-    <Compile Include="Inspector\Entries\CacheEntryBase.cs" />
+    <Compile Include="Inspector\Entries\Contents\CacheEntryBase.cs" />
     <Compile Include="ObjectTree\ObjectTreeViewer.cs" />
     <Compile Include="RuntimeUnityEditor.cs" />
     <Compile Include="Utils\EditorUtilities.cs" />
     <Compile Include="Utils\Extensions.cs" />
-    <Compile Include="Inspector\Entries\FieldCacheEntry.cs" />
-    <Compile Include="Inspector\Entries\ICacheEntry.cs" />
+    <Compile Include="Inspector\Entries\Contents\FieldCacheEntry.cs" />
+    <Compile Include="Inspector\Entries\Contents\ICacheEntry.cs" />
     <Compile Include="Inspector\InspectorHelpObj.cs" />
-    <Compile Include="Inspector\Entries\InspectorStackEntry.cs" />
-    <Compile Include="Inspector\Entries\ListCacheEntry.cs" />
-    <Compile Include="Inspector\Entries\MethodCacheEntry.cs" />
+    <Compile Include="Inspector\Entries\Inspector\InspectorStackEntryBase.cs" />
+    <Compile Include="Inspector\Entries\Contents\ListCacheEntry.cs" />
+    <Compile Include="Inspector\Entries\Contents\MethodCacheEntry.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Inspector\Entries\PropertyCacheEntry.cs" />
-    <Compile Include="Inspector\Entries\ReadonlyCacheEntry.cs" />
+    <Compile Include="Inspector\Entries\Contents\PropertyCacheEntry.cs" />
+    <Compile Include="Inspector\Entries\Contents\ReadonlyCacheEntry.cs" />
     <Compile Include="Utils\SceneDumper.cs" />
     <Compile Include="Utils\TypeNameExtensions.cs" />
   </ItemGroup>
