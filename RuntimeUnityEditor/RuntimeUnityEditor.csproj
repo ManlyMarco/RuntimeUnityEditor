@@ -52,6 +52,7 @@
   <ItemGroup>
     <Compile Include="DnSpyHelper.cs" />
     <Compile Include="Inspector\Entries\Contents\CallbackCacheEntey.cs" />
+    <Compile Include="Inspector\Entries\Contents\ReadonlyListCacheEntry.cs" />
     <Compile Include="Inspector\Entries\Inspector\InstanceStackEntry.cs" />
     <Compile Include="Inspector\Entries\Inspector\StaticStackEntry.cs" />
     <Compile Include="Inspector\Inspector.cs" />

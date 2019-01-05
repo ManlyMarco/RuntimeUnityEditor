@@ -110,10 +110,15 @@ namespace RuntimeUnityEditor.Inspector
                     _fieldCache.Add(CreateTransfromCallback(ob.transform));
                     _fieldCache.Add(CreateTransfromChildEntry(ob.transform));
                 }
+                else if (objectToOpen is IList list)
+                {
+                    for (var i = 0; i < list.Count; i++)
+                        _fieldCache.Add(new ListCacheEntry(list, i));
+                }
                 else if (objectToOpen is IEnumerable enumerable)
                 {
                     _fieldCache.AddRange(enumerable.Cast<object>()
-                        .Select((x, y) => x is ICacheEntry ? x : new ListCacheEntry(x, y))
+                        .Select((x, y) => x is ICacheEntry ? x : new ReadonlyListCacheEntry(x, y))
                         .Cast<ICacheEntry>());
                 }
 

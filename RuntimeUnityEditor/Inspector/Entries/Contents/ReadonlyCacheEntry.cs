@@ -6,7 +6,7 @@ namespace RuntimeUnityEditor.Inspector.Entries
     {
         public readonly object Object;
         private readonly Type _type;
-        private string _tostringCashe;
+        private string _tostringCache;
 
         public ReadonlyCacheEntry(string name, object obj) : base(name)
         {
@@ -36,7 +36,7 @@ namespace RuntimeUnityEditor.Inspector.Entries
 
         public override string ToString()
         {
-            return _tostringCashe ?? (_tostringCashe = Name() + " | " + Object);
+            return _tostringCache ?? (_tostringCache = Name() + " | " + Object);
         }
     }
 }

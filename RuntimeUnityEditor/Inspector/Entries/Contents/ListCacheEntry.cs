@@ -1,42 +1,45 @@
 ﻿using System;
+using System.Collections;
 
 namespace RuntimeUnityEditor.Inspector.Entries
 {
     public class ListCacheEntry : CacheEntryBase
     {
-        private readonly object _target;
-        private readonly Type _type;
+        private Type _type;
+        private readonly IList _list;
+        private readonly int _index;
 
-        public ListCacheEntry(object o, int index) : base("ID: " + index)
+        public ListCacheEntry(IList container, int index) : base(ReadonlyListCacheEntry.GetListItemName(index))
         {
-            _target = o;
-            _type = o.GetType();
+            _index = index;
+            _list = container;
         }
 
         public override object GetValueToCache()
         {
-            return null;
-        }
-
-        public override object GetValue()
-        {
-            return _target;
+            return _list[_index];
         }
 
         protected override bool OnSetValue(object newValue)
         {
+            if (CanSetValue())
+            {
+                _list[_index] = newValue;
+                _type = null;
+                return true;
+            }
+
             return false;
         }
 
         public override Type Type()
         {
-            return _type;
+            return _type ?? (_type = GetValue().GetType());
         }
 
         public override bool CanSetValue()
         {
-            return false;
+            return !_list.IsReadOnly;
         }
-
     }
 }
