@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using RuntimeUnityEditor.Inspector.Entries;
 using RuntimeUnityEditor.Utils;
 using UnityEngine;
@@ -456,19 +457,107 @@ namespace RuntimeUnityEditor.ObjectTree
             return name;
         }
 
+        private string searchText = string.Empty;
         private void DisplayObjectTree()
         {
-            _treeScrollPosition = GUILayout.BeginScrollView(_treeScrollPosition, GUI.skin.box,
-                GUILayout.Height(_windowRect.height / 3), GUILayout.ExpandWidth(true));
+            GUILayout.BeginVertical(GUI.skin.box);
             {
-                _cachedRootGameObjects.RemoveAll(o => o == null);
-                _cachedRootGameObjects.AddRange(SceneManager.GetActiveScene().GetRootGameObjects().Except(_cachedRootGameObjects));
-                foreach (var rootGameObject in _cachedRootGameObjects.OrderBy(x => x.name))
+                DisplayTreeSearchBox();
+
+                _treeScrollPosition = GUILayout.BeginScrollView(_treeScrollPosition,
+                    GUILayout.Height(_windowRect.height / 3), GUILayout.ExpandWidth(true));
                 {
-                    DisplayObjectTreeHelper(rootGameObject, 0);
+                    foreach (var rootGameObject in GetObjectsToDisplay())
+                    {
+                        DisplayObjectTreeHelper(rootGameObject, 0);
+                    }
+                }
+                GUILayout.EndScrollView();
+            }
+            GUILayout.EndVertical();
+        }
+
+        private IEnumerable<GameObject> GetObjectsToDisplay()
+        {
+            if (_searchResults != null)
+            {
+                _searchResults.RemoveAll(o => o == null);
+                return _searchResults;
+            }
+
+            _cachedRootGameObjects.RemoveAll(o => o == null);
+            _cachedRootGameObjects.AddRange(SceneManager.GetActiveScene().GetRootGameObjects().Except(_cachedRootGameObjects));
+            var objectsToDisplay = _cachedRootGameObjects.OrderBy(x => x.name);
+            return objectsToDisplay;
+        }
+
+        private void DisplayTreeSearchBox()
+        {
+            GUILayout.BeginHorizontal();
+            {
+                searchText = GUILayout.TextField(searchText, GUILayout.ExpandWidth(true));
+
+                if (GUILayout.Button("Search", GUILayout.ExpandWidth(false)))
+                    Search(searchText);
+
+                if (GUILayout.Button("Clear", GUILayout.ExpandWidth(false)))
+                {
+                    searchText = string.Empty;
+                    Search(searchText);
+                    SelectAndShowObject(_selectedTransform);
                 }
             }
-            GUILayout.EndScrollView();
+            GUILayout.EndHorizontal();
+        }
+
+        private List<GameObject> _searchResults;
+
+        private void Search(string searchString)
+        {
+            if (string.IsNullOrEmpty(searchString))
+                _searchResults = null;
+            else
+            {
+                var query = from go in Object.FindObjectsOfType<GameObject>()
+                            where go.name.Contains(searchString, StringComparison.InvariantCultureIgnoreCase)
+                                  || go.GetComponents<Component>().Any(c => SearchInComponent(searchString, c))
+                            orderby go.name
+                            select go;
+                _searchResults = query.ToList();
+            }
+        }
+
+        private static bool SearchInComponent(string searchString, Component c)
+        {
+            var type = c.GetType();
+            if (type.Name.Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
+                return true;
+
+            var nameBlacklist = new[] { "parent", "parentInternal", "root", "transform", "gameObject" };
+            var typeBlacklist = new[] { typeof(bool), typeof(object) };
+
+            foreach (var prop in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                .Where(x => x.CanRead && !nameBlacklist.Contains(x.Name) && !typeBlacklist.Contains(x.PropertyType)))
+            {
+                try
+                {
+                    if (prop.GetValue(c, null).ToString().Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
+                        return true;
+                }
+                catch { }
+            }
+            foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                .Where(x => !nameBlacklist.Contains(x.Name) && !typeBlacklist.Contains(x.FieldType)))
+            {
+                try
+                {
+                    if (field.GetValue(c).ToString().Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
+                        return true;
+                }
+                catch { }
+            }
+
+            return false;
         }
     }
 }

@@ -7,6 +7,11 @@ namespace RuntimeUnityEditor.Utils
 {
     public static class Extensions
     {
+        public static bool Contains(this string s, string searchText, StringComparison sc)
+        {
+            return s.IndexOf(searchText, sc) >= 0;
+        }
+
         public static T Next<T>(this T src) where T : struct
         {
             if (!typeof(T).IsEnum) throw new ArgumentException($"Argumnent {typeof(T).FullName} is not an Enum");
