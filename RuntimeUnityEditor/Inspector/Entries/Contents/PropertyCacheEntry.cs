@@ -23,9 +23,6 @@ namespace RuntimeUnityEditor.Inspector.Entries
             if (!PropertyInfo.CanRead)
                 return "WRITE ONLY";
 
-            if (PropertyInfo.PropertyType.IsArray)
-                return "IS INDEXED";
-
             try { return PropertyInfo.GetValue(_instance, null); }
             catch (Exception ex)
             {
