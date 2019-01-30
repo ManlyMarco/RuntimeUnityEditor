@@ -498,12 +498,15 @@ namespace RuntimeUnityEditor.ObjectTree
                 searchText = GUILayout.TextField(searchText, GUILayout.ExpandWidth(true));
 
                 if (GUILayout.Button("Search", GUILayout.ExpandWidth(false)))
-                    Search(searchText);
+                    Search(searchText, false);
+
+                if (GUILayout.Button("Deep", GUILayout.ExpandWidth(false)))
+                    Search(searchText, true);
 
                 if (GUILayout.Button("Clear", GUILayout.ExpandWidth(false)))
                 {
                     searchText = string.Empty;
-                    Search(searchText);
+                    Search(searchText, false);
                     SelectAndShowObject(_selectedTransform);
                 }
             }
@@ -512,29 +515,34 @@ namespace RuntimeUnityEditor.ObjectTree
 
         private List<GameObject> _searchResults;
 
-        private void Search(string searchString)
+        private void Search(string searchString, bool searchProperties)
         {
             if (string.IsNullOrEmpty(searchString))
+            {
                 _searchResults = null;
+            }
             else
             {
                 var query = from go in Object.FindObjectsOfType<GameObject>()
                             where go.name.Contains(searchString, StringComparison.InvariantCultureIgnoreCase)
-                                  || go.GetComponents<Component>().Any(c => SearchInComponent(searchString, c))
+                                  || go.GetComponents<Component>().Any(c => SearchInComponent(searchString, c, searchProperties))
                             orderby go.name
                             select go;
                 _searchResults = query.ToList();
             }
         }
 
-        private static bool SearchInComponent(string searchString, Component c)
+        private static bool SearchInComponent(string searchString, Component c, bool searchProperties)
         {
             var type = c.GetType();
             if (type.Name.Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
                 return true;
 
+            if (!searchProperties)
+                return false;
+
             var nameBlacklist = new[] { "parent", "parentInternal", "root", "transform", "gameObject" };
-            var typeBlacklist = new[] { typeof(bool), typeof(object) };
+            var typeBlacklist = new[] { typeof(bool) };
 
             foreach (var prop in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
                 .Where(x => x.CanRead && !nameBlacklist.Contains(x.Name) && !typeBlacklist.Contains(x.PropertyType)))
