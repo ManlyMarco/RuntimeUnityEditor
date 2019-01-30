@@ -26,7 +26,7 @@ namespace RuntimeUnityEditor.Inspector.Entries
             try { return PropertyInfo.GetValue(_instance, null); }
             catch (Exception ex)
             {
-                return "ERROR: " + ex.Message;
+                return ex;
             }
         }
 
