@@ -36,7 +36,7 @@ namespace RuntimeUnityEditor.Utils
 
         private static readonly Dictionary<Type, Func<object, string>> CustomObjectToString = new Dictionary<Type, Func<object, string>>();
 
-        public static void AddCustomObjectToString<TObj>(Func<TObj, string>func)
+        public static void AddCustomObjectToString<TObj>(Func<TObj, string> func)
         {
             CustomObjectToString.Add(typeof(TObj), o => func.Invoke((TObj)o));
         }
@@ -52,40 +52,49 @@ namespace RuntimeUnityEditor.Utils
                     return t.name;
                 case GameObject o:
                     return o.name;
-                case ICollection collection:
-                    return $"Count = {collection.Count}";
-                case IEnumerable _:
-                    return "IS ENUMERABLE";
                 case Exception ex:
                     return "EXCEPTION: " + ex.Message;
-                default:
+            }
+
+            var valueType = value.GetType();
+
+            if (CustomObjectToString.TryGetValue(valueType, out var func))
+                return func(value);
+
+            if(value is ICollection collection)
+                return $"Count = {collection.Count}";
+
+            if (value is IEnumerable _)
+            {
+                var property = valueType.GetProperty("Count", BindingFlags.Public | BindingFlags.Instance);
+                if (property != null && property.CanRead)
+                {
+                    if (property.GetValue(value, null) is int count)
+                        return $"Count = {count}";
+                }
+                
+                return "IS ENUMERABLE";
+            }
+
+            try
+            {
+                if (valueType.IsGenericType)
+                {
+                    var baseType = valueType.GetGenericTypeDefinition();
+                    if (baseType == typeof(KeyValuePair<,>))
                     {
-                        var valueType = value.GetType();
-
-                        if (CustomObjectToString.TryGetValue(valueType, out var func))
-                            return func(value);
-
-                        try
-                        {
-                            if (valueType.IsGenericType)
-                            {
-                                var baseType = valueType.GetGenericTypeDefinition();
-                                if (baseType == typeof(KeyValuePair<,>))
-                                {
-                                    //var argTypes = baseType.GetGenericArguments();
-                                    var kvpKey = valueType.GetProperty("Key")?.GetValue(value, null);
-                                    var kvpValue = valueType.GetProperty("Value")?.GetValue(value, null);
-                                    return $"[{ExtractText(kvpKey)} | {ExtractText(kvpValue)}]";
-                                }
-                            }
-
-                            return value.ToString();
-                        }
-                        catch
-                        {
-                            return valueType.Name;
-                        }
+                        //var argTypes = baseType.GetGenericArguments();
+                        var kvpKey = valueType.GetProperty("Key")?.GetValue(value, null);
+                        var kvpValue = valueType.GetProperty("Value")?.GetValue(value, null);
+                        return $"[{ExtractText(kvpKey)} | {ExtractText(kvpValue)}]";
                     }
+                }
+
+                return value.ToString();
+            }
+            catch
+            {
+                return valueType.Name;
             }
         }
 
