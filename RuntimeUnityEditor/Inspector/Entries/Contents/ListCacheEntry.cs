@@ -17,7 +17,7 @@ namespace RuntimeUnityEditor.Inspector.Entries
 
         public override object GetValueToCache()
         {
-            return _list[_index];
+            return _list.Count > _index ? _list[_index] : "ERROR: The list was changed while browsing!";
         }
 
         protected override bool OnSetValue(object newValue)
@@ -34,7 +34,7 @@ namespace RuntimeUnityEditor.Inspector.Entries
 
         public override Type Type()
         {
-            return _type ?? (_type = GetValue().GetType());
+            return _type ?? (_type = GetValue()?.GetType());
         }
 
         public override bool CanSetValue()
