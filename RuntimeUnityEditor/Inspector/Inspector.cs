@@ -9,6 +9,7 @@ using BepInEx.Logging;
 using RuntimeUnityEditor.Inspector.Entries;
 using RuntimeUnityEditor.Utils;
 using UnityEngine;
+using Component = UnityEngine.Component;
 using Logger = BepInEx.Logger;
 
 namespace RuntimeUnityEditor.Inspector
@@ -90,9 +91,15 @@ namespace RuntimeUnityEditor.Inspector
                             return null;
                         });
                 }
+
                 ReadonlyCacheEntry CreateTransfromChildEntry(Transform tr)
                 {
                     return new ReadonlyCacheEntry("Child objects", tr.Cast<Transform>().ToArray());
+                }
+
+                ReadonlyCacheEntry CreateComponentList(GameObject go)
+                {
+                    return new ReadonlyCacheEntry("Components", go.GetComponents<Component>());
                 }
 
                 // If we somehow enter a string, this allows user to see what the string actually says
@@ -104,11 +111,16 @@ namespace RuntimeUnityEditor.Inspector
                 {
                     _fieldCache.Add(CreateTransfromCallback(tr));
                     _fieldCache.Add(CreateTransfromChildEntry(tr));
+                    _fieldCache.Add(CreateComponentList(tr.gameObject));
                 }
-                else if (objectToOpen is GameObject ob && ob.transform != null)
+                else if (objectToOpen is GameObject ob)
                 {
-                    _fieldCache.Add(CreateTransfromCallback(ob.transform));
-                    _fieldCache.Add(CreateTransfromChildEntry(ob.transform));
+                    if (ob.transform != null)
+                    {
+                        _fieldCache.Add(CreateTransfromCallback(ob.transform));
+                        _fieldCache.Add(CreateTransfromChildEntry(ob.transform));
+                    }
+                    _fieldCache.Add(CreateComponentList(ob));
                 }
                 else if (objectToOpen is IList list)
                 {
