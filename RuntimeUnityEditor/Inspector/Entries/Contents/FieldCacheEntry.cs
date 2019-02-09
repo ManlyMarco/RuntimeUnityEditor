@@ -45,7 +45,7 @@ namespace RuntimeUnityEditor.Inspector.Entries
 
         public override bool CanSetValue()
         {
-            return true;
+            return (FieldInfo.Attributes & FieldAttributes.Literal) == 0;
         }
     }
 }
