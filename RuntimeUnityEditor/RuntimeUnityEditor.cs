@@ -8,7 +8,7 @@ namespace RuntimeUnityEditor
     [BepInPlugin("RuntimeUnityEditor", "Runtime Unity Editor", Version)]
     public class RuntimeUnityEditor : BaseUnityPlugin
     {
-        public const string Version = "1.0";
+        public const string Version = "1.1";
 
         [DisplayName("Path to dnSpy.exe")]
         [Description("Full path to dnSpy that will enable integration with Inspector.\n\n" +
