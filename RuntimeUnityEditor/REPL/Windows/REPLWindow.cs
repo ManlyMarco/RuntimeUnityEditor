@@ -10,7 +10,7 @@ namespace RuntimeUnityEditor.REPL.Windows
 {
     public sealed class ReplWindow
     {
-        private static readonly char[] InputSplitChars = { ',', ';', '<', '>', '(', ')', '[', ']' };
+        private static readonly char[] InputSplitChars = { ',', ';', '<', '>', '(', ')', '[', ']', '=', '|', '&' };
 
         private const int HistoryLimit = 50;
         private const int SuggestionsWidth = 200;
@@ -116,13 +116,16 @@ namespace RuntimeUnityEditor.REPL.Windows
 
         private void FetchSuggestions(string input, int cursorPos)
         {
-            var start = Mathf.Max(0, input.LastIndexOfAny(InputSplitChars, cursorPos - 1));
-            var end = Mathf.Max(input.Length, input.IndexOfAny(InputSplitChars, cursorPos - 1));
-            var trimmedInput = input.Substring(start, end - start);
+            if (!string.IsNullOrEmpty(input))
+            {
+                var start = input.LastIndexOfAny(InputSplitChars, cursorPos - 1) + 1;
+                var end = Mathf.Max(input.Length, input.IndexOfAny(InputSplitChars, cursorPos - 1));
+                input = input.Substring(start, end - start);
+            }
 
             try
             {
-                _suggestionsWindow.Suggestions = _evaluator.GetCompletions(trimmedInput, out string prefix);
+                _suggestionsWindow.Suggestions = _evaluator.GetCompletions(input, out string prefix);
                 _suggestionsWindow.Prefix = prefix;
             }
             catch (Exception)
@@ -139,7 +142,7 @@ namespace RuntimeUnityEditor.REPL.Windows
 
             TextEditor te = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
             var cursorPos = te.cursorIndex;
-            Console.WriteLine(cursorPos);
+
             if (Event.current.isKey && Event.current.keyCode == KeyCode.Return)
             {
                 AcceptInput();
@@ -165,21 +168,24 @@ namespace RuntimeUnityEditor.REPL.Windows
             }
 
             if (_inputField != _prevInputField)
-            {
-                /*if (_inputField.Contains("typeof("))
-                {
-                    _suggestionsWindow.Suggestions = null;
-                    _suggestionsWindow.Prefix = null;
-                }
-                else*/
-                {
-                    FetchSuggestions(_inputField, cursorPos);
-                }
-            }
+                FetchSuggestions(_inputField, cursorPos);
         }
 
         private void AcceptInput()
         {
+            if (_inputField.Contains("geti()"))
+            {
+                var val = REPL.geti();
+                if (val == null)
+                {
+                    _sb.AppendLine($"> {_inputField}");
+                    _sb.AppendLine("Error: No object opened in inspector or a static type is opened");
+                    return;
+                }
+
+                _inputField = _inputField.Replace("geti()", $"geti<{val.GetType().FullName}>()");
+            }
+
             _sb.AppendLine($"> {_inputField}");
             var result = Evaluate(_inputField);
             if (result != null && !Equals(result, VoidType.Value))

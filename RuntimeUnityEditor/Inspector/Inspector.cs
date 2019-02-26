@@ -276,6 +276,13 @@ namespace RuntimeUnityEditor.Inspector
             LoadStackEntry(stackEntry);
         }
 
+        public object GetInspectedObject()
+        {
+            if (_inspectorStack.Count > 0 && _inspectorStack.Peek() is InstanceStackEntry se)
+                return se.Instance;
+            return null;
+        }
+
         private void LoadStackEntry(InspectorStackEntryBase stackEntry)
         {
             switch (stackEntry)

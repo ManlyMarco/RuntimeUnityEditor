@@ -93,6 +93,18 @@ namespace RuntimeUnityEditor.REPL
             return type<T>().info();
         }
 
+        [Documentation("geti() - get object currently opened in inspector. Will get expanded upon accepting. Use like this: var x = geti()")]
+        public static object geti()
+        {
+            return RuntimeUnityEditor.Instance.Inspector.GetInspectedObject();
+        }
+
+        //[Documentation("geti<T>() - get object currently opened in inspector. Use geti() instead.")]
+        public static T geti<T>()
+        {
+            return (T) RuntimeUnityEditor.Instance.Inspector.GetInspectedObject();
+        }
+
         [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property)]
         private class DocumentationAttribute : Attribute
         {

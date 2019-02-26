@@ -20,8 +20,12 @@ namespace RuntimeUnityEditor
         public ObjectTreeViewer TreeViewer { get; private set; }
         public ReplWindow Repl { get; private set; }
 
+        internal static RuntimeUnityEditor Instance { get; private set; }
+        
         protected void Awake()
         {
+            Instance = this;
+
             DnSpyPath = new ConfigWrapper<string>(nameof(DnSpyPath), this);
             DnSpyPath.SettingChanged += (sender, args) => DnSpyHelper.DnSpyPath = DnSpyPath.Value;
             DnSpyHelper.DnSpyPath = DnSpyPath.Value;
