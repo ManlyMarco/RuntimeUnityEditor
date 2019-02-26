@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using BepInEx;
 using RuntimeUnityEditor.ObjectTree;
+using RuntimeUnityEditor.REPL.Windows;
 using UnityEngine;
 
 namespace RuntimeUnityEditor
@@ -17,6 +18,7 @@ namespace RuntimeUnityEditor
 
         public Inspector.Inspector Inspector { get; private set; }
         public ObjectTreeViewer TreeViewer { get; private set; }
+        public ReplWindow Repl { get; private set; }
 
         protected void Awake()
         {
@@ -32,6 +34,8 @@ namespace RuntimeUnityEditor
                     Inspector.InspectorPush(stackEntry);
             });
 
+            Repl = new ReplWindow();
+
             DnSpyPath = new ConfigWrapper<string>(nameof(DnSpyPath), this);
             DnSpyPath.SettingChanged += (sender, args) => DnSpyHelper.DnSpyPath = DnSpyPath.Value;
             DnSpyHelper.DnSpyPath = DnSpyPath.Value;
@@ -39,10 +43,11 @@ namespace RuntimeUnityEditor
 
         protected void OnGUI()
         {
-            if(Show)
+            if (Show)
             {
                 Inspector.DisplayInspector();
                 TreeViewer.DisplayViewer();
+                Repl.DisplayWindow();
             }
         }
 
@@ -59,8 +64,6 @@ namespace RuntimeUnityEditor
 
                     TreeViewer.UpdateCaches();
                 }
-
-                //CursorBlocker.DisableCameraControls = _show;
             }
         }
 
@@ -76,19 +79,38 @@ namespace RuntimeUnityEditor
 
         private void SetWindowSizes()
         {
-            int w = Screen.width, h = Screen.height;
-            _screenRect = new Rect(ScreenOffset, ScreenOffset, w - ScreenOffset * 2, h - ScreenOffset * 2);
+            const int screenOffset = 10;
 
-            UpdateWindowSize(_screenRect);
+            var screenRect = new Rect(
+                screenOffset,
+                screenOffset,
+                Screen.width - screenOffset * 2,
+                Screen.height - screenOffset * 2);
+
+            var centerWidth = (int)Mathf.Min(850, screenRect.width);
+            var centerX = (int)(screenRect.xMin + screenRect.width / 2 - Mathf.RoundToInt((float)centerWidth / 2));
+
+            var inspectorHeight = (int)(screenRect.height / 4) * 3;
+            Inspector.UpdateWindowSize(new Rect(
+                centerX, 
+                screenRect.yMin, 
+                centerWidth, 
+                inspectorHeight));
+
+            var rightWidth = 350;
+            var treeViewHeight = screenRect.height;
+            TreeViewer.UpdateWindowSize(new Rect(
+                screenRect.xMax - rightWidth, 
+                screenRect.yMin, 
+                rightWidth, 
+                treeViewHeight));
+
+            var replPadding = 8;
+            Repl.UpdateWindowSize(new Rect(
+                centerX, 
+                screenRect.yMin + inspectorHeight + replPadding, 
+                centerWidth, 
+                screenRect.height - inspectorHeight - replPadding));
         }
-
-        private void UpdateWindowSize(Rect screenRect)
-        {
-            Inspector.UpdateWindowSize(screenRect);
-            TreeViewer.UpdateWindowSize(screenRect);
-        }
-
-        private const int ScreenOffset = 20;
-        private Rect _screenRect;
     }
 }

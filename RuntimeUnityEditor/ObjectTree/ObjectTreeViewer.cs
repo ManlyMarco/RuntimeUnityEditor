@@ -82,14 +82,9 @@ namespace RuntimeUnityEditor.ObjectTree
             _inspectorOpenCallback.Invoke(items);
         }
 
-        public void UpdateWindowSize(Rect screenRect)
+        public void UpdateWindowSize(Rect windowRect)
         {
-            const int width = 350;
-            //const int padding = 3;
-
-            var height = screenRect.height;
-
-            _windowRect = new Rect(screenRect.xMax - width, screenRect.yMin, width, height);
+            _windowRect = windowRect;
         }
 
         private void DisplayObjectTreeHelper(GameObject go, int indent)

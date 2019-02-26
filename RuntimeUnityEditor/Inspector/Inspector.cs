@@ -471,13 +471,9 @@ namespace RuntimeUnityEditor.Inspector
             }
         }
 
-        public void UpdateWindowSize(Rect screenRect)
+        public void UpdateWindowSize(Rect windowRect)
         {
-            var width = (int)Mathf.Min(850, screenRect.width);
-
-            var height = screenRect.height;//(int)(screenRect.height / 3) * 2;
-
-            _inspectorWindowRect = new Rect(screenRect.xMin + screenRect.width / 2 - Mathf.RoundToInt((float)width / 2), screenRect.yMin, width, height);
+            _inspectorWindowRect = windowRect;
         }
 
         public void InspectorUpdate()
