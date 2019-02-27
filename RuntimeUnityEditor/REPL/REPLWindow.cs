@@ -1,22 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
+using BepInEx.Logging;
 using RuntimeUnityEditor.REPL.MCS;
 using RuntimeUnityEditor.Utils;
 using UnityEngine;
 
-namespace RuntimeUnityEditor.REPL.Windows
+namespace RuntimeUnityEditor.REPL
 {
     public sealed class ReplWindow
     {
         private static readonly char[] InputSplitChars = { ',', ';', '<', '>', '(', ')', '[', ']', '=', '|', '&' };
 
         private const int HistoryLimit = 50;
-        private const int SuggestionsWidth = 200;
 
         private readonly ScriptEvaluator _evaluator;
-        private readonly SuggestionsWindow _suggestionsWindow;
 
         private readonly List<string> _history = new List<string>();
         private int _historyPosition;
@@ -24,11 +24,17 @@ namespace RuntimeUnityEditor.REPL.Windows
         private readonly StringBuilder _sb = new StringBuilder();
 
         private string _inputField = "";
-        private string _prevInputField = "";
+        private string _prevInput = "";
         private Vector2 _scrollPosition = Vector2.zero;
 
         private readonly int _windowId;
         private Rect _windowRect;
+        private TextEditor _textEditor;
+        private int _newCursorLocation = -1;
+
+        private readonly HashSet<string> _namespaces;
+        private readonly List<string> _suggestions = new List<string>();
+        private string _suggestionsPrefix;
 
         public ReplWindow()
         {
@@ -37,9 +43,6 @@ namespace RuntimeUnityEditor.REPL.Windows
             _sb.AppendLine("Welcome to C# REPL (read-evaluate-print loop)! Enter \"help\" to get a list of common methods.");
 
             _evaluator = new ScriptEvaluator(new StringWriter(_sb)) { InteractiveBaseClass = typeof(REPL) };
-
-            _suggestionsWindow = new SuggestionsWindow();
-            _suggestionsWindow.SuggestionAccept += AcceptSuggestion;
 
             var envSetup = new string[]
             {
@@ -52,16 +55,43 @@ namespace RuntimeUnityEditor.REPL.Windows
 
             foreach (var define in envSetup)
                 Evaluate(define);
+
+            _namespaces = new HashSet<string>(
+                AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(x =>
+                    {
+                        try { return x.GetTypes(); }
+                        catch { return Enumerable.Empty<Type>(); }
+                    })
+                .Where(x => x.IsPublic && !string.IsNullOrEmpty(x.Namespace))
+                .Select(x => x.Namespace));
+            BepInEx.Logger.Log(LogLevel.Debug, $"Found {_namespaces.Count} public namespaces");
         }
 
         public void DisplayWindow()
         {
+            if (_completionsListingStyle == null)
+            {
+                _completionsListingStyle = new GUIStyle(GUI.skin.button)
+                {
+                    border = new RectOffset(0, 0, 0, 0),
+                    margin = new RectOffset(0, 0, 0, 0),
+                    padding = new RectOffset(0, 0, 0, 0),
+                    hover = { background = Texture2D.whiteTexture, textColor = Color.black },
+                    normal = { background = null },
+                    focused = { background = Texture2D.whiteTexture, textColor = Color.black },
+                    active = { background = Texture2D.whiteTexture, textColor = Color.black }
+                };
+            }
+
             EditorUtilities.DrawSolidWindowBackground(_windowRect);
             _windowRect = GUILayout.Window(_windowId, _windowRect, WindowFunc, "C# REPL Console");
-
-            _suggestionsWindow.UpdateWindowSize(new Rect(_windowRect.x - SuggestionsWidth, _windowRect.y, SuggestionsWidth, _windowRect.height));
-            _suggestionsWindow.DisplayWindow();
         }
+
+        private GUIStyle _completionsListingStyle;
+        private bool _refocus;
+        private int _refocusCursorIndex = -1;
+        private int _refocusSelectIndex;
 
         private void WindowFunc(int id)
         {
@@ -70,15 +100,42 @@ namespace RuntimeUnityEditor.REPL.Windows
                 _scrollPosition = GUILayout.BeginScrollView(_scrollPosition, false, true, GUIStyle.none, GUI.skin.verticalScrollbar, GUI.skin.textArea);
                 {
                     GUILayout.FlexibleSpace();
-                    GUILayout.TextArea(_sb.ToString(), GUI.skin.label);
+
+                    if (_suggestions.Count > 0)
+                    {
+                        foreach (string suggestion in _suggestions)
+                        {
+                            if (!GUILayout.Button($"{_suggestionsPrefix}{suggestion}", _completionsListingStyle, GUILayout.ExpandWidth(true)))
+                                continue;
+                            AcceptSuggestion(suggestion);
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        GUILayout.TextArea(_sb.ToString(), GUI.skin.label);
+                    }
                 }
                 GUILayout.EndScrollView();
 
                 GUILayout.BeginHorizontal();
                 {
                     GUI.SetNextControlName("replInput");
-                    _prevInputField = _inputField;
                     _inputField = GUILayout.TextField(_inputField);
+
+                    if (_refocus)
+                    {
+                        _refocusCursorIndex = _textEditor.cursorIndex;
+                        _refocusSelectIndex = _textEditor.selectIndex;
+                        GUI.FocusControl("replInput");
+                        _refocus = false;
+                    }
+                    else if (_refocusCursorIndex >= 0)
+                    {
+                        _textEditor.cursorIndex = _refocusCursorIndex;
+                        _textEditor.selectIndex = _refocusSelectIndex;
+                        _refocusCursorIndex = -1;
+                    }
 
                     if (GUILayout.Button("Run", GUILayout.ExpandWidth(false)))
                         AcceptInput();
@@ -104,8 +161,9 @@ namespace RuntimeUnityEditor.REPL.Windows
 
         private void AcceptSuggestion(string suggestion)
         {
-            _inputField += suggestion;
-            _suggestionsWindow.Suggestions = null;
+            _inputField = _inputField.Insert(_textEditor.cursorIndex, suggestion);
+            _newCursorLocation = _textEditor.cursorIndex + suggestion.Length;
+            ClearSuggestions();
         }
 
         private object Evaluate(string str)
@@ -134,25 +192,37 @@ namespace RuntimeUnityEditor.REPL.Windows
             _inputField = _history[_historyPosition];
         }
 
-        private void FetchSuggestions(string input, int cursorPos)
+        private void FetchSuggestions(string input)
         {
-            if (!string.IsNullOrEmpty(input))
-            {
-                var start = input.LastIndexOfAny(InputSplitChars, cursorPos - 1) + 1;
-                var end = Mathf.Max(input.Length, input.IndexOfAny(InputSplitChars, cursorPos - 1));
-                input = input.Substring(start, end - start);
-            }
-
             try
             {
-                _suggestionsWindow.Suggestions = _evaluator.GetCompletions(input, out string prefix);
-                _suggestionsWindow.Prefix = prefix;
+                _suggestions.Clear();
+
+                var completions = _evaluator.GetCompletions(input, out string prefix);
+                if (completions != null)
+                    _suggestions.AddRange(completions);
+
+                _suggestions.AddRange(GetNamespaceSuggestions(input));
+
+                _suggestionsPrefix = prefix ?? input;
+
+                _refocus = true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                _suggestionsWindow.Suggestions = null;
-                _suggestionsWindow.Prefix = null;
+                BepInEx.Logger.Log(LogLevel.Debug, ex);
+                ClearSuggestions();
             }
+        }
+
+        private IEnumerable<string> GetNamespaceSuggestions(string input)
+        {
+            var trimmedInput = input.Trim();
+            if (trimmedInput.StartsWith("using"))
+                trimmedInput = trimmedInput.Remove(0, 5).Trim();
+
+            return _namespaces.Where(x => x.StartsWith(trimmedInput) && x.Length > trimmedInput.Length)
+                .Select(x => x.Substring(trimmedInput.Length));
         }
 
         private void CheckReplInput()
@@ -160,8 +230,13 @@ namespace RuntimeUnityEditor.REPL.Windows
             if (GUI.GetNameOfFocusedControl() != "replInput")
                 return;
 
-            TextEditor te = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
-            var cursorPos = te.cursorIndex;
+            _textEditor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
+            if (_newCursorLocation >= 0)
+            {
+                _textEditor.cursorIndex = _newCursorLocation;
+                _textEditor.selectIndex = _newCursorLocation;
+                _newCursorLocation = -1;
+            }
 
             if (Event.current.isKey && Event.current.keyCode == KeyCode.Return)
             {
@@ -175,20 +250,48 @@ namespace RuntimeUnityEditor.REPL.Windows
                 {
                     FetchHistory(-1);
                     Event.current.Use();
-                    _suggestionsWindow.Suggestions = null;
-                    _suggestionsWindow.Prefix = null;
+                    ClearSuggestions();
                 }
                 else if (Event.current.keyCode == KeyCode.DownArrow)
                 {
                     FetchHistory(1);
                     Event.current.Use();
-                    _suggestionsWindow.Suggestions = null;
-                    _suggestionsWindow.Prefix = null;
+                    ClearSuggestions();
                 }
             }
 
-            if (_inputField != _prevInputField)
-                FetchSuggestions(_inputField, cursorPos);
+            var input = _inputField;
+            if (!string.IsNullOrEmpty(input))
+            {
+                try
+                {
+                    // Separate input into parts, grab only the part with cursor in it
+                    var start = input.LastIndexOfAny(InputSplitChars, _textEditor.cursorIndex - 1) + 1;
+                    var end = input.IndexOfAny(InputSplitChars, _textEditor.cursorIndex - 1);
+                    if (end < 0) end = input.Length;
+                    input = input.Substring(start, end - start);
+                }
+                catch (ArgumentException) { }
+
+                if (input != _prevInput)
+                {
+                    if (!string.IsNullOrEmpty(input))
+                        FetchSuggestions(input);
+
+                    _prevInput = input;
+                }
+            }
+            else
+            {
+                ClearSuggestions();
+            }
+        }
+
+        private void ClearSuggestions()
+        {
+            _suggestions.Clear();
+            _suggestionsPrefix = null;
+            _refocus = true;
         }
 
         private void AcceptInput()
@@ -216,8 +319,7 @@ namespace RuntimeUnityEditor.REPL.Windows
             _scrollPosition.y = float.MaxValue;
 
             _inputField = string.Empty;
-            _suggestionsWindow.Suggestions = null;
-            _suggestionsWindow.Prefix = null;
+            ClearSuggestions();
         }
 
         private class VoidType

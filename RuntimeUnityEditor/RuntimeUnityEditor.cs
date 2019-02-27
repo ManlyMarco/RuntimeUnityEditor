@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using BepInEx;
 using RuntimeUnityEditor.ObjectTree;
-using RuntimeUnityEditor.REPL.Windows;
+using RuntimeUnityEditor.REPL;
 using UnityEngine;
 
 namespace RuntimeUnityEditor

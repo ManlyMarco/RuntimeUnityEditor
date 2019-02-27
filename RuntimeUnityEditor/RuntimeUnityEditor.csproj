@@ -69,8 +69,7 @@
     <Compile Include="REPL\REPL.cs" />
     <Compile Include="REPL\ReplHelper.cs" />
     <Compile Include="REPL\TypeHelper.cs" />
-    <Compile Include="REPL\Windows\REPLWindow.cs" />
-    <Compile Include="REPL\Windows\SuggestionsWindow.cs" />
+    <Compile Include="REPL\REPLWindow.cs" />
     <Compile Include="RuntimeUnityEditor.cs" />
     <Compile Include="Utils\EditorUtilities.cs" />
     <Compile Include="Utils\Extensions.cs" />
@@ -86,5 +85,6 @@
     <Compile Include="Utils\SceneDumper.cs" />
     <Compile Include="Utils\TypeNameExtensions.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
