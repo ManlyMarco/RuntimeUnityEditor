@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using Mono.CSharp;
+using RuntimeUnityEditor.Inspector.Entries;
 using UnityEngine;
 using Attribute = System.Attribute;
 using Object = UnityEngine.Object;
@@ -20,7 +23,7 @@ namespace RuntimeUnityEditor.REPL
             MB = go.AddComponent<ReplHelper>();
         }
 
-        public new static string help
+        public static new string help
         {
             get
             {
@@ -93,16 +96,69 @@ namespace RuntimeUnityEditor.REPL
             return type<T>().info();
         }
 
-        [Documentation("geti() - get object currently opened in inspector. Will get expanded upon accepting. Use like this: var x = geti()")]
+        [Documentation("findrefs(obj) - find references to the object in currently loaded components.")]
+        public static Component[] findrefs(object obj)
+        {
+            if (obj == null) throw new ArgumentNullException(nameof(obj));
+
+            var results = new List<Component>();
+            foreach (var component in Object.FindObjectsOfType<Component>())
+            {
+                var type = component.GetType();
+
+                var nameBlacklist = new[] { "parent", "parentInternal", "root", "transform", "gameObject" };
+                var typeBlacklist = new[] { typeof(bool) };
+
+                foreach (var prop in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                    .Where(x => x.CanRead && !nameBlacklist.Contains(x.Name) && !typeBlacklist.Contains(x.PropertyType)))
+                {
+                    try
+                    {
+                        if (Equals(prop.GetValue(component, null), obj))
+                        {
+                            results.Add(component);
+                            goto finish;
+                        }
+                    }
+                    catch { }
+                }
+                foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                    .Where(x => !nameBlacklist.Contains(x.Name) && !typeBlacklist.Contains(x.FieldType)))
+                {
+                    try
+                    {
+                        if (Equals(field.GetValue(component), obj))
+                        {
+                            results.Add(component);
+                            goto finish;
+                        }
+                    }
+                    catch { }
+                }
+                finish:;
+            }
+
+            return results.ToArray();
+        }
+
+        [Documentation("geti() - get object currently opened in inspector. Will get expanded upon accepting. Best to use like this: var x = geti()")]
         public static object geti()
         {
-            return RuntimeUnityEditor.Instance.Inspector.GetInspectedObject();
+            return RuntimeUnityEditor.Instance.Inspector.GetInspectedObject()
+                ?? throw new InvalidOperationException("No object is opened in inspector or a static type is opened");
         }
 
         //[Documentation("geti<T>() - get object currently opened in inspector. Use geti() instead.")]
         public static T geti<T>()
         {
-            return (T) RuntimeUnityEditor.Instance.Inspector.GetInspectedObject();
+            return (T)geti();
+        }
+
+        [Documentation("seti(obj) - send the object to the inspector.")]
+        public static void seti(object obj)
+        {
+            if (obj == null) throw new ArgumentNullException(nameof(obj));
+            RuntimeUnityEditor.Instance.Inspector.InspectorPush(new InstanceStackEntry(obj, "REPL > " + obj.GetType().Name));
         }
 
         [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property)]

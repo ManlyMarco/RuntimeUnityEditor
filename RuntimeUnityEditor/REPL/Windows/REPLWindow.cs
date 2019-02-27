@@ -40,12 +40,24 @@ namespace RuntimeUnityEditor.REPL.Windows
 
             _suggestionsWindow = new SuggestionsWindow();
             _suggestionsWindow.SuggestionAccept += AcceptSuggestion;
+
+            var envSetup = new string[]
+            {
+                "using System;",
+                "using UnityEngine;",
+                "using System.Linq;",
+                "using System.Collections;",
+                "using System.Collections.Generic;",
+            };
+
+            foreach (var define in envSetup)
+                Evaluate(define);
         }
 
         public void DisplayWindow()
         {
             EditorUtilities.DrawSolidWindowBackground(_windowRect);
-            _windowRect = GUILayout.Window(_windowId, _windowRect, WindowFunc, "REPL");
+            _windowRect = GUILayout.Window(_windowId, _windowRect, WindowFunc, "C# REPL Console");
 
             _suggestionsWindow.UpdateWindowSize(new Rect(_windowRect.x - SuggestionsWidth, _windowRect.y, SuggestionsWidth, _windowRect.height));
             _suggestionsWindow.DisplayWindow();
@@ -55,9 +67,10 @@ namespace RuntimeUnityEditor.REPL.Windows
         {
             GUILayout.BeginVertical();
             {
-                _scrollPosition = GUILayout.BeginScrollView(_scrollPosition);
+                _scrollPosition = GUILayout.BeginScrollView(_scrollPosition, false, true, GUIStyle.none, GUI.skin.verticalScrollbar, GUI.skin.textArea);
                 {
-                    GUILayout.TextArea(_sb.ToString(), GUILayout.ExpandHeight(true));
+                    GUILayout.FlexibleSpace();
+                    GUILayout.TextArea(_sb.ToString(), GUI.skin.label);
                 }
                 GUILayout.EndScrollView();
 
@@ -69,6 +82,13 @@ namespace RuntimeUnityEditor.REPL.Windows
 
                     if (GUILayout.Button("Run", GUILayout.ExpandWidth(false)))
                         AcceptInput();
+
+                    if (GUILayout.Button("History", GUILayout.ExpandWidth(false)))
+                    {
+                        _sb.AppendLine("History of entered commands:");
+                        foreach (var h in _history)
+                            _sb.AppendLine(h);
+                    }
 
                     if (GUILayout.Button("Clear log", GUILayout.ExpandWidth(false)))
                         _sb.Length = 0;
@@ -173,17 +193,19 @@ namespace RuntimeUnityEditor.REPL.Windows
 
         private void AcceptInput()
         {
+            _history.Add(_inputField);
+            if (_history.Count > HistoryLimit)
+                _history.RemoveRange(0, _history.Count - HistoryLimit);
+            _historyPosition = 0;
+
             if (_inputField.Contains("geti()"))
             {
-                var val = REPL.geti();
-                if (val == null)
+                try
                 {
-                    _sb.AppendLine($"> {_inputField}");
-                    _sb.AppendLine("Error: No object opened in inspector or a static type is opened");
-                    return;
+                    var val = REPL.geti();
+                    _inputField = _inputField.Replace("geti()", $"geti<{val.GetType().FullName}>()");
                 }
-
-                _inputField = _inputField.Replace("geti()", $"geti<{val.GetType().FullName}>()");
+                catch (SystemException) { }
             }
 
             _sb.AppendLine($"> {_inputField}");
@@ -192,11 +214,6 @@ namespace RuntimeUnityEditor.REPL.Windows
                 _sb.AppendLine(result.ToString());
 
             _scrollPosition.y = float.MaxValue;
-
-            _history.Add(_inputField);
-            if (_history.Count > HistoryLimit)
-                _history.RemoveRange(0, _history.Count - HistoryLimit);
-            _historyPosition = 0;
 
             _inputField = string.Empty;
             _suggestionsWindow.Suggestions = null;

@@ -55,6 +55,7 @@ namespace RuntimeUnityEditor
             }
         }
 
+        [Browsable(false)]
         public bool Show
         {
             get => TreeViewer.Enabled;
