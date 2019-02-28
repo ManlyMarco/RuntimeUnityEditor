@@ -33,9 +33,8 @@ namespace RuntimeUnityEditor.REPL
         private int _newCursorLocation = -1;
 
         private readonly HashSet<string> _namespaces;
-        private readonly List<string> _suggestions = new List<string>();
-        private string _suggestionsPrefix;
-
+        private readonly List<Suggestion> _suggestions = new List<Suggestion>();
+        
         public ReplWindow()
         {
             _windowId = GetHashCode();
@@ -65,7 +64,7 @@ namespace RuntimeUnityEditor.REPL
                     })
                 .Where(x => x.IsPublic && !string.IsNullOrEmpty(x.Namespace))
                 .Select(x => x.Namespace));
-            BepInEx.Logger.Log(LogLevel.Debug, $"Found {_namespaces.Count} public namespaces");
+            BepInEx.Logger.Log(LogLevel.Debug, $"[REPL] Found {_namespaces.Count} public namespaces");
         }
 
         public void DisplayWindow()
@@ -103,11 +102,12 @@ namespace RuntimeUnityEditor.REPL
 
                     if (_suggestions.Count > 0)
                     {
-                        foreach (string suggestion in _suggestions)
+                        foreach (var suggestion in _suggestions)
                         {
-                            if (!GUILayout.Button($"{_suggestionsPrefix}{suggestion}", _completionsListingStyle, GUILayout.ExpandWidth(true)))
+                            _completionsListingStyle.normal.textColor = suggestion.GetTextColor();
+                            if (!GUILayout.Button(suggestion.Full, _completionsListingStyle, GUILayout.ExpandWidth(true)))
                                 continue;
-                            AcceptSuggestion(suggestion);
+                            AcceptSuggestion(suggestion.Addition);
                             break;
                         }
                     }
@@ -142,9 +142,12 @@ namespace RuntimeUnityEditor.REPL
 
                     if (GUILayout.Button("History", GUILayout.ExpandWidth(false)))
                     {
-                        _sb.AppendLine("History of entered commands:");
+                        _sb.AppendLine();
+                        _sb.AppendLine("# History of entered commands:");
                         foreach (var h in _history)
                             _sb.AppendLine(h);
+
+                        ScrollToBottom();
                     }
 
                     if (GUILayout.Button("Clear log", GUILayout.ExpandWidth(false)))
@@ -200,29 +203,36 @@ namespace RuntimeUnityEditor.REPL
 
                 var completions = _evaluator.GetCompletions(input, out string prefix);
                 if (completions != null)
-                    _suggestions.AddRange(completions);
+                {
+                    if (prefix == null)
+                        prefix = input;
 
-                _suggestions.AddRange(GetNamespaceSuggestions(input));
+                    _suggestions.AddRange(completions
+                        .Where(x => !string.IsNullOrEmpty(x))
+                        .Select(x => new Suggestion(x, prefix, SuggestionKind.Unknown))
+                        //.Where(x => !_namespaces.Contains(x.Full))
+                        );
+                }
 
-                _suggestionsPrefix = prefix ?? input;
+                _suggestions.AddRange(GetNamespaceSuggestions(input).OrderBy(x => x.Full));
 
                 _refocus = true;
             }
             catch (Exception ex)
             {
-                BepInEx.Logger.Log(LogLevel.Debug, ex);
+                BepInEx.Logger.Log(LogLevel.Debug, "[REPL] " + ex);
                 ClearSuggestions();
             }
         }
 
-        private IEnumerable<string> GetNamespaceSuggestions(string input)
+        private IEnumerable<Suggestion> GetNamespaceSuggestions(string input)
         {
             var trimmedInput = input.Trim();
             if (trimmedInput.StartsWith("using"))
                 trimmedInput = trimmedInput.Remove(0, 5).Trim();
 
             return _namespaces.Where(x => x.StartsWith(trimmedInput) && x.Length > trimmedInput.Length)
-                .Select(x => x.Substring(trimmedInput.Length));
+                .Select(x => new Suggestion(x.Substring(trimmedInput.Length), x.Substring(0, trimmedInput.Length), SuggestionKind.Namespace));
         }
 
         private void CheckReplInput()
@@ -266,9 +276,10 @@ namespace RuntimeUnityEditor.REPL
                 try
                 {
                     // Separate input into parts, grab only the part with cursor in it
-                    var start = input.LastIndexOfAny(InputSplitChars, _textEditor.cursorIndex - 1) + 1;
-                    var end = input.IndexOfAny(InputSplitChars, _textEditor.cursorIndex - 1);
-                    if (end < 0) end = input.Length;
+                    var cursorIndex = _refocusCursorIndex >= 0 ? _refocusCursorIndex : _textEditor.cursorIndex;
+                    var start = cursorIndex <= 0 ? 0 : input.LastIndexOfAny(InputSplitChars, cursorIndex - 1) + 1;
+                    var end = cursorIndex <= 0 ? input.Length : input.IndexOfAny(InputSplitChars, cursorIndex - 1);
+                    if (end < 0 || end < start) end = input.Length;
                     input = input.Substring(start, end - start);
                 }
                 catch (ArgumentException) { }
@@ -277,21 +288,23 @@ namespace RuntimeUnityEditor.REPL
                 {
                     if (!string.IsNullOrEmpty(input))
                         FetchSuggestions(input);
-
-                    _prevInput = input;
                 }
             }
             else
             {
                 ClearSuggestions();
             }
+
+            _prevInput = input;
         }
 
         private void ClearSuggestions()
         {
-            _suggestions.Clear();
-            _suggestionsPrefix = null;
-            _refocus = true;
+            if (_suggestions.Any())
+            {
+                _suggestions.Clear();
+                _refocus = true;
+            }
         }
 
         private void AcceptInput()
@@ -316,10 +329,15 @@ namespace RuntimeUnityEditor.REPL
             if (result != null && !Equals(result, VoidType.Value))
                 _sb.AppendLine(result.ToString());
 
-            _scrollPosition.y = float.MaxValue;
+            ScrollToBottom();
 
             _inputField = string.Empty;
             ClearSuggestions();
+        }
+
+        private void ScrollToBottom()
+        {
+            _scrollPosition.y = float.MaxValue;
         }
 
         private class VoidType

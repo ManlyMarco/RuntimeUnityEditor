@@ -1,7 +1,8 @@
 ﻿using System.Collections;
 using UnityEngine;
 
-namespace RuntimeUnityEditor.REPL {
+namespace RuntimeUnityEditor.REPL
+{
     public class ReplHelper : MonoBehaviour
     {
         public T Find<T>() where T : Object

@@ -40,7 +40,7 @@ namespace RuntimeUnityEditor
                 switch (centry)
                 {
                     case MethodCacheEntry m:
-                        if(m.MethodInfo.ToString().Contains(',') || m.MethodInfo.DeclaringType.FullName.Contains(','))
+                        if (m.MethodInfo.ToString().Contains(',') || m.MethodInfo.DeclaringType.FullName.Contains(','))
                             throw new Exception("Unsupported type or method with generic parameters");
                         return $"\"{m.MethodInfo.DeclaringType.Assembly.Location}\" --select M:{m.MethodInfo.DeclaringType.FullName}.{m.MethodInfo.ToString().Split(new[] { ' ' }, 2).Last()}";
                     case PropertyCacheEntry p:

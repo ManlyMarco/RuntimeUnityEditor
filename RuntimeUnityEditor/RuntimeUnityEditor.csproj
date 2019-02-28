@@ -68,6 +68,8 @@
     <Compile Include="REPL\MCS\ScriptEvaluator.cs" />
     <Compile Include="REPL\REPL.cs" />
     <Compile Include="REPL\ReplHelper.cs" />
+    <Compile Include="REPL\Suggestion.cs" />
+    <Compile Include="REPL\SuggestionKind.cs" />
     <Compile Include="REPL\TypeHelper.cs" />
     <Compile Include="REPL\REPLWindow.cs" />
     <Compile Include="RuntimeUnityEditor.cs" />
