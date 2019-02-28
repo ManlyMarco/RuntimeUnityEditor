@@ -1,8 +1,14 @@
 # Runtime Unity Editor / Debugging Tools
-In-game inspector and editor for applications made with Unity3D game engine. It allows viewing objects in current scene and inspecting all of their variables and components.
+In-game inspector, editor and interactive console for applications made with Unity3D game engine. It's designed for debugging and modding Unity games.
 
-To name some of the features, inspector allows modifying values of the components in real time, while the browser allows disabling/enabling and destroying objects.
+### Features
+- Works on most Unity games supported by BepInEx
+- GameObject and component browser
+- Object inspector that allows modifying values of objects in real time
+- REPL C# console
+- All parts are integrated together (e.g. REPL console can access inspected object, inspector can focus objects on GameObject list, etc.)
 
+![preview](https://user-images.githubusercontent.com/39247311/53586063-a8324000-3b87-11e9-8209-57e660d2949d.png)
 ![preview](https://user-images.githubusercontent.com/39247311/49837301-2d3a6400-fda6-11e8-961a-9a85f1247705.PNG)
 
 ### How to use
