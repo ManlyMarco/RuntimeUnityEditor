@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Xml;
 using BepInEx;
 using RuntimeUnityEditor.ObjectTree;
 using RuntimeUnityEditor.REPL;
@@ -24,6 +25,8 @@ namespace RuntimeUnityEditor
         
         protected void Awake()
         {
+            new XmlDocument().CreateComment("Test if System.XML is available (REPL fails with no message without it)");
+
             Instance = this;
 
             DnSpyPath = new ConfigWrapper<string>(nameof(DnSpyPath), this);
