@@ -258,7 +258,7 @@ namespace RuntimeUnityEditor.ObjectTree
                 DrawVector3(nameof(Transform.localPosition), vector3 => _selectedTransform.localPosition = vector3, () => _selectedTransform.localPosition, -5, 5);
                 DrawVector3(nameof(Transform.localScale), vector3 => _selectedTransform.localScale = vector3, () => _selectedTransform.localScale, 0.00001f, 5);
                 DrawVector3(nameof(Transform.eulerAngles), vector3 => _selectedTransform.eulerAngles = vector3, () => _selectedTransform.eulerAngles, 0, 360);
-                DrawVector3("localEuler", vector3 => _selectedTransform.eulerAngles = vector3, () => _selectedTransform.localEulerAngles, 0, 360);
+                DrawVector3("localEuler", vector3 => _selectedTransform.localEulerAngles = vector3, () => _selectedTransform.localEulerAngles, 0, 360);
             }
             GUILayout.EndVertical();
         }
