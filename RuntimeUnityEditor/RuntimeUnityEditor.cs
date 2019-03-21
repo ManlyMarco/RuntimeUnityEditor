@@ -22,11 +22,9 @@ namespace RuntimeUnityEditor
         public ReplWindow Repl { get; private set; }
 
         internal static RuntimeUnityEditor Instance { get; private set; }
-        
+
         protected void Awake()
         {
-            new XmlDocument().CreateComment("Test if System.XML is available (REPL fails with no message without it)");
-
             Instance = this;
 
             DnSpyPath = new ConfigWrapper<string>(nameof(DnSpyPath), this);
@@ -41,7 +39,9 @@ namespace RuntimeUnityEditor
                     Inspector.InspectorPush(stackEntry);
             });
 
-            Repl = new ReplWindow();
+            //todo missing mcs still crashes
+            if (Utils.OldFeatureWrapper.SupportsScenes && Utils.OldFeatureWrapper.SupportsXml && Utils.OldFeatureWrapper.McsDetected)
+                Repl = new ReplWindow();
 
             DnSpyPath = new ConfigWrapper<string>(nameof(DnSpyPath), this);
             DnSpyPath.SettingChanged += (sender, args) => DnSpyHelper.DnSpyPath = DnSpyPath.Value;
@@ -54,7 +54,7 @@ namespace RuntimeUnityEditor
             {
                 Inspector.DisplayInspector();
                 TreeViewer.DisplayViewer();
-                Repl.DisplayWindow();
+                Repl?.DisplayWindow();
             }
         }
 
@@ -100,24 +100,24 @@ namespace RuntimeUnityEditor
 
             var inspectorHeight = (int)(screenRect.height / 4) * 3;
             Inspector.UpdateWindowSize(new Rect(
-                centerX, 
-                screenRect.yMin, 
-                centerWidth, 
+                centerX,
+                screenRect.yMin,
+                centerWidth,
                 inspectorHeight));
 
             var rightWidth = 350;
             var treeViewHeight = screenRect.height;
             TreeViewer.UpdateWindowSize(new Rect(
-                screenRect.xMax - rightWidth, 
-                screenRect.yMin, 
-                rightWidth, 
+                screenRect.xMax - rightWidth,
+                screenRect.yMin,
+                rightWidth,
                 treeViewHeight));
 
             var replPadding = 8;
-            Repl.UpdateWindowSize(new Rect(
-                centerX, 
-                screenRect.yMin + inspectorHeight + replPadding, 
-                centerWidth, 
+            Repl?.UpdateWindowSize(new Rect(
+                centerX,
+                screenRect.yMin + inspectorHeight + replPadding,
+                centerWidth,
                 screenRect.height - inspectorHeight - replPadding));
         }
     }

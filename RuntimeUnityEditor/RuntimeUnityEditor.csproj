@@ -49,8 +49,7 @@
     <Reference Include="System.Core" />
     <Reference Include="System.XML" />
     <Reference Include="UnityEngine">
-      <HintPath>..\Libs\UnityEngine.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\..\lib\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI">
       <HintPath>..\Libs\UnityEngine.UI.dll</HintPath>
@@ -66,6 +65,7 @@
     <Compile Include="Inspector\Inspector.cs" />
     <Compile Include="Inspector\Entries\Contents\CacheEntryBase.cs" />
     <Compile Include="ObjectTree\ObjectTreeViewer.cs" />
+    <Compile Include="Utils\OldFeatureWrapper.cs" />
     <Compile Include="REPL\MCS\ScriptEvaluator.cs" />
     <Compile Include="REPL\REPL.cs" />
     <Compile Include="REPL\ReplHelper.cs" />

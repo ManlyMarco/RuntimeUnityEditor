@@ -10,7 +10,6 @@ using RuntimeUnityEditor.Inspector.Entries;
 using RuntimeUnityEditor.Utils;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
@@ -359,7 +358,7 @@ namespace RuntimeUnityEditor.ObjectTree
                         }
                     case Text text:
                         GUILayout.Label(
-                            $"{text.text} {text.font} {text.fontStyle} {text.fontSize} {text.alignment} {text.alignByGeometry} {text.resizeTextForBestFit} {text.color}");
+                            $"{text.text} {text.font} {text.fontStyle} {text.fontSize} {text.alignment} {text.resizeTextForBestFit} {text.color}");
                         break;
                     case RawImage r:
                         GUILayout.Label(r.mainTexture);
@@ -472,6 +471,7 @@ namespace RuntimeUnityEditor.ObjectTree
             GUILayout.EndVertical();
         }
 
+
         private IEnumerable<GameObject> GetObjectsToDisplay()
         {
             if (_searchResults != null)
@@ -481,9 +481,20 @@ namespace RuntimeUnityEditor.ObjectTree
             }
 
             _cachedRootGameObjects.RemoveAll(o => o == null);
-            _cachedRootGameObjects.AddRange(SceneManager.GetActiveScene().GetRootGameObjects().Except(_cachedRootGameObjects));
-            var objectsToDisplay = _cachedRootGameObjects.OrderBy(x => x.name);
-            return objectsToDisplay;
+
+            if(OldFeatureWrapper.SupportsScenes)
+            {
+                try
+                {
+                    _cachedRootGameObjects.AddRange(OldFeatureWrapper.GetSceneGameObjects().Except(_cachedRootGameObjects));
+                }
+                catch (Exception )
+                {
+                    OldFeatureWrapper.SupportsScenes = false;
+                }
+            }
+
+            return _cachedRootGameObjects.OrderBy(x => x.name);
         }
 
         private void DisplayTreeSearchBox()
