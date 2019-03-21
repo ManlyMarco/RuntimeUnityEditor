@@ -36,6 +36,7 @@
   <ItemGroup>
     <Reference Include="0Harmony">
       <HintPath>..\Libs\0Harmony.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="BepInEx">
       <HintPath>..\Libs\BepInEx.dll</HintPath>
@@ -50,6 +51,7 @@
     <Reference Include="System.XML" />
     <Reference Include="UnityEngine">
       <HintPath>..\..\lib\UnityEngine.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.UI">
       <HintPath>..\Libs\UnityEngine.UI.dll</HintPath>
@@ -65,7 +67,6 @@
     <Compile Include="Inspector\Inspector.cs" />
     <Compile Include="Inspector\Entries\Contents\CacheEntryBase.cs" />
     <Compile Include="ObjectTree\ObjectTreeViewer.cs" />
-    <Compile Include="Utils\OldFeatureWrapper.cs" />
     <Compile Include="REPL\MCS\ScriptEvaluator.cs" />
     <Compile Include="REPL\REPL.cs" />
     <Compile Include="REPL\ReplHelper.cs" />
@@ -87,6 +88,7 @@
     <Compile Include="Inspector\Entries\Contents\ReadonlyCacheEntry.cs" />
     <Compile Include="Utils\SceneDumper.cs" />
     <Compile Include="Utils\TypeNameExtensions.cs" />
+    <Compile Include="Utils\UnityFeatureHelper.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

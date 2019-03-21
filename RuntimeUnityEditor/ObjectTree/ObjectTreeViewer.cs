@@ -482,17 +482,8 @@ namespace RuntimeUnityEditor.ObjectTree
 
             _cachedRootGameObjects.RemoveAll(o => o == null);
 
-            if(OldFeatureWrapper.SupportsScenes)
-            {
-                try
-                {
-                    _cachedRootGameObjects.AddRange(OldFeatureWrapper.GetSceneGameObjects().Except(_cachedRootGameObjects));
-                }
-                catch (Exception )
-                {
-                    OldFeatureWrapper.SupportsScenes = false;
-                }
-            }
+            if (UnityFeatureHelper.SupportsScenes)
+                _cachedRootGameObjects.AddRange(UnityFeatureHelper.GetSceneGameObjects().Except(_cachedRootGameObjects));
 
             return _cachedRootGameObjects.OrderBy(x => x.name);
         }

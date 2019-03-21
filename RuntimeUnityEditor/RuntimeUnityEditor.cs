@@ -23,7 +23,7 @@ namespace RuntimeUnityEditor
 
         internal static RuntimeUnityEditor Instance { get; private set; }
 
-        protected void Awake()
+        protected void Start()
         {
             Instance = this;
 
@@ -40,7 +40,9 @@ namespace RuntimeUnityEditor
             });
 
             //todo missing mcs still crashes
-            if (Utils.OldFeatureWrapper.SupportsScenes && Utils.OldFeatureWrapper.SupportsXml && Utils.OldFeatureWrapper.McsDetected)
+            if (Utils.UnityFeatureHelper.SupportsCursorIndex && 
+                Utils.UnityFeatureHelper.SupportsXml && 
+                Utils.UnityFeatureHelper.McsDetected)
                 Repl = new ReplWindow();
 
             DnSpyPath = new ConfigWrapper<string>(nameof(DnSpyPath), this);
