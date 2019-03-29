@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel;
-using System.Xml;
 using BepInEx;
 using RuntimeUnityEditor.ObjectTree;
 using RuntimeUnityEditor.REPL;
@@ -7,10 +6,11 @@ using UnityEngine;
 
 namespace RuntimeUnityEditor
 {
-    [BepInPlugin("RuntimeUnityEditor", "Runtime Unity Editor", Version)]
+    [BepInPlugin(GUID, "Runtime Unity Editor", Version)]
     public class RuntimeUnityEditor : BaseUnityPlugin
     {
-        public const string Version = "1.2";
+        internal const string Version = "1.2";
+        public const string GUID = "Marco.RuntimeUnityEditor";
 
         [DisplayName("Path to dnSpy.exe")]
         [Description("Full path to dnSpy that will enable integration with Inspector.\n\n" +
