@@ -9,7 +9,7 @@ namespace RuntimeUnityEditor
     [BepInPlugin(GUID, "Runtime Unity Editor", Version)]
     public class RuntimeUnityEditor : BaseUnityPlugin
     {
-        internal const string Version = "1.2";
+        internal const string Version = "1.3";
         public const string GUID = "Marco.RuntimeUnityEditor";
 
         [DisplayName("Path to dnSpy.exe")]
