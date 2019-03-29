@@ -38,11 +38,9 @@ namespace RuntimeUnityEditor
                 foreach (var stackEntry in items)
                     Inspector.InspectorPush(stackEntry);
             });
-
-            //todo missing mcs still crashes
+            
             if (Utils.UnityFeatureHelper.SupportsCursorIndex && 
-                Utils.UnityFeatureHelper.SupportsXml && 
-                Utils.UnityFeatureHelper.McsDetected)
+                Utils.UnityFeatureHelper.SupportsXml)
                 Repl = new ReplWindow();
 
             DnSpyPath = new ConfigWrapper<string>(nameof(DnSpyPath), this);

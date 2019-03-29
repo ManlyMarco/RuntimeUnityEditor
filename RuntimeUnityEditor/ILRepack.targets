@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="ILRepacker" AfterTargets="Build">
+    <Move SourceFiles="$(OutputPath)\$(AssemblyName).dll" DestinationFiles="$(OutputPath)\$(AssemblyName)1.dll" />
+
+    <ItemGroup>
+      <InputAssemblies Include="$(OutputPath)\$(AssemblyName)1.dll" />
+      <InputAssemblies Include="$(OutputPath)\mcs_custom.dll" />
+    </ItemGroup>
+
+    <ILRepack
+      Parallel="true"
+      Internalize="true"
+      DebugInfo="false"
+      LibraryPath="$(SolutionDir)Libs\"
+      InputAssemblies="@(InputAssemblies)"
+      TargetKind="Dll"
+      TargetPlatformVersion="v2"
+      OutputFile="$(OutputPath)\$(AssemblyName).dll"
+    />
+
+    <Delete Files="@(InputAssemblies)" />
+  </Target>
+</Project>

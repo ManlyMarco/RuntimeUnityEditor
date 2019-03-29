@@ -10,7 +10,6 @@ namespace RuntimeUnityEditor.Utils
     {
         private static readonly Type _sceneManager = Type.GetType("UnityEngine.SceneManagement.SceneManager, UnityEngine, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null", false);
         private static readonly Type _scene = Type.GetType("UnityEngine.SceneManagement.Scene, UnityEngine, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null", false);
-        private static readonly Type _mcs = Type.GetType("Mono.CSharp.InteractiveBase, mcs, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", false);
         private static readonly Type _xml = Type.GetType("System.Xml.XmlComment, System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089", false);
 
         static UnityFeatureHelper()
@@ -24,16 +23,11 @@ namespace RuntimeUnityEditor.Utils
             if (!SupportsCursorIndex)
                 BepInEx.Logger.Log(LogLevel.Warning, "[RuntimeEditor] TextEditor.cursorIndex is not available, some features will be disabled");
 
-            McsDetected = _mcs != null;
-            if (!McsDetected)
-                BepInEx.Logger.Log(LogLevel.Warning, "[RuntimeEditor] mcs.dll is not available, some features will be disabled");
-
             SupportsXml = _xml != null;
             if (!SupportsXml)
                 BepInEx.Logger.Log(LogLevel.Warning, "[RuntimeEditor] System.XML.dll is not available, some features will be disabled");
         }
-
-        public static bool McsDetected { get; }
+        
         public static bool SupportsScenes { get; private set; }
         public static bool SupportsXml { get; }
         public static bool SupportsCursorIndex { get; }
