@@ -8,8 +8,6 @@ namespace RuntimeUnityEditor.Inspector.Entries {
             StaticType = staticType;
         }
 
-        public object Instance { get; }
-
         public Type StaticType { get; }
 
         public override bool EntryIsValid()

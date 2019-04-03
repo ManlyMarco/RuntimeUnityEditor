@@ -10,5 +10,10 @@
         public string Name { get; }
 
         public abstract bool EntryIsValid();
+
+        public override string ToString()
+        {
+            return Name;
+        }
     }
 }
