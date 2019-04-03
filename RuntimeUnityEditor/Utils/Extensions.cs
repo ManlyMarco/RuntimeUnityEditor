@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Reflection;
+using RuntimeUnityEditor.Inspector.Entries;
 using UnityEngine;
 
 namespace RuntimeUnityEditor.Utils
@@ -82,6 +83,29 @@ namespace RuntimeUnityEditor.Utils
                     return res;
             }
             return null;
+        }
+
+        public static MemberInfo GetMemberInfo(this ICacheEntry centry, bool throwOnError)
+        {
+            if (centry == null)
+            {
+                if (!throwOnError) return null;
+                throw new ArgumentNullException(nameof(centry));
+            }
+
+            switch (centry)
+            {
+                case MethodCacheEntry m:
+                    return m.MethodInfo;
+                case PropertyCacheEntry p:
+                    return p.PropertyInfo;
+                case FieldCacheEntry f:
+                    return f.FieldInfo;
+                default:
+                    if (throwOnError)
+                        throw new Exception("Cannot open items of type " + centry.GetType().FullName);
+                    return null;
+            }
         }
     }
 }

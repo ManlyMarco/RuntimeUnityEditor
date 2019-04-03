@@ -154,11 +154,32 @@ namespace RuntimeUnityEditor.REPL
             return (T)geti();
         }
 
-        [Documentation("seti(obj) - send the object to the inspector.")]
+        [Documentation("seti(obj) - send the object to the inspector. To send a static class use the setis(type) command.")]
         public static void seti(object obj)
         {
             if (obj == null) throw new ArgumentNullException(nameof(obj));
             RuntimeUnityEditor.Instance.Inspector.InspectorPush(new InstanceStackEntry(obj, "REPL > " + obj.GetType().Name));
+        }
+
+        [Documentation("setis(type) - send the static class to the inspector.")]
+        public static void setis(Type type)
+        {
+            if (type == null) throw new ArgumentNullException(nameof(type));
+            RuntimeUnityEditor.Instance.Inspector.InspectorPush(new StaticStackEntry(type, "REPL > " + type.Name));
+        }
+        
+        [Documentation("dnspy(type) - open the type in dnSpy if dnSpy path is configured.")]
+        public static void dnspy(Type type)
+        {
+            if (type == null) throw new ArgumentNullException(nameof(type));
+            DnSpyHelper.OpenInDnSpy(type);
+        }
+
+        [Documentation("dnspy(memberInfo) - open the type member in dnSpy if dnSpy is configured.")]
+        public static void dnspy(MemberInfo member)
+        {
+            if (member == null) throw new ArgumentNullException(nameof(member));
+            DnSpyHelper.OpenInDnSpy(member);
         }
 
         [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property)]

@@ -447,7 +447,7 @@ namespace RuntimeUnityEditor.Inspector
                     DrawValue(value, GUILayout.ExpandWidth(true));
 
                 if (DnSpyHelper.IsAvailable && GUILayout.Button("^", _dnSpyButtonOptions))
-                    DnSpyHelper.OpenTypeInDnSpy(entry);
+                    DnSpyHelper.OpenInDnSpy(entry);
             }
             GUILayout.EndHorizontal();
         }

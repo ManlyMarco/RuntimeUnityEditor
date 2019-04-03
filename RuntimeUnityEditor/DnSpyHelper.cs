@@ -2,8 +2,10 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using BepInEx.Logging;
 using RuntimeUnityEditor.Inspector.Entries;
+using RuntimeUnityEditor.Utils;
 using Logger = BepInEx.Logger;
 
 namespace RuntimeUnityEditor
@@ -32,40 +34,73 @@ namespace RuntimeUnityEditor
 
         public static bool IsAvailable { get; private set; }
 
-        public static void OpenTypeInDnSpy(ICacheEntry entry)
+        public static void OpenInDnSpy(ICacheEntry entry)
         {
-            string GetDnspyArgs(ICacheEntry centry)
+            try { OpenInDnSpy(entry.GetMemberInfo(true)); }
+            catch (Exception e)
             {
-                // TODO support for generic types
-                switch (centry)
-                {
-                    case MethodCacheEntry m:
-                        if (m.MethodInfo.ToString().Contains(',') || m.MethodInfo.DeclaringType.FullName.Contains(','))
-                            throw new Exception("Unsupported type or method with generic parameters");
-                        return $"\"{m.MethodInfo.DeclaringType.Assembly.Location}\" --select M:{m.MethodInfo.DeclaringType.FullName}.{m.MethodInfo.ToString().Split(new[] { ' ' }, 2).Last()}";
-                    case PropertyCacheEntry p:
-                        if (p.PropertyInfo.DeclaringType.FullName.Contains(','))
-                            throw new Exception("Unsupported type with generic parameters");
-                        return $"\"{p.PropertyInfo.DeclaringType.Assembly.Location}\" --select P:{p.PropertyInfo.DeclaringType.FullName}.{p.PropertyInfo.Name}";
-                    case FieldCacheEntry f:
-                        if (f.FieldInfo.DeclaringType.FullName.Contains(','))
-                            throw new Exception("Unsupported type with generic parameters");
-                        return $"\"{f.FieldInfo.DeclaringType.Assembly.Location}\" --select F:{f.FieldInfo.DeclaringType.FullName}.{f.FieldInfo.Name}";
-                    default:
-                        throw new Exception("Cannot open dynamically generated items");
-                }
+                Logger.Log(LogLevel.Error | LogLevel.Message, "[DnSpyHelper] " + e.Message);
             }
+        }
 
+        public static void OpenInDnSpy(Type type)
+        {
             try
             {
-                var refString = GetDnspyArgs(entry);
-                Logger.Log(LogLevel.Info, $"[DnSpyHelper] Opening {DnSpyPath} {refString}");
-                Process.Start(DnSpyPath, refString);
+                if (type == null) throw new ArgumentNullException(nameof(type));
+
+                if (type.ToString().Contains(','))
+                    throw new Exception("Unsupported type with generic parameters");
+                var refString = $"\"{type.Assembly.Location}\" --select T:{type.FullName}";
+
+                StartDnSpy(refString);
             }
             catch (Exception e)
             {
                 Logger.Log(LogLevel.Error | LogLevel.Message, "[DnSpyHelper] " + e.Message);
             }
+        }
+
+        public static void OpenInDnSpy(MemberInfo entry)
+        {
+            string GetDnspyArgs(MemberInfo centry)
+            {
+                // TODO support for generic types
+                switch (centry)
+                {
+                    case MethodInfo m:
+                        if (m.ToString().Contains(',') || m.DeclaringType.FullName.Contains(','))
+                            throw new Exception("Unsupported type or method with generic parameters");
+                        return $"\"{m.DeclaringType.Assembly.Location}\" --select M:{m.DeclaringType.FullName}.{m.ToString().Split(new[] { ' ' }, 2).Last()}";
+                    case PropertyInfo p:
+                        if (p.DeclaringType.FullName.Contains(','))
+                            throw new Exception("Unsupported type with generic parameters");
+                        return $"\"{p.DeclaringType.Assembly.Location}\" --select P:{p.DeclaringType.FullName}.{p.Name}";
+                    case FieldInfo f:
+                        if (f.DeclaringType.FullName.Contains(','))
+                            throw new Exception("Unsupported type with generic parameters");
+                        return $"\"{f.DeclaringType.Assembly.Location}\" --select F:{f.DeclaringType.FullName}.{f.Name}";
+                    default:
+                        throw new Exception("Unknown MemberInfo " + entry.GetType().FullName);
+                }
+            }
+
+            try
+            {
+                if (entry == null) throw new ArgumentNullException(nameof(entry));
+                var refString = GetDnspyArgs(entry);
+                StartDnSpy(refString);
+            }
+            catch (Exception e)
+            {
+                Logger.Log(LogLevel.Error | LogLevel.Message, "[DnSpyHelper] " + e.Message);
+            }
+        }
+
+        private static void StartDnSpy(string refString)
+        {
+            Logger.Log(LogLevel.Info, $"[DnSpyHelper] Opening {DnSpyPath} {refString}");
+            Process.Start(DnSpyPath, refString);
         }
     }
 }
