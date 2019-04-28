@@ -8,7 +8,7 @@ namespace RuntimeUnityEditor.Core
     public class RuntimeUnityEditorCore
     {
         public const string Version = "1.3";
-        public const string GUID = "Marco.RuntimeUnityEditor";
+        public const string GUID = "RuntimeUnityEditor";
 
         public Inspector.Inspector Inspector { get; }
         public ObjectTreeViewer TreeViewer { get; }
