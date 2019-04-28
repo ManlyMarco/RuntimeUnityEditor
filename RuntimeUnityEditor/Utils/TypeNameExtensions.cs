@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace RuntimeUnityEditor.Utils
+namespace RuntimeUnityEditor.Core.Utils
 {
     public static class TypeNameExtensions
     {

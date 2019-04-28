@@ -5,14 +5,12 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using BepInEx.Logging;
-using RuntimeUnityEditor.Inspector.Entries;
-using RuntimeUnityEditor.Utils;
+using RuntimeUnityEditor.Core.Inspector.Entries;
+using RuntimeUnityEditor.Core.Utils;
 using UnityEngine;
 using Component = UnityEngine.Component;
-using Logger = BepInEx.Logger;
 
-namespace RuntimeUnityEditor.Inspector
+namespace RuntimeUnityEditor.Core.Inspector
 {
     public sealed class Inspector
     {
@@ -153,7 +151,7 @@ namespace RuntimeUnityEditor.Inspector
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Warning, "[Inspector] CacheFields crash: " + ex);
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "[Inspector] CacheFields crash: " + ex);
             }
         }
 
@@ -170,7 +168,7 @@ namespace RuntimeUnityEditor.Inspector
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Warning, "[Inspector] CacheFields crash: " + ex);
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "[Inspector] CacheFields crash: " + ex);
             }
         }
 
@@ -228,7 +226,7 @@ namespace RuntimeUnityEditor.Inspector
                     }
                     catch (Exception ex)
                     {
-                        Logger.Log(LogLevel.Error, "[Inspector] Failed to set value - " + ex.Message);
+                        RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, "[Inspector] Failed to set value - " + ex.Message);
                     }
                 }
                 else
@@ -383,7 +381,7 @@ namespace RuntimeUnityEditor.Inspector
             }
             catch (Exception ex)
             {
-                Logger.Log(LogLevel.Error, "[Inspector] GUI crash: " + ex);
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, "[Inspector] GUI crash: " + ex);
                 InspectorClear();
             }
 
@@ -468,7 +466,7 @@ namespace RuntimeUnityEditor.Inspector
             while (_inspectorStack.Count > 0 && !_inspectorStack.Peek().EntryIsValid())
             {
                 var se = _inspectorStack.Pop();
-                Logger.Log(LogLevel.Message, $"[Inspector] Removed invalid/removed stack object: \"{se.Name}\"");
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Message, $"[Inspector] Removed invalid/removed stack object: \"{se.Name}\"");
             }
 
             if (_inspectorStack.Count != 0)

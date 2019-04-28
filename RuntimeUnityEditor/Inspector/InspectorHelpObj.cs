@@ -1,6 +1,6 @@
-﻿using RuntimeUnityEditor.Inspector.Entries;
+﻿using RuntimeUnityEditor.Core.Inspector.Entries;
 
-namespace RuntimeUnityEditor.Inspector
+namespace RuntimeUnityEditor.Core.Inspector
 {
     internal class InspectorHelpObj
     {

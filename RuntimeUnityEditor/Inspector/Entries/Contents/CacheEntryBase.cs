@@ -1,7 +1,7 @@
 ﻿using System;
-using RuntimeUnityEditor.Utils;
+using RuntimeUnityEditor.Core.Utils;
 
-namespace RuntimeUnityEditor.Inspector.Entries
+namespace RuntimeUnityEditor.Core.Inspector.Entries
 {
     public abstract class CacheEntryBase : ICacheEntry
     {

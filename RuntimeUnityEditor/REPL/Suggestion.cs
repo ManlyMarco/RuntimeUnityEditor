@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace RuntimeUnityEditor.REPL {
+namespace RuntimeUnityEditor.Core.REPL {
     internal struct Suggestion
     {
         public readonly string Prefix;

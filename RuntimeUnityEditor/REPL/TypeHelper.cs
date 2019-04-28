@@ -2,7 +2,7 @@
 using System.Reflection;
 using System.Text;
 
-namespace RuntimeUnityEditor.REPL
+namespace RuntimeUnityEditor.Core.REPL
 {
     public class TypeHelper
     {

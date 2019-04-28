@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Reflection;
-using RuntimeUnityEditor.Inspector.Entries;
+using RuntimeUnityEditor.Core.Inspector.Entries;
 using UnityEngine;
 
-namespace RuntimeUnityEditor.Utils
+namespace RuntimeUnityEditor.Core.Utils
 {
     public static class Extensions
     {

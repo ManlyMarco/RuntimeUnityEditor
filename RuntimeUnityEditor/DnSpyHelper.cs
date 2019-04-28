@@ -3,14 +3,12 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using BepInEx.Logging;
-using RuntimeUnityEditor.Inspector.Entries;
-using RuntimeUnityEditor.Utils;
-using Logger = BepInEx.Logger;
+using RuntimeUnityEditor.Core.Inspector.Entries;
+using RuntimeUnityEditor.Core.Utils;
 
-namespace RuntimeUnityEditor
+namespace RuntimeUnityEditor.Core
 {
-    internal static class DnSpyHelper
+    public static class DnSpyHelper
     {
         private static string _dnSpyPath;
 
@@ -27,7 +25,7 @@ namespace RuntimeUnityEditor
                     if (File.Exists(_dnSpyPath) && _dnSpyPath.EndsWith("dnspy.exe", StringComparison.OrdinalIgnoreCase))
                         IsAvailable = true;
                     else
-                        Logger.Log(LogLevel.Error | LogLevel.Message, "[DnSpyHelper] Invalid dnSpy path. The path has to point to 64bit dnSpy.exe");
+                        RuntimeUnityEditorCore.Logger.Log(LogLevel.Error | LogLevel.Message, "[DnSpyHelper] Invalid dnSpy path. The path has to point to 64bit dnSpy.exe");
                 }
             }
         }
@@ -39,7 +37,7 @@ namespace RuntimeUnityEditor
             try { OpenInDnSpy(entry.GetMemberInfo(true)); }
             catch (Exception e)
             {
-                Logger.Log(LogLevel.Error | LogLevel.Message, "[DnSpyHelper] " + e.Message);
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Error | LogLevel.Message, "[DnSpyHelper] " + e.Message);
             }
         }
 
@@ -57,7 +55,7 @@ namespace RuntimeUnityEditor
             }
             catch (Exception e)
             {
-                Logger.Log(LogLevel.Error | LogLevel.Message, "[DnSpyHelper] " + e.Message);
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Error | LogLevel.Message, "[DnSpyHelper] " + e.Message);
             }
         }
 
@@ -93,13 +91,13 @@ namespace RuntimeUnityEditor
             }
             catch (Exception e)
             {
-                Logger.Log(LogLevel.Error | LogLevel.Message, "[DnSpyHelper] " + e.Message);
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Error | LogLevel.Message, "[DnSpyHelper] " + e.Message);
             }
         }
 
         private static void StartDnSpy(string refString)
         {
-            Logger.Log(LogLevel.Info, $"[DnSpyHelper] Opening {DnSpyPath} {refString}");
+            RuntimeUnityEditorCore.Logger.Log(LogLevel.Info, $"[DnSpyHelper] Opening {DnSpyPath} {refString}");
             Process.Start(DnSpyPath, refString);
         }
     }

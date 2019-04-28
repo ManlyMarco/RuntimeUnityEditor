@@ -1,4 +1,4 @@
-namespace RuntimeUnityEditor.REPL {
+namespace RuntimeUnityEditor.Core.REPL {
     internal enum SuggestionKind
     {
         Unknown,

@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using BepInEx.Logging;
 using UnityEngine;
 
-namespace RuntimeUnityEditor.Utils
+namespace RuntimeUnityEditor.Core.Utils
 {
     public static class UnityFeatureHelper
     {
@@ -16,16 +15,16 @@ namespace RuntimeUnityEditor.Utils
         {
             SupportsScenes = _scene != null && _sceneManager != null;
             if (!SupportsScenes)
-                BepInEx.Logger.Log(LogLevel.Warning, "[RuntimeEditor] UnityEngine.SceneManager and/or UnityEngine.SceneManagement.Scene are not available, some features will be disabled");
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "[RuntimeEditor] UnityEngine.SceneManager and/or UnityEngine.SceneManagement.Scene are not available, some features will be disabled");
 
             // Todo detect properly?
             SupportsCursorIndex = SupportsScenes;
             if (!SupportsCursorIndex)
-                BepInEx.Logger.Log(LogLevel.Warning, "[RuntimeEditor] TextEditor.cursorIndex is not available, some features will be disabled");
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "[RuntimeEditor] TextEditor.cursorIndex is not available, some features will be disabled");
 
             SupportsXml = _xml != null;
             if (!SupportsXml)
-                BepInEx.Logger.Log(LogLevel.Warning, "[RuntimeEditor] System.XML.dll is not available, some features will be disabled");
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "[RuntimeEditor] System.XML.dll is not available, some features will be disabled");
         }
         
         public static bool SupportsScenes { get; private set; }

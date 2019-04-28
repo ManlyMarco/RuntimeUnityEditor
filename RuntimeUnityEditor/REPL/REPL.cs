@@ -1,16 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using Mono.CSharp;
-using RuntimeUnityEditor.Inspector.Entries;
+using RuntimeUnityEditor.Core.Inspector.Entries;
 using UnityEngine;
 using Attribute = System.Attribute;
 using Object = UnityEngine.Object;
 
-namespace RuntimeUnityEditor.REPL
+namespace RuntimeUnityEditor.Core.REPL
 {
     public class REPL : InteractiveBase
     {
@@ -19,7 +19,7 @@ namespace RuntimeUnityEditor.REPL
         static REPL()
         {
             go = new GameObject("UnityREPL");
-            go.transform.parent = BepInEx.Bootstrap.Chainloader.ManagerObject.transform;
+            go.transform.parent = RuntimeUnityEditorCore.PluginObject.transform;
             MB = go.AddComponent<ReplHelper>();
         }
 
@@ -144,7 +144,7 @@ namespace RuntimeUnityEditor.REPL
         [Documentation("geti() - get object currently opened in inspector. Will get expanded upon accepting. Best to use like this: var x = geti()")]
         public static object geti()
         {
-            return RuntimeUnityEditor.Instance.Inspector.GetInspectedObject()
+            return RuntimeUnityEditorCore.Instance.Inspector.GetInspectedObject()
                 ?? throw new InvalidOperationException("No object is opened in inspector or a static type is opened");
         }
 
@@ -158,14 +158,14 @@ namespace RuntimeUnityEditor.REPL
         public static void seti(object obj)
         {
             if (obj == null) throw new ArgumentNullException(nameof(obj));
-            RuntimeUnityEditor.Instance.Inspector.InspectorPush(new InstanceStackEntry(obj, "REPL > " + obj.GetType().Name));
+            RuntimeUnityEditorCore.Instance.Inspector.InspectorPush(new InstanceStackEntry(obj, "REPL > " + obj.GetType().Name));
         }
 
         [Documentation("setis(type) - send the static class to the inspector.")]
         public static void setis(Type type)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
-            RuntimeUnityEditor.Instance.Inspector.InspectorPush(new StaticStackEntry(type, "REPL > " + type.Name));
+            RuntimeUnityEditorCore.Instance.Inspector.InspectorPush(new StaticStackEntry(type, "REPL > " + type.Name));
         }
         
         [Documentation("dnspy(type) - open the type in dnSpy if dnSpy path is configured.")]

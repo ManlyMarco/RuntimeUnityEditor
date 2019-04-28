@@ -3,13 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using BepInEx.Logging;
-using RuntimeUnityEditor.Inspector.Entries;
+using RuntimeUnityEditor.Core.Inspector.Entries;
 using UnityEngine;
-using Logger = BepInEx.Logger;
 using Object = UnityEngine.Object;
 
-namespace RuntimeUnityEditor.Utils
+namespace RuntimeUnityEditor.Core.Utils
 {
     public static class EditorUtilities
     {
@@ -100,7 +98,7 @@ namespace RuntimeUnityEditor.Utils
 
         public static IEnumerable<ReadonlyCacheEntry> GetTransformScanner()
         {
-            Logger.Log(LogLevel.Debug, "[CheatTools] Looking for Transforms...");
+            RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, "[CheatTools] Looking for Transforms...");
 
             var trt = typeof(Transform);
             var types = GetAllComponentTypes().Where(x => trt.IsAssignableFrom(x));
@@ -111,7 +109,7 @@ namespace RuntimeUnityEditor.Utils
 
         public static IEnumerable<ReadonlyCacheEntry> GetRootGoScanner()
         {
-            Logger.Log(LogLevel.Debug, "[CheatTools] Looking for Root Game Objects...");
+            RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, "[CheatTools] Looking for Root Game Objects...");
 
             foreach (GameObject go in Resources.FindObjectsOfTypeAll<GameObject>().Where(x => x.transform == x.transform.root))
                 yield return new ReadonlyCacheEntry($"GameObject({go.name})", go);
@@ -119,7 +117,7 @@ namespace RuntimeUnityEditor.Utils
 
         public static IEnumerable<ReadonlyCacheEntry> GetMonoBehaviourScanner()
         {
-            Logger.Log(LogLevel.Debug, "[CheatTools] Looking for MonoBehaviours...");
+            RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, "[CheatTools] Looking for MonoBehaviours...");
 
             var mbt = typeof(MonoBehaviour);
             var types = GetAllComponentTypes().Where(x => mbt.IsAssignableFrom(x));
@@ -130,7 +128,7 @@ namespace RuntimeUnityEditor.Utils
 
         public static IEnumerable<ReadonlyCacheEntry> GetComponentScanner()
         {
-            Logger.Log(LogLevel.Debug, "[CheatTools] Looking for Components...");
+            RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, "[CheatTools] Looking for Components...");
 
             var mbt = typeof(MonoBehaviour);
             var trt = typeof(Transform);
@@ -181,7 +179,7 @@ namespace RuntimeUnityEditor.Utils
 
         public static IEnumerable<ReadonlyCacheEntry> GetInstanceClassScanner()
         {
-            Logger.Log(LogLevel.Debug, "[CheatTools] Looking for class instances...");
+            RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, "[CheatTools] Looking for class instances...");
 
             var query = AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(x =>
@@ -208,7 +206,7 @@ namespace RuntimeUnityEditor.Utils
                 }
                 catch (Exception ex)
                 {
-                    Logger.Log(LogLevel.Debug, ex.ToString());
+                    RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, ex.ToString());
                 }
                 if (obj != null)
                     yield return new ReadonlyCacheEntry(type.Name + ".Instance", obj);

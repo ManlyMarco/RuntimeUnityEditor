@@ -6,14 +6,14 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using RuntimeUnityEditor.Inspector.Entries;
-using RuntimeUnityEditor.Utils;
+using RuntimeUnityEditor.Core.Inspector.Entries;
+using RuntimeUnityEditor.Core.Utils;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
-namespace RuntimeUnityEditor.ObjectTree
+namespace RuntimeUnityEditor.Core.ObjectTree
 {
     public sealed class ObjectTreeViewer
     {

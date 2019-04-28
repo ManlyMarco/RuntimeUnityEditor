@@ -7,8 +7,8 @@
     <ProjectGuid>{A66A97B4-F32F-4748-8332-48F0876F0AAC}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>RuntimeUnityEditor</RootNamespace>
-    <AssemblyName>RuntimeUnityEditor</AssemblyName>
+    <RootNamespace>RuntimeUnityEditor.Core</RootNamespace>
+    <AssemblyName>RuntimeUnityEditor.Core</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <NuGetPackageImportStamp>
@@ -26,7 +26,7 @@
     </CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>none</DebugType>
+    <DebugType>embedded</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>..\bin\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
@@ -34,40 +34,35 @@
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>
     </CodeAnalysisRuleSet>
-    <DebugSymbols>false</DebugSymbols>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="0Harmony">
-      <HintPath>..\Libs\0Harmony.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="BepInEx">
-      <HintPath>..\Libs\BepInEx.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="mcs_custom">
       <HintPath>..\Libs\mcs_custom.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.XML" />
     <Reference Include="UnityEngine">
-      <HintPath>..\Libs\UnityEngine.dll</HintPath>
+      <HintPath>..\Libs\v4\UnityEngine.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.UI">
-      <HintPath>..\Libs\UnityEngine.UI.dll</HintPath>
+      <HintPath>..\Libs\v4\UnityEngine.UI.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DnSpyHelper.cs" />
+    <Compile Include="ILoggerWrapper.cs" />
     <Compile Include="Inspector\Entries\Contents\CallbackCacheEntey.cs" />
     <Compile Include="Inspector\Entries\Contents\ReadonlyListCacheEntry.cs" />
     <Compile Include="Inspector\Entries\Inspector\InstanceStackEntry.cs" />
     <Compile Include="Inspector\Entries\Inspector\StaticStackEntry.cs" />
     <Compile Include="Inspector\Inspector.cs" />
     <Compile Include="Inspector\Entries\Contents\CacheEntryBase.cs" />
+    <Compile Include="LogLevel.cs" />
     <Compile Include="ObjectTree\ObjectTreeViewer.cs" />
     <Compile Include="REPL\MCS\ScriptEvaluator.cs" />
     <Compile Include="REPL\REPL.cs" />
@@ -76,7 +71,7 @@
     <Compile Include="REPL\SuggestionKind.cs" />
     <Compile Include="REPL\TypeHelper.cs" />
     <Compile Include="REPL\REPLWindow.cs" />
-    <Compile Include="RuntimeUnityEditor.cs" />
+    <Compile Include="RuntimeUnityEditorCore.cs" />
     <Compile Include="Utils\EditorUtilities.cs" />
     <Compile Include="Utils\Extensions.cs" />
     <Compile Include="Inspector\Entries\Contents\FieldCacheEntry.cs" />

@@ -1,35 +1,31 @@
-﻿using System.ComponentModel;
-using BepInEx;
-using RuntimeUnityEditor.ObjectTree;
-using RuntimeUnityEditor.REPL;
+﻿using System;
+using RuntimeUnityEditor.Core.ObjectTree;
+using RuntimeUnityEditor.Core.REPL;
 using UnityEngine;
 
-namespace RuntimeUnityEditor
+namespace RuntimeUnityEditor.Core
 {
-    [BepInPlugin(GUID, "Runtime Unity Editor", Version)]
-    public class RuntimeUnityEditor : BaseUnityPlugin
+    public class RuntimeUnityEditorCore
     {
-        internal const string Version = "1.3";
+        public const string Version = "1.3";
         public const string GUID = "Marco.RuntimeUnityEditor";
 
-        [DisplayName("Path to dnSpy.exe")]
-        [Description("Full path to dnSpy that will enable integration with Inspector.\n\n" +
-                     "When correctly configured, you will see a new ^ buttons that will open the members in dnSpy.")]
-        public ConfigWrapper<string> DnSpyPath { get; private set; }
+        public Inspector.Inspector Inspector { get; }
+        public ObjectTreeViewer TreeViewer { get; }
+        public ReplWindow Repl { get; }
 
-        public Inspector.Inspector Inspector { get; private set; }
-        public ObjectTreeViewer TreeViewer { get; private set; }
-        public ReplWindow Repl { get; private set; }
+        internal static RuntimeUnityEditorCore Instance { get; private set; }
+        internal static GameObject PluginObject { get; private set; }
+        internal static ILoggerWrapper Logger { get; private set; }
 
-        internal static RuntimeUnityEditor Instance { get; private set; }
-
-        protected void Start()
+        public RuntimeUnityEditorCore(GameObject pluginObject, ILoggerWrapper logger)
         {
-            Instance = this;
+            if(Instance != null)
+                throw new InvalidOperationException("Can only create one instance of the Core object");
 
-            DnSpyPath = new ConfigWrapper<string>(nameof(DnSpyPath), this);
-            DnSpyPath.SettingChanged += (sender, args) => DnSpyHelper.DnSpyPath = DnSpyPath.Value;
-            DnSpyHelper.DnSpyPath = DnSpyPath.Value;
+            PluginObject = pluginObject;
+            Logger = logger;
+            Instance = this;
 
             Inspector = new Inspector.Inspector(targetTransform => TreeViewer.SelectAndShowObject(targetTransform));
             TreeViewer = new ObjectTreeViewer(items =>
@@ -38,17 +34,13 @@ namespace RuntimeUnityEditor
                 foreach (var stackEntry in items)
                     Inspector.InspectorPush(stackEntry);
             });
-            
-            if (Utils.UnityFeatureHelper.SupportsCursorIndex && 
+
+            if (Utils.UnityFeatureHelper.SupportsCursorIndex &&
                 Utils.UnityFeatureHelper.SupportsXml)
                 Repl = new ReplWindow();
-
-            DnSpyPath = new ConfigWrapper<string>(nameof(DnSpyPath), this);
-            DnSpyPath.SettingChanged += (sender, args) => DnSpyHelper.DnSpyPath = DnSpyPath.Value;
-            DnSpyHelper.DnSpyPath = DnSpyPath.Value;
         }
 
-        protected void OnGUI()
+        public void OnGUI()
         {
             if (Show)
             {
@@ -58,7 +50,6 @@ namespace RuntimeUnityEditor
             }
         }
 
-        [Browsable(false)]
         public bool Show
         {
             get => TreeViewer.Enabled;
@@ -75,7 +66,7 @@ namespace RuntimeUnityEditor
             }
         }
 
-        protected void Update()
+        public void Update()
         {
             if (Input.GetKeyDown(KeyCode.F12))
             {

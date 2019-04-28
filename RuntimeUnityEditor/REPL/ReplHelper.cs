@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using UnityEngine;
 
-namespace RuntimeUnityEditor.REPL
+namespace RuntimeUnityEditor.Core.REPL
 {
     public class ReplHelper : MonoBehaviour
     {

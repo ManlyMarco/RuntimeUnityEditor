@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections;
 
-namespace RuntimeUnityEditor.Inspector.Entries
+namespace RuntimeUnityEditor.Core.Inspector.Entries
 {
     public class ListCacheEntry : CacheEntryBase
     {

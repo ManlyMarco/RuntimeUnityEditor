@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace RuntimeUnityEditor.Inspector.Entries {
+namespace RuntimeUnityEditor.Core.Inspector.Entries {
     public class StaticStackEntry : InspectorStackEntryBase
     {
         public StaticStackEntry(Type staticType, string name) : base(name)
