@@ -371,30 +371,26 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                     case Button b:
                         {
                             for (var i = 0; i < b.onClick.GetPersistentEventCount(); ++i)
-                                GUILayout.Label(
-                                    $"{b.onClick.GetPersistentTarget(i).GetType().FullName}.{b.onClick.GetPersistentMethodName(i)}");
-                            var calls = (IList)b.onClick.GetPrivateExplicit<UnityEventBase>("m_Calls")
-                                .GetPrivate("m_RuntimeCalls");
+                                GUILayout.Label($"{b.onClick.GetPersistentTarget(i).GetType().FullName ?? "[NULL]"}.{b.onClick.GetPersistentMethodName(i)}");
+
+                            var calls = (IList)b.onClick.GetPrivateExplicit<UnityEventBase>("m_Calls").GetPrivate("m_RuntimeCalls");
                             foreach (var call in calls)
                             {
                                 var unityAction = (UnityAction)call.GetPrivate("Delegate");
-                                GUILayout.Label(
-                                    $"{unityAction.Target.GetType().FullName}.{unityAction.Method.Name}");
+                                GUILayout.Label($"{unityAction.Target?.GetType().FullName ?? "[NULL]"}.{unityAction.Method.Name}");
                             }
                             break;
                         }
                     case Toggle b:
                         {
                             for (var i = 0; i < b.onValueChanged.GetPersistentEventCount(); ++i)
-                                GUILayout.Label(
-                                    $"{b.onValueChanged.GetPersistentTarget(i).GetType().FullName}.{b.onValueChanged.GetPersistentMethodName(i)}");
-                            var calls = (IList)b.onValueChanged.GetPrivateExplicit<UnityEventBase>("m_Calls")
-                                .GetPrivate("m_RuntimeCalls");
+                                GUILayout.Label($"{b.onValueChanged.GetPersistentTarget(i).GetType().FullName ?? "[NULL]"}.{b.onValueChanged.GetPersistentMethodName(i)}");
+
+                            var calls = (IList)b.onValueChanged.GetPrivateExplicit<UnityEventBase>("m_Calls").GetPrivate("m_RuntimeCalls");
                             foreach (var call in calls)
                             {
                                 var unityAction = (UnityAction<bool>)call.GetPrivate("Delegate");
-                                GUILayout.Label(
-                                    $"{unityAction.Target.GetType().FullName}.{unityAction.Method.Name}");
+                                GUILayout.Label($"{unityAction.Target?.GetType().FullName ?? "[NULL]"}.{unityAction.Method.Name}");
                             }
                             break;
                         }
