@@ -14,11 +14,9 @@ namespace RuntimeUnityEditor.Core.REPL
 {
     public class REPL : InteractiveBase
     {
-        private static readonly GameObject go;
-
         static REPL()
         {
-            go = new GameObject("UnityREPL");
+            var go = new GameObject("UnityREPL");
             go.transform.parent = RuntimeUnityEditorCore.PluginObject.transform;
             MB = go.AddComponent<ReplHelper>();
         }

@@ -11,7 +11,7 @@ namespace RuntimeUnityEditor.Core.REPL
 {
     public sealed class ReplWindow
     {
-        private static readonly char[] InputSplitChars = { ',', ';', '<', '>', '(', ')', '[', ']', '=', '|', '&' };
+        private static readonly char[] _inputSplitChars = { ',', ';', '<', '>', '(', ')', '[', ']', '=', '|', '&' };
 
         private const int HistoryLimit = 50;
 
@@ -42,7 +42,7 @@ namespace RuntimeUnityEditor.Core.REPL
 
             _evaluator = new ScriptEvaluator(new StringWriter(_sb)) { InteractiveBaseClass = typeof(REPL) };
 
-            var envSetup = new string[]
+            var envSetup = new[]
             {
                 "using System;",
                 "using UnityEngine;",
@@ -276,8 +276,8 @@ namespace RuntimeUnityEditor.Core.REPL
                 {
                     // Separate input into parts, grab only the part with cursor in it
                     var cursorIndex = _refocusCursorIndex >= 0 ? _refocusCursorIndex : _textEditor.cursorIndex;
-                    var start = cursorIndex <= 0 ? 0 : input.LastIndexOfAny(InputSplitChars, cursorIndex - 1) + 1;
-                    var end = cursorIndex <= 0 ? input.Length : input.IndexOfAny(InputSplitChars, cursorIndex - 1);
+                    var start = cursorIndex <= 0 ? 0 : input.LastIndexOfAny(_inputSplitChars, cursorIndex - 1) + 1;
+                    var end = cursorIndex <= 0 ? input.Length : input.IndexOfAny(_inputSplitChars, cursorIndex - 1);
                     if (end < 0 || end < start) end = input.Length;
                     input = input.Substring(start, end - start);
                 }

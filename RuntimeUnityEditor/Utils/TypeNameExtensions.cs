@@ -26,7 +26,7 @@ namespace RuntimeUnityEditor.Core.Utils
 
             if (type.IsGenericType)
             {
-                var genargNames = type.GetGenericArguments().Select(type1 => GetSourceCodeRepresentationInt(type1, new List<Type>{ type }));
+                var genargNames = type.GetGenericArguments().Select(type1 => GetSourceCodeRepresentationInt(type1, new List<Type>()));
                 var idx = type.Name.IndexOf('`');
                 var typename = idx > 0 ? type.Name.Substring(0, idx) : type.Name;
                 return $"{prefixName}{typename}<{string.Join(", ", genargNames.ToArray())}>";
