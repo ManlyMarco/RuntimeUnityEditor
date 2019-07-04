@@ -318,7 +318,8 @@ namespace RuntimeUnityEditor.Core.REPL
                 try
                 {
                     var val = REPL.geti();
-                    _inputField = _inputField.Replace("geti()", $"geti<{val.GetType().GetFriendlyName()}>()");
+                    if (val != null)
+                        _inputField = _inputField.Replace("geti()", $"geti<{val.GetType().GetSourceCodeRepresentation()}>()");
                 }
                 catch (SystemException) { }
             }

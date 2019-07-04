@@ -51,7 +51,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
             {
                 var type = Type();
                 if (type != null)
-                    _typeName = type.GetFriendlyName();
+                    _typeName = type.GetSourceCodeRepresentation();
                 else
                     _typeName = "INVALID";
             }
