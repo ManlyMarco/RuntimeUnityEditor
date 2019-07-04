@@ -62,7 +62,10 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         public virtual bool CanEnterValue()
         {
             if (_canEnter == null)
-                _canEnter = !Type().IsPrimitive;
+            {
+                var type = Type();
+                _canEnter = type != null && !type.IsPrimitive;
+            }
             return _canEnter.Value;
         }
     }
