@@ -33,7 +33,7 @@ namespace RuntimeUnityEditor.Core.REPL
 
         private readonly HashSet<string> _namespaces;
         private readonly List<Suggestion> _suggestions = new List<Suggestion>();
-        
+
         public ReplWindow()
         {
             _windowId = GetHashCode();
@@ -318,7 +318,7 @@ namespace RuntimeUnityEditor.Core.REPL
                 try
                 {
                     var val = REPL.geti();
-                    _inputField = _inputField.Replace("geti()", $"geti<{val.GetType().FullName}>()");
+                    _inputField = _inputField.Replace("geti()", $"geti<{val.GetType().FullName?.Replace('+', '.')}>()");
                 }
                 catch (SystemException) { }
             }
