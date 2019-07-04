@@ -23,7 +23,14 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
             if (!PropertyInfo.CanRead)
                 return "WRITE ONLY";
 
-            try { return PropertyInfo.GetValue(_instance, null); }
+            try
+            {
+                return PropertyInfo.GetValue(_instance, null);
+            }
+            catch (TargetInvocationException ex)
+            {
+                return ex.InnerException ?? ex;
+            }
             catch (Exception ex)
             {
                 return ex;
