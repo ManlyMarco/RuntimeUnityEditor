@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace RuntimeUnityEditor.Core.Utils
 {
@@ -6,25 +7,26 @@ namespace RuntimeUnityEditor.Core.Utils
     {
         public static string GetFriendlyName(this Type type)
         {
-            string friendlyName = type.Name;
+            var prefixName = string.Empty;
+            if (type.DeclaringType != null)
+                prefixName = GetFriendlyName(type.DeclaringType) + ".";
+            else if (!string.IsNullOrEmpty(type.Namespace))
+                prefixName = type.Namespace + ".";
+
             if (type.IsGenericType)
             {
-                int iBacktick = friendlyName.IndexOf('`');
-                if (iBacktick > 0)
-                {
-                    friendlyName = friendlyName.Remove(iBacktick);
-                }
-                friendlyName += "<";
-                Type[] typeParameters = type.GetGenericArguments();
-                for (int i = 0; i < typeParameters.Length; ++i)
-                {
-                    string typeParamName = GetFriendlyName(typeParameters[i]);
-                    friendlyName += (i == 0 ? typeParamName : "," + typeParamName);
-                }
-                friendlyName += ">";
+                var genargNames = type.GetGenericArguments().Select(GetFriendlyName);
+                var idx = type.Name.IndexOf('`');
+                var typename = idx > 0 ? type.Name.Substring(0, idx) : type.Name;
+                return $"{prefixName}{typename}<{string.Join(", ", genargNames.ToArray())}>";
             }
 
-            return friendlyName;
+            if (type.IsArray)
+            {
+                return $"{prefixName}{GetFriendlyName(type.GetElementType())}[]";
+            }
+
+            return $"{prefixName}{type.Name}";
         }
     }
 }
