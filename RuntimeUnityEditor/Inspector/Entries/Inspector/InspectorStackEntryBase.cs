@@ -1,4 +1,6 @@
-﻿namespace RuntimeUnityEditor.Core.Inspector.Entries
+﻿using UnityEngine;
+
+namespace RuntimeUnityEditor.Core.Inspector.Entries
 {
     public abstract class InspectorStackEntryBase
     {
@@ -15,5 +17,7 @@
         {
             return Name;
         }
+
+        public Vector2 ScrollPosition;
     }
 }

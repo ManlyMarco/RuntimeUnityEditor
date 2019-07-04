@@ -24,7 +24,6 @@ namespace RuntimeUnityEditor.Core.Inspector
         private GUIStyle _alignedButtonStyle;
 
         private Rect _inspectorWindowRect;
-        private Vector2 _inspectorScrollPos;
         private Vector2 _inspectorStackScrollPos;
 
         private int _currentVisibleCount;
@@ -38,6 +37,8 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         private InspectorStackEntryBase _nextToPush;
         private readonly int _windowId;
+
+        private InspectorStackEntryBase CurrentStackItem => _inspectorStack.Peek();
 
         public Inspector(Action<Transform> treelistShowCallback)
         {
@@ -70,7 +71,6 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         private void CacheAllMembers(object objectToOpen)
         {
-            _inspectorScrollPos = Vector2.zero;
             _fieldCache.Clear();
 
             if (objectToOpen == null) return;
@@ -157,7 +157,6 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         private void CacheStaticMembers(Type type)
         {
-            _inspectorScrollPos = Vector2.zero;
             _fieldCache.Clear();
 
             if (type == null) return;
@@ -390,11 +389,14 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         private void DrawContentScrollView()
         {
-            _inspectorScrollPos = GUILayout.BeginScrollView(_inspectorScrollPos);
+            if (_inspectorStack.Count == 0) return;
+
+            var currentItem = CurrentStackItem;
+            currentItem.ScrollPosition = GUILayout.BeginScrollView(currentItem.ScrollPosition);
             {
                 GUILayout.BeginVertical();
                 {
-                    var firstIndex = (int)(_inspectorScrollPos.y / InspectorRecordHeight);
+                    var firstIndex = (int)(currentItem.ScrollPosition.y / InspectorRecordHeight);
 
                     GUILayout.Space(firstIndex * InspectorRecordHeight);
 
