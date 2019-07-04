@@ -14,6 +14,8 @@ namespace RuntimeUnityEditor.Core
         public ObjectTreeViewer TreeViewer { get; }
         public ReplWindow Repl { get; }
 
+        public KeyCode ShowHotkey { get; set; } = KeyCode.F12;
+
         internal static RuntimeUnityEditorCore Instance { get; private set; }
         internal static GameObject PluginObject { get; private set; }
         internal static ILoggerWrapper Logger { get; private set; }
@@ -68,10 +70,8 @@ namespace RuntimeUnityEditor.Core
 
         public void Update()
         {
-            if (Input.GetKeyDown(KeyCode.F12))
-            {
+            if (Input.GetKeyDown(ShowHotkey))
                 Show = !Show;
-            }
 
             Inspector.InspectorUpdate();
         }
