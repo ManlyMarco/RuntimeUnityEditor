@@ -10,6 +10,7 @@ namespace RuntimeUnityEditor.Core.Utils
         private static readonly Type _sceneManager = Type.GetType("UnityEngine.SceneManagement.SceneManager, UnityEngine, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null", false);
         private static readonly Type _scene = Type.GetType("UnityEngine.SceneManagement.Scene, UnityEngine, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null", false);
         private static readonly Type _xml = Type.GetType("System.Xml.XmlComment, System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089", false);
+        private static readonly Type _vectrosity = Type.GetType("Vectrosity.VectorObject2D, Vectrosity, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null", false);
 
         static UnityFeatureHelper()
         {
@@ -24,12 +25,17 @@ namespace RuntimeUnityEditor.Core.Utils
 
             SupportsXml = _xml != null;
             if (!SupportsXml)
-                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "[RuntimeEditor] System.XML.dll is not available, some features will be disabled");
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "[RuntimeEditor] System.XML.dll is not available, REPL will be disabled");
+
+            SupportsVectrosity = _vectrosity != null;
+            if (!SupportsVectrosity)
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "[RuntimeEditor] Vectrosity.dll is not available, drawing gizmos will be disabled");
         }
         
         public static bool SupportsScenes { get; private set; }
         public static bool SupportsXml { get; }
         public static bool SupportsCursorIndex { get; }
+        public static bool SupportsVectrosity { get; }
 
         public static IEnumerable<GameObject> GetSceneGameObjects()
         {

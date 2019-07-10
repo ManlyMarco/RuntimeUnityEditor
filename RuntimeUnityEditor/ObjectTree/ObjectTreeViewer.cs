@@ -6,6 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using RuntimeUnityEditor.Core.Gizmos;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.Utils;
 using UnityEngine;
@@ -17,7 +18,9 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 {
     public sealed class ObjectTreeViewer
     {
-        private readonly Action<InspectorStackEntryBase[]> _inspectorOpenCallback;
+        internal Action<InspectorStackEntryBase[]> InspectorOpenCallback;
+        internal Action<Transform> TreeSelectionChangedCallback;
+
         private readonly HashSet<GameObject> _openedObjects = new HashSet<GameObject>();
         private Vector2 _propertiesScrollPosition;
         private Transform _selectedTransform;
@@ -35,7 +38,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
         public void SelectAndShowObject(Transform target)
         {
-            _selectedTransform = target;
+            SelectedTransform = target;
 
             target = target.parent;
             while (target != null)
@@ -48,9 +51,8 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             Enabled = true;
         }
 
-        public ObjectTreeViewer(Action<InspectorStackEntryBase[]> inspectorOpenCallback)
+        public ObjectTreeViewer()
         {
-            _inspectorOpenCallback = inspectorOpenCallback ?? throw new ArgumentNullException(nameof(inspectorOpenCallback));
             _windowId = GetHashCode();
         }
 
@@ -66,6 +68,16 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             }
         }
 
+        public Transform SelectedTransform
+        {
+            get { return _selectedTransform; }
+            set
+            {
+                _selectedTransform = value;
+                TreeSelectionChangedCallback?.Invoke(_selectedTransform);
+            }
+        }
+
         public void UpdateCaches()
         {
             _cachedRootGameObjects = Resources.FindObjectsOfTypeAll<Transform>()
@@ -78,7 +90,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
         private void OnInspectorOpen(params InspectorStackEntryBase[] items)
         {
-            _inspectorOpenCallback.Invoke(items);
+            InspectorOpenCallback.Invoke(items);
         }
 
         public void UpdateWindowSize(Rect windowRect)
@@ -89,7 +101,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         private void DisplayObjectTreeHelper(GameObject go, int indent)
         {
             var c = GUI.color;
-            if (_selectedTransform == go.transform)
+            if (SelectedTransform == go.transform)
             {
                 GUI.color = Color.cyan;
                 if (_scrollTreeToSelected && Event.current.type == EventType.Repaint)
@@ -125,14 +137,14 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
                     if (GUILayout.Button(go.name, GUI.skin.label, GUILayout.ExpandWidth(true), GUILayout.MinWidth(200)))
                     {
-                        if (_selectedTransform == go.transform)
+                        if (SelectedTransform == go.transform)
                         {
                             if (_openedObjects.Contains(go) == false)
                                 _openedObjects.Add(go);
                             else
                                 _openedObjects.Remove(go);
                         }
-                        _selectedTransform = go.transform;
+                        SelectedTransform = go.transform;
                     }
 
                     GUI.color = c;
@@ -174,9 +186,9 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         {
             GUILayout.BeginHorizontal(GUI.skin.box);
             {
-                if (_selectedTransform == null) GUI.enabled = false;
+                if (SelectedTransform == null) GUI.enabled = false;
                 if (GUILayout.Button("Dump", GUILayout.ExpandWidth(false)))
-                    SceneDumper.DumpObjects(_selectedTransform?.gameObject);
+                    SceneDumper.DumpObjects(SelectedTransform?.gameObject);
                 GUI.enabled = true;
 
                 if (GUILayout.Button("Log", GUILayout.ExpandWidth(false)))
@@ -199,13 +211,15 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 GL.wireframe = GUILayout.Toggle(GL.wireframe, "Wireframe");
             }
             GUILayout.EndHorizontal();
+
+            GizmoDrawer.DisplayControls();
         }
 
         private void DisplayObjectProperties()
         {
             _propertiesScrollPosition = GUILayout.BeginScrollView(_propertiesScrollPosition, GUI.skin.box);
             {
-                if (_selectedTransform == null)
+                if (SelectedTransform == null)
                 {
                     GUILayout.Label("No object selected");
                 }
@@ -213,7 +227,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 {
                     DrawTransformControls();
 
-                    foreach (var component in _selectedTransform.GetComponents<Component>())
+                    foreach (var component in SelectedTransform.GetComponents<Component>())
                     {
                         if (component == null)
                             continue;
@@ -229,35 +243,35 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         {
             GUILayout.BeginVertical(GUI.skin.box);
             {
-                var fullTransfromPath = GetFullTransfromPath(_selectedTransform);
+                var fullTransfromPath = GetFullTransfromPath(SelectedTransform);
 
                 GUILayout.TextArea(fullTransfromPath, GUI.skin.label);
 
                 GUILayout.BeginHorizontal();
                 {
-                    GUILayout.Label($"Layer {_selectedTransform.gameObject.layer} ({LayerMask.LayerToName(_selectedTransform.gameObject.layer)})");
+                    GUILayout.Label($"Layer {SelectedTransform.gameObject.layer} ({LayerMask.LayerToName(SelectedTransform.gameObject.layer)})");
 
                     GUILayout.Space(8);
 
-                    GUILayout.Toggle(_selectedTransform.gameObject.isStatic, "isStatic");
+                    GUILayout.Toggle(SelectedTransform.gameObject.isStatic, "isStatic");
 
-                    _selectedTransform.gameObject.SetActive(GUILayout.Toggle(_selectedTransform.gameObject.activeSelf, "Active", GUILayout.ExpandWidth(false)));
+                    SelectedTransform.gameObject.SetActive(GUILayout.Toggle(SelectedTransform.gameObject.activeSelf, "Active", GUILayout.ExpandWidth(false)));
 
                     GUILayout.FlexibleSpace();
 
                     if (GUILayout.Button("Inspect"))
-                        OnInspectorOpen(new InstanceStackEntry(_selectedTransform.gameObject, _selectedTransform.gameObject.name));
+                        OnInspectorOpen(new InstanceStackEntry(SelectedTransform.gameObject, SelectedTransform.gameObject.name));
 
                     if (GUILayout.Button("X"))
-                        Object.Destroy(_selectedTransform.gameObject);
+                        Object.Destroy(SelectedTransform.gameObject);
                 }
                 GUILayout.EndHorizontal();
 
-                DrawVector3(nameof(Transform.position), vector3 => _selectedTransform.position = vector3, () => _selectedTransform.position, -5, 5);
-                DrawVector3(nameof(Transform.localPosition), vector3 => _selectedTransform.localPosition = vector3, () => _selectedTransform.localPosition, -5, 5);
-                DrawVector3(nameof(Transform.localScale), vector3 => _selectedTransform.localScale = vector3, () => _selectedTransform.localScale, 0.00001f, 5);
-                DrawVector3(nameof(Transform.eulerAngles), vector3 => _selectedTransform.eulerAngles = vector3, () => _selectedTransform.eulerAngles, 0, 360);
-                DrawVector3("localEuler", vector3 => _selectedTransform.localEulerAngles = vector3, () => _selectedTransform.localEulerAngles, 0, 360);
+                DrawVector3(nameof(Transform.position), vector3 => SelectedTransform.position = vector3, () => SelectedTransform.position, -5, 5);
+                DrawVector3(nameof(Transform.localPosition), vector3 => SelectedTransform.localPosition = vector3, () => SelectedTransform.localPosition, -5, 5);
+                DrawVector3(nameof(Transform.localScale), vector3 => SelectedTransform.localScale = vector3, () => SelectedTransform.localScale, 0.00001f, 5);
+                DrawVector3(nameof(Transform.eulerAngles), vector3 => SelectedTransform.eulerAngles = vector3, () => SelectedTransform.eulerAngles, 0, 360);
+                DrawVector3("localEuler", vector3 => SelectedTransform.localEulerAngles = vector3, () => SelectedTransform.localEulerAngles, 0, 360);
             }
             GUILayout.EndVertical();
         }
@@ -481,7 +495,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             if (UnityFeatureHelper.SupportsScenes)
                 _cachedRootGameObjects.AddRange(UnityFeatureHelper.GetSceneGameObjects().Except(_cachedRootGameObjects));
 
-            return _cachedRootGameObjects.OrderBy(x => x.name);
+            return _cachedRootGameObjects.Where(x => !x.name.StartsWith(GizmoDrawer.GizmoObjectName, StringComparison.Ordinal)).OrderBy(x => x.name);
         }
 
         private void DisplayTreeSearchBox()
@@ -500,7 +514,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 {
                     searchText = string.Empty;
                     Search(searchText, false);
-                    SelectAndShowObject(_selectedTransform);
+                    SelectAndShowObject(SelectedTransform);
                 }
             }
             GUILayout.EndHorizontal();

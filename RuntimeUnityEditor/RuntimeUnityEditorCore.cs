@@ -1,4 +1,5 @@
 ﻿using System;
+using RuntimeUnityEditor.Core.Gizmos;
 using RuntimeUnityEditor.Core.ObjectTree;
 using RuntimeUnityEditor.Core.REPL;
 using UnityEngine;
@@ -17,12 +18,14 @@ namespace RuntimeUnityEditor.Core
         public KeyCode ShowHotkey { get; set; } = KeyCode.F12;
 
         internal static RuntimeUnityEditorCore Instance { get; private set; }
-        internal static GameObject PluginObject { get; private set; }
+        internal static MonoBehaviour PluginObject { get; private set; }
         internal static ILoggerWrapper Logger { get; private set; }
 
-        public RuntimeUnityEditorCore(GameObject pluginObject, ILoggerWrapper logger)
+        internal static GizmoDrawer GizmoDrawer { get; private set; }
+
+        public RuntimeUnityEditorCore(MonoBehaviour pluginObject, ILoggerWrapper logger)
         {
-            if(Instance != null)
+            if (Instance != null)
                 throw new InvalidOperationException("Can only create one instance of the Core object");
 
             PluginObject = pluginObject;
@@ -30,12 +33,20 @@ namespace RuntimeUnityEditor.Core
             Instance = this;
 
             Inspector = new Inspector.Inspector(targetTransform => TreeViewer.SelectAndShowObject(targetTransform));
-            TreeViewer = new ObjectTreeViewer(items =>
+
+            TreeViewer = new ObjectTreeViewer();
+            TreeViewer.InspectorOpenCallback = items =>
             {
                 Inspector.InspectorClear();
                 foreach (var stackEntry in items)
                     Inspector.InspectorPush(stackEntry);
-            });
+            };
+
+            if (Utils.UnityFeatureHelper.SupportsVectrosity)
+            {
+                GizmoDrawer = new GizmoDrawer(pluginObject);
+                TreeViewer.TreeSelectionChangedCallback = transform => GizmoDrawer.UpdateState(transform);
+            }
 
             if (Utils.UnityFeatureHelper.SupportsCursorIndex &&
                 Utils.UnityFeatureHelper.SupportsXml)
@@ -58,6 +69,12 @@ namespace RuntimeUnityEditor.Core
             set
             {
                 TreeViewer.Enabled = value;
+
+                if (GizmoDrawer != null)
+                {
+                    GizmoDrawer.Show = value;
+                    GizmoDrawer.UpdateState(TreeViewer.SelectedTransform);
+                }
 
                 if (value)
                 {
