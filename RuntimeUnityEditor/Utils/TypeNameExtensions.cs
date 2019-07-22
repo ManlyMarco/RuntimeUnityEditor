@@ -8,11 +8,21 @@ namespace RuntimeUnityEditor.Core.Utils
     {
         public static string GetSourceCodeRepresentation(this Type type)
         {
-            return GetSourceCodeRepresentationInt(type, new List<Type>());
+            try
+            {
+                return GetSourceCodeRepresentationInt(type, new List<Type>());
+            }
+            catch
+            {
+                return type.FullName;
+            }
         }
 
         private static string GetSourceCodeRepresentationInt(Type type, List<Type> travesed)
         {
+            // Potential infinite recursion
+            if (travesed.Count > 20) throw new ArgumentException();
+
             travesed.Add(type);
 
             var prefixName = string.Empty;
@@ -26,7 +36,8 @@ namespace RuntimeUnityEditor.Core.Utils
 
             if (type.IsGenericType)
             {
-                var genargNames = type.GetGenericArguments().Select(type1 => GetSourceCodeRepresentationInt(type1, new List<Type>()));
+                // Fill the list with nulls to preserve the depth
+                var genargNames = type.GetGenericArguments().Select(type1 => GetSourceCodeRepresentationInt(type1, new List<Type>(Enumerable.Repeat<Type>(null, travesed.Count))));
                 var idx = type.Name.IndexOf('`');
                 var typename = idx > 0 ? type.Name.Substring(0, idx) : type.Name;
                 return $"{prefixName}{typename}<{string.Join(", ", genargNames.ToArray())}>";
