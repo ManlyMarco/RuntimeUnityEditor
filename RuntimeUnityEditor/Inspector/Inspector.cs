@@ -251,7 +251,12 @@ namespace RuntimeUnityEditor.Core.Inspector
             {
                 var val = field.EnterValue();
                 if (val != null)
-                    _nextToPush = new InstanceStackEntry(val, field.Name());
+                {
+                    if (val is InspectorStackEntryBase sb)
+                        _nextToPush = sb;
+                    else
+                        _nextToPush = new InstanceStackEntry(val, field.Name());
+                }
             }
         }
 
