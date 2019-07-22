@@ -50,7 +50,16 @@ namespace RuntimeUnityEditor.Core
 
             if (Utils.UnityFeatureHelper.SupportsCursorIndex &&
                 Utils.UnityFeatureHelper.SupportsXml)
-                Repl = new ReplWindow();
+            {
+                try
+                {
+                    Repl = new ReplWindow();
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log(LogLevel.Warning, "Failed to load REPL - " + ex.Message);
+                }
+            }
         }
 
         public void OnGUI()
