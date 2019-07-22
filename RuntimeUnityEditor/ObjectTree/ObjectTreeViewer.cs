@@ -503,13 +503,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             GUILayout.BeginHorizontal();
             {
                 searchText = GUILayout.TextField(searchText, GUILayout.ExpandWidth(true));
-
-                if (GUILayout.Button("Search", GUILayout.ExpandWidth(false)))
-                    Search(searchText, false);
-
-                if (GUILayout.Button("Deep", GUILayout.ExpandWidth(false)))
-                    Search(searchText, true);
-
+                
                 if (GUILayout.Button("Clear", GUILayout.ExpandWidth(false)))
                 {
                     searchText = string.Empty;
@@ -518,6 +512,45 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 }
             }
             GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            {
+                if (GUILayout.Button("Search scene"))
+                    Search(searchText, false);
+
+                if (GUILayout.Button("Deep scene"))
+                    Search(searchText, true);
+
+                if (GUILayout.Button("Search static"))
+                {
+                    if (string.IsNullOrEmpty(searchText))
+                    {
+                        RuntimeUnityEditorCore.Logger.Log(LogLevel.Message | LogLevel.Warning, "Can't search for empty string");
+                    }
+                    else
+                    {
+                        var matchedTypes = AppDomain.CurrentDomain.GetAssemblies()
+                            .SelectMany(x =>
+                            {
+                                try { return x.GetTypes(); }
+                                catch { return new Type[0]; }
+                            })
+                            .Where(x => x.GetSourceCodeRepresentation()
+                                .Contains(searchText, StringComparison.OrdinalIgnoreCase));
+
+                        var stackEntries = matchedTypes.Select(t => new StaticStackEntry(t, t.FullName)).ToList();
+
+                        if (stackEntries.Count == 0)
+                            RuntimeUnityEditorCore.Logger.Log(LogLevel.Message | LogLevel.Warning, "No static type names contained the search string");
+                        else if (stackEntries.Count == 1)
+                            RuntimeUnityEditorCore.Instance.Inspector.InspectorPush(stackEntries.Single());
+                        else
+                            RuntimeUnityEditorCore.Instance.Inspector.InspectorPush(new InstanceStackEntry(stackEntries, "Static type search"));
+                    }
+                }
+            }
+            GUILayout.EndHorizontal();
+
         }
 
         private List<GameObject> _searchResults;
