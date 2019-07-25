@@ -39,11 +39,7 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="UnityEngine">
-      <HintPath>..\Libs\v5\UnityEngine.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="UnityEngine.CoreModule">
-      <HintPath>..\Libs\v5\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>..\..\..\..\_Koikatu\bepinex basic setup\UniversalDemozaics project\lib\UnityEngine.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
