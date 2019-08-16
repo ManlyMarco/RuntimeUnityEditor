@@ -69,6 +69,9 @@ namespace RuntimeUnityEditor.Core
         {
             if (Show)
             {
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+
                 Inspector.DisplayInspector();
                 TreeViewer.DisplayViewer();
                 Repl?.DisplayWindow();
@@ -80,6 +83,20 @@ namespace RuntimeUnityEditor.Core
             get => TreeViewer.Enabled;
             set
             {
+                if (Show != value)
+                {
+                    if (value)
+                    {
+                        _previousCursorLockState = Cursor.lockState;
+                        _previousCursorVisible = Cursor.visible;
+                    }
+                    else
+                    {
+                        Cursor.lockState = _previousCursorLockState;
+                        Cursor.visible = _previousCursorVisible;
+                    }
+                }
+
                 TreeViewer.Enabled = value;
 
                 if (GizmoDrawer != null)
