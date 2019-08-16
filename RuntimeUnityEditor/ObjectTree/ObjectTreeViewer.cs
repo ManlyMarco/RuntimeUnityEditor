@@ -211,7 +211,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 GUI.enabled = true;
 
                 if (GUILayout.Button("Log", GUILayout.ExpandWidth(false)))
-                    Process.Start(Path.Combine(Application.dataPath, "output_log.txt"));
+                    UnityFeatureHelper.OpenLog();
 
                 GUILayout.FlexibleSpace();
 
