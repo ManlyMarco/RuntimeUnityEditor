@@ -23,6 +23,9 @@ namespace RuntimeUnityEditor.Core
 
         internal static GizmoDrawer GizmoDrawer { get; private set; }
 
+        private CursorLockMode _previousCursorLockState;
+        private bool _previousCursorVisible;
+
         public RuntimeUnityEditorCore(MonoBehaviour pluginObject, ILoggerWrapper logger)
         {
             if (Instance != null)
@@ -34,7 +37,7 @@ namespace RuntimeUnityEditor.Core
 
             Inspector = new Inspector.Inspector(targetTransform => TreeViewer.SelectAndShowObject(targetTransform));
 
-            TreeViewer = new ObjectTreeViewer();
+            TreeViewer = new ObjectTreeViewer(pluginObject);
             TreeViewer.InspectorOpenCallback = items =>
             {
                 Inspector.InspectorClear();

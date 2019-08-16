@@ -51,9 +51,25 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             Enabled = true;
         }
 
-        public ObjectTreeViewer()
+        public ObjectTreeViewer(MonoBehaviour pluginObject)
         {
             _windowId = GetHashCode();
+
+            pluginObject.StartCoroutine(SetWireframeCo());
+        }
+
+        private bool _wireframe, prev;
+
+        private IEnumerator SetWireframeCo()
+
+        {
+            while (true)
+            {
+                yield return new WaitForEndOfFrame();
+
+                if (GL.wireframe != _wireframe)
+                    GL.wireframe = _wireframe;
+            }
         }
 
         public bool Enabled
@@ -160,6 +176,9 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
         public void DisplayViewer()
         {
+            if (_wireframe && Event.current.type == EventType.layout)
+                GL.wireframe = false;
+
             if (Enabled)
             {
                 EditorUtilities.DrawSolidWindowBackground(_windowRect);
@@ -208,7 +227,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
                 GUILayout.FlexibleSpace();
 
-                GL.wireframe = GUILayout.Toggle(GL.wireframe, "Wireframe");
+                _wireframe = GUILayout.Toggle(_wireframe, "Wireframe");
             }
             GUILayout.EndHorizontal();
 
@@ -504,7 +523,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             GUILayout.BeginHorizontal();
             {
                 searchText = GUILayout.TextField(searchText, GUILayout.ExpandWidth(true));
-                
+
                 if (GUILayout.Button("Clear", GUILayout.ExpandWidth(false)))
                 {
                     searchText = string.Empty;
