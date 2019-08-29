@@ -24,7 +24,7 @@ namespace RuntimeUnityEditor.Core.Gizmos
             set => _show = value;
         }
 
-        public static bool ShowGizmos { get; set; } = true;
+        public static bool ShowGizmos { get; set; }
         public static bool ShowGizmosOutsideEditor { get; set; }
 
         public static void DisplayControls()
