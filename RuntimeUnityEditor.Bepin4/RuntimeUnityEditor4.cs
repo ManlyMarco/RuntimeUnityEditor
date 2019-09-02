@@ -22,7 +22,7 @@ namespace RuntimeUnityEditor.Bepin4
 
         private void Start()
         {
-            Instance = new RuntimeUnityEditorCore(this, new Logger());
+            Instance = new RuntimeUnityEditorCore(this, new Logger(), Paths.PluginPath);
             DnSpyPath = new ConfigWrapper<string>(nameof(DnSpyPath), this);
             DnSpyPath.SettingChanged += (sender, args) => DnSpyHelper.DnSpyPath = DnSpyPath.Value;
             DnSpyHelper.DnSpyPath = DnSpyPath.Value;

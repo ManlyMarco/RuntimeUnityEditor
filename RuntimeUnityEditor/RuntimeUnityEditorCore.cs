@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using RuntimeUnityEditor.Core.Gizmos;
 using RuntimeUnityEditor.Core.ObjectTree;
 using RuntimeUnityEditor.Core.REPL;
@@ -26,7 +27,7 @@ namespace RuntimeUnityEditor.Core
         private CursorLockMode _previousCursorLockState;
         private bool _previousCursorVisible;
 
-        public RuntimeUnityEditorCore(MonoBehaviour pluginObject, ILoggerWrapper logger)
+        public RuntimeUnityEditorCore(MonoBehaviour pluginObject, ILoggerWrapper logger, string configPath)
         {
             if (Instance != null)
                 throw new InvalidOperationException("Can only create one instance of the Core object");
@@ -56,7 +57,8 @@ namespace RuntimeUnityEditor.Core
             {
                 try
                 {
-                    Repl = new ReplWindow();
+                    Repl = new ReplWindow(Path.Combine(configPath, "RuntimeUnityEditor.Autostart.cs"));
+                    Repl.RunAutostart();
                 }
                 catch (Exception ex)
                 {

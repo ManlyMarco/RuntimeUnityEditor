@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,7 @@ namespace RuntimeUnityEditor.Core.REPL
 {
     public sealed class ReplWindow
     {
+        private readonly string _autostartFilename;
         private static readonly char[] _inputSplitChars = { ',', ';', '<', '>', '(', ')', '[', ']', '=', '|', '&' };
 
         private const int HistoryLimit = 50;
@@ -51,7 +53,7 @@ namespace RuntimeUnityEditor.Core.REPL
 
         private readonly List<Suggestion> _suggestions = new List<Suggestion>();
 
-        public ReplWindow()
+        public ReplWindow(string autostartFilename)
         {
             _windowId = GetHashCode();
 
@@ -70,6 +72,23 @@ namespace RuntimeUnityEditor.Core.REPL
 
             foreach (var define in envSetup)
                 Evaluate(define);
+
+            _autostartFilename = autostartFilename;
+        }
+
+        internal void RunAutostart()
+        {
+            if (File.Exists(_autostartFilename))
+            {
+                var allLines = File.ReadAllText(_autostartFilename).Trim('\t', ' ', '\r', '\n');
+                if (allLines.Length > 0)
+                {
+                    var message = "Executing code from " + _autostartFilename;
+                    RuntimeUnityEditorCore.Logger.Log(LogLevel.Info, message);
+                    _sb.AppendLine(message);
+                    Evaluate(allLines);
+                }
+            }
         }
 
         public void DisplayWindow()
@@ -155,6 +174,19 @@ namespace RuntimeUnityEditor.Core.REPL
                         ScrollToBottom();
                     }
 
+                    if (GUILayout.Button("Autostart", GUILayout.ExpandWidth(false)))
+                    {
+                        _sb.AppendLine("Opening autostart file at " + _autostartFilename);
+
+                        if (!File.Exists(_autostartFilename))
+                            File.WriteAllText(_autostartFilename, "// This C# code will be executed by the REPL near the end of plugin initialization. Use echo(string) to write to REPL log and message(string) to write to global log.\n\n");
+
+                        try { Process.Start(_autostartFilename); }
+                        catch (Exception e) { _sb.AppendLine(e.Message); }
+
+                        ScrollToBottom();
+                    }
+
                     if (GUILayout.Button("Clear log", GUILayout.ExpandWidth(false)))
                         _sb.Length = 0;
                 }
@@ -174,7 +206,7 @@ namespace RuntimeUnityEditor.Core.REPL
             ClearSuggestions();
         }
 
-        private object Evaluate(string str)
+        public object Evaluate(string str)
         {
             object ret = VoidType.Value;
             _evaluator.Compile(str, out var compiled);
@@ -355,6 +387,11 @@ namespace RuntimeUnityEditor.Core.REPL
         public void UpdateWindowSize(Rect windowRect)
         {
             _windowRect = windowRect;
+        }
+
+        internal void AppendLogLine(string message)
+        {
+            _sb.AppendLine(message);
         }
     }
 }

@@ -20,7 +20,7 @@ namespace RuntimeUnityEditor.Bepin5
 
         private void Start()
         {
-            Instance = new RuntimeUnityEditorCore(this, new Logger5(Logger));
+            Instance = new RuntimeUnityEditorCore(this, new Logger5(Logger), Paths.ConfigPath);
 
             DnSpyPath = Config.Wrap(null, "Path to dnSpy.exe", "Full path to dnSpy that will enable integration with Inspector. When correctly configured, you will see a new ^ buttons that will open the members in dnSpy.", string.Empty);
             DnSpyPath.SettingChanged += (sender, args) => DnSpyHelper.DnSpyPath = DnSpyPath.Value;
