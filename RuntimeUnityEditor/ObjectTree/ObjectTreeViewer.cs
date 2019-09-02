@@ -522,6 +522,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         {
             GUILayout.BeginHorizontal();
             {
+                GUI.SetNextControlName("searchbox");
                 searchText = GUILayout.TextField(searchText, GUILayout.ExpandWidth(true));
 
                 if (GUILayout.Button("Clear", GUILayout.ExpandWidth(false)))
@@ -535,7 +536,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
             GUILayout.BeginHorizontal();
             {
-                if (GUILayout.Button("Search scene"))
+                if (GUILayout.Button("Search scene") || GUI.GetNameOfFocusedControl() == "searchbox" && Event.current.keyCode == KeyCode.Return)
                     Search(searchText, false);
 
                 if (GUILayout.Button("Deep scene"))
