@@ -560,13 +560,8 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                     else
                     {
                         var matchedTypes = AppDomain.CurrentDomain.GetAssemblies()
-                            .SelectMany(x =>
-                            {
-                                try { return x.GetTypes(); }
-                                catch { return new Type[0]; }
-                            })
-                            .Where(x => x.GetSourceCodeRepresentation()
-                                .Contains(searchText, StringComparison.OrdinalIgnoreCase));
+                            .SelectMany(Extensions.GetTypesSafe)
+                            .Where(x => x.GetSourceCodeRepresentation().Contains(searchText, StringComparison.OrdinalIgnoreCase));
 
                         var stackEntries = matchedTypes.Select(t => new StaticStackEntry(t, t.FullName)).ToList();
 

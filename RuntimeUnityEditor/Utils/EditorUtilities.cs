@@ -59,7 +59,7 @@ namespace RuntimeUnityEditor.Core.Utils
             if (CustomObjectToString.TryGetValue(valueType, out var func))
                 return func(value);
 
-            if(value is ICollection collection)
+            if (value is ICollection collection)
                 return $"Count = {collection.Count}";
 
             if (value is IEnumerable _)
@@ -70,7 +70,7 @@ namespace RuntimeUnityEditor.Core.Utils
                     if (property.GetValue(value, null) is int count)
                         return $"Count = {count}";
                 }
-                
+
                 return "IS ENUMERABLE";
             }
 
@@ -162,17 +162,7 @@ namespace RuntimeUnityEditor.Core.Utils
         {
             var compType = typeof(Component);
             return AppDomain.CurrentDomain.GetAssemblies()
-                .SelectMany(x =>
-                {
-                    try
-                    {
-                        return x.GetTypes();
-                    }
-                    catch (SystemException)
-                    {
-                        return Enumerable.Empty<Type>();
-                    }
-                })
+                .SelectMany(Extensions.GetTypesSafe)
                 .Where(t => t.IsClass && !t.IsAbstract && !t.ContainsGenericParameters)
                 .Where(compType.IsAssignableFrom);
         }
@@ -182,17 +172,7 @@ namespace RuntimeUnityEditor.Core.Utils
             RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, "[CheatTools] Looking for class instances...");
 
             var query = AppDomain.CurrentDomain.GetAssemblies()
-                .SelectMany(x =>
-                {
-                    try
-                    {
-                        return x.GetTypes();
-                    }
-                    catch (SystemException)
-                    {
-                        return Enumerable.Empty<Type>();
-                    }
-                })
+                .SelectMany(Extensions.GetTypesSafe)
                 .Where(t => t.IsClass && !t.IsAbstract && !t.ContainsGenericParameters);
 
             foreach (var type in query)
@@ -200,9 +180,7 @@ namespace RuntimeUnityEditor.Core.Utils
                 object obj = null;
                 try
                 {
-                    obj = type.GetProperty("Instance",
-                            BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
-                        ?.GetValue(null, null);
+                    obj = type.GetProperty("Instance", BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)?.GetValue(null, null);
                 }
                 catch (Exception ex)
                 {

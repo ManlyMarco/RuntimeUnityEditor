@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using UnityEngine;
@@ -106,6 +108,13 @@ namespace RuntimeUnityEditor.Core.Utils
                         throw new Exception("Cannot open items of type " + centry.GetType().FullName);
                     return null;
             }
+        }
+
+        public static IEnumerable<Type> GetTypesSafe(this Assembly ass)
+        {
+            try { return ass.GetTypes(); }
+            catch (ReflectionTypeLoadException e) { return e.Types.Where(x => x != null); }
+            catch { return Enumerable.Empty<Type>(); }
         }
     }
 }

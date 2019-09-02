@@ -31,7 +31,24 @@ namespace RuntimeUnityEditor.Core.REPL
         private TextEditor _textEditor;
         private int _newCursorLocation = -1;
 
-        private readonly HashSet<string> _namespaces;
+        private HashSet<string> _namespaces;
+        private HashSet<string> Namespaces
+        {
+            get
+            {
+                if (_namespaces == null)
+                {
+                    _namespaces = new HashSet<string>(
+                        AppDomain.CurrentDomain.GetAssemblies()
+                            .SelectMany(Extensions.GetTypesSafe)
+                            .Where(x => x.IsPublic && !string.IsNullOrEmpty(x.Namespace))
+                            .Select(x => x.Namespace));
+                    RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, $"[REPL] Found {_namespaces.Count} public namespaces");
+                }
+                return _namespaces;
+            }
+        }
+
         private readonly List<Suggestion> _suggestions = new List<Suggestion>();
 
         public ReplWindow()
@@ -53,17 +70,6 @@ namespace RuntimeUnityEditor.Core.REPL
 
             foreach (var define in envSetup)
                 Evaluate(define);
-
-            _namespaces = new HashSet<string>(
-                AppDomain.CurrentDomain.GetAssemblies()
-                .SelectMany(x =>
-                    {
-                        try { return x.GetTypes(); }
-                        catch { return Enumerable.Empty<Type>(); }
-                    })
-                .Where(x => x.IsPublic && !string.IsNullOrEmpty(x.Namespace))
-                .Select(x => x.Namespace));
-            RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, $"[REPL] Found {_namespaces.Count} public namespaces");
         }
 
         public void DisplayWindow()
@@ -230,7 +236,7 @@ namespace RuntimeUnityEditor.Core.REPL
             if (trimmedInput.StartsWith("using"))
                 trimmedInput = trimmedInput.Remove(0, 5).Trim();
 
-            return _namespaces.Where(x => x.StartsWith(trimmedInput) && x.Length > trimmedInput.Length)
+            return Namespaces.Where(x => x.StartsWith(trimmedInput) && x.Length > trimmedInput.Length)
                 .Select(x => new Suggestion(x.Substring(trimmedInput.Length), x.Substring(0, trimmedInput.Length), SuggestionKind.Namespace));
         }
 
