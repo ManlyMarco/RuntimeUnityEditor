@@ -79,25 +79,17 @@ namespace RuntimeUnityEditor.Core.Inspector
 
             try
             {
-                CallbackCacheEntey<Action> CreateTransfromCallback(Transform tr)
+                if (objectToOpen is Component cmp)
                 {
-                    return new CallbackCacheEntey<Action>("Open in Scene Object Browser",
-                        "Navigate to this object in the Scene Object Browser",
-                        () =>
-                        {
-                            _treelistShowCallback(tr);
-                            return null;
-                        });
+                    _fieldCache.Add(new CallbackCacheEntey<Action>("Open in Scene Object Browser", "Navigate to GameObject this Component is attached to",
+                        () => { _treelistShowCallback(cmp.transform); return null; }));
                 }
-
-                ReadonlyCacheEntry CreateTransfromChildEntry(Transform tr)
+                else if (objectToOpen is GameObject castedObj)
                 {
-                    return new ReadonlyCacheEntry("Child objects", tr.Cast<Transform>().ToArray());
-                }
-
-                ReadonlyCacheEntry CreateComponentList(GameObject go)
-                {
-                    return new ReadonlyCacheEntry("Components", go.GetComponents<Component>());
+                    _fieldCache.Add(new CallbackCacheEntey<Action>("Open in Scene Object Browser", "Navigate to this object in the Scene Object Browser",
+                        () => { _treelistShowCallback(castedObj.transform); return null; }));
+                    _fieldCache.Add(new ReadonlyCacheEntry("Child objects", castedObj.transform.Cast<Transform>().ToArray()));
+                    _fieldCache.Add(new ReadonlyCacheEntry("Components", castedObj.GetComponents<Component>()));
                 }
 
                 // If we somehow enter a string, this allows user to see what the string actually says
@@ -105,20 +97,9 @@ namespace RuntimeUnityEditor.Core.Inspector
                 {
                     _fieldCache.Add(new ReadonlyCacheEntry("this", objectToOpen));
                 }
-                else if (objectToOpen is Transform tr)
+                else if (objectToOpen is Transform)
                 {
-                    _fieldCache.Add(CreateTransfromCallback(tr));
-                    _fieldCache.Add(CreateTransfromChildEntry(tr));
-                    _fieldCache.Add(CreateComponentList(tr.gameObject));
-                }
-                else if (objectToOpen is GameObject ob)
-                {
-                    if (ob.transform != null)
-                    {
-                        _fieldCache.Add(CreateTransfromCallback(ob.transform));
-                        _fieldCache.Add(CreateTransfromChildEntry(ob.transform));
-                    }
-                    _fieldCache.Add(CreateComponentList(ob));
+                    // Prevent the list overloads from listing subcomponents
                 }
                 else if (objectToOpen is IList list)
                 {
