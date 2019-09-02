@@ -80,13 +80,14 @@ namespace RuntimeUnityEditor.Core.REPL
         {
             if (File.Exists(_autostartFilename))
             {
-                var allLines = File.ReadAllText(_autostartFilename).Trim('\t', ' ', '\r', '\n');
+                var allLines = File.ReadAllLines(_autostartFilename).Select(x => x.Trim('\t', ' ', '\r', '\n')).Where(x => !string.IsNullOrEmpty(x) && !x.StartsWith("//")).ToArray();
                 if (allLines.Length > 0)
                 {
                     var message = "Executing code from " + _autostartFilename;
                     RuntimeUnityEditorCore.Logger.Log(LogLevel.Info, message);
                     _sb.AppendLine(message);
-                    Evaluate(allLines);
+                    foreach (var line in allLines)
+                        Evaluate(line);
                 }
             }
         }
@@ -179,7 +180,7 @@ namespace RuntimeUnityEditor.Core.REPL
                         _sb.AppendLine("Opening autostart file at " + _autostartFilename);
 
                         if (!File.Exists(_autostartFilename))
-                            File.WriteAllText(_autostartFilename, "// This C# code will be executed by the REPL near the end of plugin initialization. Use echo(string) to write to REPL log and message(string) to write to global log.\n\n");
+                            File.WriteAllText(_autostartFilename, "// This C# code will be executed by the REPL near the end of plugin initialization. Only single-line statements are supported. Use echo(string) to write to REPL log and message(string) to write to global log.\n\n");
 
                         try { Process.Start(_autostartFilename); }
                         catch (Exception e) { _sb.AppendLine(e.Message); }
