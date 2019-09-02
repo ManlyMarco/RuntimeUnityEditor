@@ -180,6 +180,18 @@ namespace RuntimeUnityEditor.Core.REPL
             DnSpyHelper.OpenInDnSpy(member);
         }
 
+        [Documentation("echo(string) - write a string to REPL output.")]
+        public static void echo(string message)
+        {
+            RuntimeUnityEditorCore.Instance.Repl.AppendLogLine(message);
+        }
+
+        [Documentation("message(string) - write a string to log.")]
+        public static void message(string message)
+        {
+            RuntimeUnityEditorCore.Logger.Log(LogLevel.Message, message);
+        }
+
         [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property)]
         private class DocumentationAttribute : Attribute
         {
