@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using RuntimeUnityEditor.Core.Gizmos;
@@ -96,12 +94,17 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
         public void UpdateCaches()
         {
-            _cachedRootGameObjects = Resources.FindObjectsOfTypeAll<Transform>()
-                                    .Where(t => t.parent == null)
-                                    .Select(x => x.gameObject)
-                                    .ToList();
+            _cachedRootGameObjects = GetAllRootGameObjects();
 
             _imagePreviewCache.Clear();
+        }
+
+        private static List<GameObject> GetAllRootGameObjects()
+        {
+            return Resources.FindObjectsOfTypeAll<Transform>()
+                                                .Where(t => t.parent == null)
+                                                .Select(x => x.gameObject)
+                                                .ToList();
         }
 
         private void OnInspectorOpen(params InspectorStackEntryBase[] items)
@@ -584,12 +587,12 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             }
             else
             {
-                var query = from go in Object.FindObjectsOfType<GameObject>()
-                            where go.name.Contains(searchString, StringComparison.InvariantCultureIgnoreCase)
-                                  || go.GetComponents<Component>().Any(c => SearchInComponent(searchString, c, searchProperties))
-                            orderby go.name
-                            select go;
-                _searchResults = query.ToList();
+                _searchResults = GetAllRootGameObjects()
+                    .SelectMany(x => x.GetComponentsInChildren<Transform>(true))
+                    .Where(x => x.name.Contains(searchString, StringComparison.InvariantCultureIgnoreCase) || x.GetComponents<Component>().Any(c => SearchInComponent(searchString, c, searchProperties)))
+                    .OrderBy(x => x.name)
+                    .Select(x => x.gameObject)
+                    .ToList();
             }
         }
 
