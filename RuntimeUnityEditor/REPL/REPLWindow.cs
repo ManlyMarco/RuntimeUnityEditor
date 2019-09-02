@@ -12,11 +12,11 @@ namespace RuntimeUnityEditor.Core.REPL
 {
     public sealed class ReplWindow
     {
-        private readonly string _autostartFilename;
         private static readonly char[] _inputSplitChars = { ',', ';', '<', '>', '(', ')', '[', ']', '=', '|', '&' };
 
         private const int HistoryLimit = 50;
 
+        private readonly string _autostartFilename;
         private readonly ScriptEvaluator _evaluator;
 
         private readonly List<string> _history = new List<string>();
