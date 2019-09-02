@@ -539,8 +539,14 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
             GUILayout.BeginHorizontal();
             {
-                if (GUILayout.Button("Search scene") || GUI.GetNameOfFocusedControl() == "searchbox" && Event.current.keyCode == KeyCode.Return)
+                if (GUILayout.Button("Search scene"))
                     Search(searchText, false);
+
+                if (Event.current.isKey && Event.current.keyCode == KeyCode.Return && GUI.GetNameOfFocusedControl() == "searchbox")
+                {
+                    Search(searchText, false);
+                    Event.current.Use();
+                }
 
                 if (GUILayout.Button("Deep scene"))
                     Search(searchText, true);
