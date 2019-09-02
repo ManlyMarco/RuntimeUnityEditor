@@ -31,6 +31,9 @@ namespace RuntimeUnityEditor.Core.Inspector
         private string _currentlyEditingText;
         private bool _userHasHitReturn;
 
+        private string _searchString;
+        private bool _focusSearchBox;
+
         private readonly Dictionary<Type, bool> _canCovertCache = new Dictionary<Type, bool>();
         private readonly List<ICacheEntry> _fieldCache = new List<ICacheEntry>();
         private readonly Stack<InspectorStackEntryBase> _inspectorStack = new Stack<InspectorStackEntryBase>();
@@ -249,12 +252,18 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         private void InspectorPop()
         {
+            _focusSearchBox = true;
+            _searchString = null;
+
             _inspectorStack.Pop();
             LoadStackEntry(_inspectorStack.Peek());
         }
 
         public void InspectorPush(InspectorStackEntryBase stackEntry)
         {
+            _focusSearchBox = true;
+            _searchString = null;
+
             _inspectorStack.Push(stackEntry);
             LoadStackEntry(stackEntry);
         }
@@ -289,9 +298,21 @@ namespace RuntimeUnityEditor.Core.Inspector
                 {
                     GUILayout.BeginHorizontal();
                     {
-                        GUILayout.BeginHorizontal(GUI.skin.box);
+                        GUILayout.BeginHorizontal(GUI.skin.box, GUILayout.ExpandWidth(true));
                         {
-                            GUILayout.Label("Find:");
+                            GUILayout.Label("Filter:", GUILayout.ExpandWidth(false));
+
+                            GUI.SetNextControlName(SearchBoxName);
+                            _searchString = GUILayout.TextField(_searchString, GUILayout.ExpandWidth(true));
+
+                            if (_focusSearchBox)
+                            {
+                                GUI.FocusWindow(id);
+                                GUI.FocusControl(SearchBoxName);
+                                _focusSearchBox = false;
+                            }
+
+                            GUILayout.Label("Find:", GUILayout.ExpandWidth(false));
                             foreach (var obj in new[]
                             {
                                 new KeyValuePair<object, string>(
@@ -306,7 +327,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                             })
                             {
                                 if (obj.Key == null) continue;
-                                if (GUILayout.Button(obj.Value))
+                                if (GUILayout.Button(obj.Value, GUILayout.ExpandWidth(false)))
                                 {
                                     InspectorClear();
                                     InspectorPush(new InstanceStackEntry(obj.Key, obj.Value));
@@ -315,9 +336,9 @@ namespace RuntimeUnityEditor.Core.Inspector
                         }
                         GUILayout.EndHorizontal();
 
-                        GUILayout.Space(13);
+                        GUILayout.Space(6);
 
-                        GUILayout.BeginHorizontal(GUI.skin.box);
+                        GUILayout.BeginHorizontal(GUI.skin.box, GUILayout.Width(160));
                         {
                             if (GUILayout.Button("Help"))
                                 InspectorPush(InspectorHelpObj.Create());
@@ -373,6 +394,8 @@ namespace RuntimeUnityEditor.Core.Inspector
             GUI.DragWindow();
         }
 
+        private const string SearchBoxName = "InspectorFilterBox";
+
         private void DrawContentScrollView()
         {
             if (_inspectorStack.Count == 0) return;
@@ -382,14 +405,18 @@ namespace RuntimeUnityEditor.Core.Inspector
             {
                 GUILayout.BeginVertical();
                 {
+                    var visibleFields = string.IsNullOrEmpty(_searchString) ?
+                        _fieldCache :
+                        _fieldCache.Where(x => x.Name().Contains(_searchString, StringComparison.OrdinalIgnoreCase) || x.TypeName().Contains(_searchString, StringComparison.OrdinalIgnoreCase)).ToList();
+
                     var firstIndex = (int)(currentItem.ScrollPosition.y / InspectorRecordHeight);
 
                     GUILayout.Space(firstIndex * InspectorRecordHeight);
 
                     _currentVisibleCount = (int)(_inspectorWindowRect.height / InspectorRecordHeight) - 4;
-                    for (var index = firstIndex; index < Mathf.Min(_fieldCache.Count, firstIndex + _currentVisibleCount); index++)
+                    for (var index = firstIndex; index < Mathf.Min(visibleFields.Count, firstIndex + _currentVisibleCount); index++)
                     {
-                        var entry = _fieldCache[index];
+                        var entry = visibleFields[index];
                         try
                         {
                             DrawSingleContentEntry(entry);
@@ -401,7 +428,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                     }
                     try
                     {
-                        GUILayout.Space(Mathf.Max(_inspectorWindowRect.height / 2, (_fieldCache.Count - firstIndex - _currentVisibleCount) * InspectorRecordHeight));
+                        GUILayout.Space(Mathf.Max(_inspectorWindowRect.height / 2, (visibleFields.Count - firstIndex - _currentVisibleCount) * InspectorRecordHeight));
                     }
                     catch
                     {
@@ -449,7 +476,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                 };
             }
 
-            if (Event.current.keyCode == KeyCode.Return) _userHasHitReturn = true;
+            if (Event.current.isKey && Event.current.keyCode == KeyCode.Return) _userHasHitReturn = true;
 
             while (_inspectorStack.Count > 0 && !_inspectorStack.Peek().EntryIsValid())
             {
