@@ -56,7 +56,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             pluginObject.StartCoroutine(SetWireframeCo());
         }
 
-        private bool _wireframe, prev;
+        private bool _wireframe;
 
         private IEnumerator SetWireframeCo()
 
@@ -141,29 +141,29 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 GUILayout.BeginHorizontal();
                 {
                     if (go.transform.childCount != 0)
+                    {
                         if (GUILayout.Toggle(_openedObjects.Contains(go), "", GUILayout.ExpandWidth(false)))
-                        {
-                            if (_openedObjects.Contains(go) == false)
-                                _openedObjects.Add(go);
-                        }
+                            _openedObjects.Add(go);
                         else
-                        {
-                            if (_openedObjects.Contains(go))
-                                _openedObjects.Remove(go);
-                        }
+                            _openedObjects.Remove(go);
+                    }
                     else
+                    {
                         GUILayout.Space(20f);
+                    }
 
                     if (GUILayout.Button(go.name, GUI.skin.label, GUILayout.ExpandWidth(true), GUILayout.MinWidth(200)))
                     {
                         if (SelectedTransform == go.transform)
                         {
-                            if (_openedObjects.Contains(go) == false)
-                                _openedObjects.Add(go);
-                            else
+                            // Toggle on/off
+                            if (!_openedObjects.Add(go))
                                 _openedObjects.Remove(go);
                         }
-                        SelectedTransform = go.transform;
+                        else
+                        {
+                            SelectedTransform = go.transform;
+                        }
                     }
 
                     GUI.color = c;
