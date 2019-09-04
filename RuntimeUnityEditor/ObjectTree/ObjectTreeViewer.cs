@@ -225,7 +225,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 if (GUILayout.Button("||", GUILayout.ExpandWidth(false)))
                     Time.timeScale = 0;
 
-                if (float.TryParse(GUILayout.TextField(Time.timeScale.ToString("F2", CultureInfo.InvariantCulture), _drawVector3FieldWidth), out var newVal))
+                if (float.TryParse(GUILayout.TextField(Time.timeScale.ToString("F2", CultureInfo.InvariantCulture), _drawVector3FieldWidth), NumberStyles.Any, CultureInfo.InvariantCulture, out var newVal))
                     Time.timeScale = newVal;
 
                 GUILayout.FlexibleSpace();
@@ -303,19 +303,20 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             var v3 = get();
             var v3New = v3;
 
+            GUI.changed = false;
             GUILayout.BeginHorizontal();
             {
                 GUILayout.Label(name, GUILayout.ExpandWidth(true), _drawVector3FieldHeight);
                 v3New.x = GUILayout.HorizontalSlider(v3.x, minVal, maxVal, _drawVector3SliderWidth, _drawVector3SliderHeight);
-                float.TryParse(GUILayout.TextField(v3New.x.ToString("F2", CultureInfo.InvariantCulture), _drawVector3FieldWidth, _drawVector3FieldHeight), out v3New.x);
+                float.TryParse(GUILayout.TextField(v3New.x.ToString("F2", CultureInfo.InvariantCulture), _drawVector3FieldWidth, _drawVector3FieldHeight), NumberStyles.Any, CultureInfo.InvariantCulture, out v3New.x);
                 v3New.y = GUILayout.HorizontalSlider(v3.y, minVal, maxVal, _drawVector3SliderWidth, _drawVector3SliderHeight);
-                float.TryParse(GUILayout.TextField(v3New.y.ToString("F2", CultureInfo.InvariantCulture), _drawVector3FieldWidth, _drawVector3FieldHeight), out v3New.y);
+                float.TryParse(GUILayout.TextField(v3New.y.ToString("F2", CultureInfo.InvariantCulture), _drawVector3FieldWidth, _drawVector3FieldHeight), NumberStyles.Any, CultureInfo.InvariantCulture, out v3New.y);
                 v3New.z = GUILayout.HorizontalSlider(v3.z, minVal, maxVal, _drawVector3SliderWidth, _drawVector3SliderHeight);
-                float.TryParse(GUILayout.TextField(v3New.z.ToString("F2", CultureInfo.InvariantCulture), _drawVector3FieldWidth, _drawVector3FieldHeight), out v3New.z);
+                float.TryParse(GUILayout.TextField(v3New.z.ToString("F2", CultureInfo.InvariantCulture), _drawVector3FieldWidth, _drawVector3FieldHeight), NumberStyles.Any, CultureInfo.InvariantCulture, out v3New.z);
             }
             GUILayout.EndHorizontal();
 
-            if (v3 != v3New) set(v3New);
+            if (GUI.changed && v3 != v3New) set(v3New);
         }
 
         private void DrawVector2(string name, Action<Vector2> set, Func<Vector2> get, float minVal, float maxVal)
@@ -323,17 +324,18 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             var vector2 = get();
             var vector2New = vector2;
 
+            GUI.changed = false;
             GUILayout.BeginHorizontal();
             {
                 GUILayout.Label(name, GUILayout.ExpandWidth(true), _drawVector3FieldHeight);
                 vector2New.x = GUILayout.HorizontalSlider(vector2.x, minVal, maxVal, _drawVector3SliderWidth, _drawVector3SliderHeight);
-                float.TryParse(GUILayout.TextField(vector2New.x.ToString("F2", CultureInfo.InvariantCulture), _drawVector3FieldWidth, _drawVector3FieldHeight), out vector2New.x);
+                float.TryParse(GUILayout.TextField(vector2New.x.ToString("F2", CultureInfo.InvariantCulture), _drawVector3FieldWidth, _drawVector3FieldHeight), NumberStyles.Any, CultureInfo.InvariantCulture, out vector2New.x);
                 vector2New.y = GUILayout.HorizontalSlider(vector2.y, minVal, maxVal, _drawVector3SliderWidth, _drawVector3SliderHeight);
-                float.TryParse(GUILayout.TextField(vector2New.y.ToString("F2", CultureInfo.InvariantCulture), _drawVector3FieldWidth, _drawVector3FieldHeight), out vector2New.y);
+                float.TryParse(GUILayout.TextField(vector2New.y.ToString("F2", CultureInfo.InvariantCulture), _drawVector3FieldWidth, _drawVector3FieldHeight), NumberStyles.Any, CultureInfo.InvariantCulture, out vector2New.y);
             }
             GUILayout.EndHorizontal();
 
-            if (vector2 != vector2New) set(vector2New);
+            if (GUI.changed && vector2 != vector2New) set(vector2New);
         }
 
         private void DrawSingleComponent(Component component)
