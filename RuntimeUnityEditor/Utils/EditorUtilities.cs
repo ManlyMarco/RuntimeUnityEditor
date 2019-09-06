@@ -11,6 +11,12 @@ namespace RuntimeUnityEditor.Core.Utils
 {
     public static class EditorUtilities
     {
+        public static void EatInputInRect(Rect eatRect)
+        {
+            if (eatRect.Contains(new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y)))
+                Input.ResetInputAxes();
+        }
+
         private static Texture2D WindowBackground { get; set; }
 
         public static void DrawSolidWindowBackground(Rect windowRect)

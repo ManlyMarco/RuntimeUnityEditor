@@ -110,6 +110,7 @@ namespace RuntimeUnityEditor.Core.REPL
 
             EditorUtilities.DrawSolidWindowBackground(_windowRect);
             _windowRect = GUILayout.Window(_windowId, _windowRect, WindowFunc, "C# REPL Console");
+            EditorUtilities.EatInputInRect(_windowRect);
         }
 
         private GUIStyle _completionsListingStyle;

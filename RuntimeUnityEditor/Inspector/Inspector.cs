@@ -488,6 +488,7 @@ namespace RuntimeUnityEditor.Core.Inspector
             {
                 EditorUtilities.DrawSolidWindowBackground(_inspectorWindowRect);
                 _inspectorWindowRect = GUILayout.Window(_windowId, _inspectorWindowRect, InspectorWindow, "Inspector");
+                EditorUtilities.EatInputInRect(_inspectorWindowRect);
             }
         }
 
