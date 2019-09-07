@@ -28,7 +28,6 @@ namespace RuntimeUnityEditor.Core
 
         private CursorLockMode _previousCursorLockState;
         private bool _previousCursorVisible;
-        private GUISkin _customSkin;
 
         internal RuntimeUnityEditorCore(MonoBehaviour pluginObject, ILoggerWrapper logger, string configPath)
         {
@@ -74,21 +73,8 @@ namespace RuntimeUnityEditor.Core
         {
             if (Show)
             {
-                if (_customSkin == null)
-                {
-                    try
-                    {
-                        _customSkin = InterfaceMaker.CreateSkin();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Log(LogLevel.Warning, "Could not load custom GUISkin - " + ex.Message);
-                        _customSkin = GUI.skin;
-                    }
-                }
-
                 var originalSkin = GUI.skin;
-                GUI.skin = _customSkin;
+                GUI.skin = InterfaceMaker.CustomSkin;
 
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
@@ -97,6 +83,7 @@ namespace RuntimeUnityEditor.Core
                 TreeViewer.DisplayViewer();
                 Repl?.DisplayWindow();
 
+                // Restore old skin for maximum compatibility
                 GUI.skin = originalSkin;
             }
         }
