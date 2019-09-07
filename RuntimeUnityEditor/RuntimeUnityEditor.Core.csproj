@@ -68,6 +68,7 @@
     <Compile Include="Inspector\Entries\Inspector\StaticStackEntry.cs" />
     <Compile Include="Inspector\Inspector.cs" />
     <Compile Include="Inspector\Entries\Contents\CacheEntryBase.cs" />
+    <Compile Include="Inspector\InspectorHelpObject.cs" />
     <Compile Include="LogLevel.cs" />
     <Compile Include="Gizmos\GizmoDrawer.cs" />
     <Compile Include="ObjectTree\ObjectTreeViewer.cs" />
@@ -84,15 +85,16 @@
     <Compile Include="Utils\Extensions.cs" />
     <Compile Include="Inspector\Entries\Contents\FieldCacheEntry.cs" />
     <Compile Include="Inspector\Entries\Contents\ICacheEntry.cs" />
-    <Compile Include="Inspector\InspectorHelpObj.cs" />
     <Compile Include="Inspector\Entries\Inspector\InspectorStackEntryBase.cs" />
     <Compile Include="Inspector\Entries\Contents\ListCacheEntry.cs" />
     <Compile Include="Inspector\Entries\Contents\MethodCacheEntry.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Inspector\Entries\Contents\PropertyCacheEntry.cs" />
     <Compile Include="Inspector\Entries\Contents\ReadonlyCacheEntry.cs" />
+    <Compile Include="UI\InterfaceMaker.cs" />
     <Compile Include="Utils\ResourceUtils.cs" />
     <Compile Include="Utils\SceneDumper.cs" />
+    <Compile Include="Inspector\ToStringConverter.cs" />
     <Compile Include="Utils\TypeNameExtensions.cs" />
     <Compile Include="Utils\UnityFeatureHelper.cs" />
   </ItemGroup>

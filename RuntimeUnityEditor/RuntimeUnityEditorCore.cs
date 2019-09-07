@@ -3,6 +3,7 @@ using System.IO;
 using RuntimeUnityEditor.Core.Gizmos;
 using RuntimeUnityEditor.Core.ObjectTree;
 using RuntimeUnityEditor.Core.REPL;
+using RuntimeUnityEditor.Core.UI;
 using RuntimeUnityEditor.Core.Utils;
 using UnityEngine;
 
@@ -77,7 +78,7 @@ namespace RuntimeUnityEditor.Core
                 {
                     try
                     {
-                        _customSkin = EditorUtilities.CreateSkin();
+                        _customSkin = InterfaceMaker.CreateSkin();
                     }
                     catch (Exception ex)
                     {

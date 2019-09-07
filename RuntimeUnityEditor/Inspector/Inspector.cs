@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using RuntimeUnityEditor.Core.Inspector.Entries;
+using RuntimeUnityEditor.Core.UI;
 using RuntimeUnityEditor.Core.Utils;
 using UnityEngine;
 using Component = UnityEngine.Component;
@@ -193,7 +194,7 @@ namespace RuntimeUnityEditor.Core.Inspector
         private void DrawEditableValue(ICacheEntry field, object value, params GUILayoutOption[] layoutParams)
         {
             var isBeingEdited = _currentlyEditingTag == field;
-            var text = isBeingEdited ? _currentlyEditingText : EditorUtilities.ExtractText(value);
+            var text = isBeingEdited ? _currentlyEditingText : ToStringConverter.ObjectToString(value);
             var result = GUILayout.TextField(text, layoutParams);
 
             if (!Equals(text, result) || isBeingEdited)
@@ -221,7 +222,7 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         private void DrawValue(object value, params GUILayoutOption[] layoutParams)
         {
-            GUILayout.TextArea(EditorUtilities.ExtractText(value), GUI.skin.label, layoutParams);
+            GUILayout.TextArea(ToStringConverter.ObjectToString(value), GUI.skin.label, layoutParams);
         }
 
         private void DrawVariableName(ICacheEntry field)
@@ -341,7 +342,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                         GUILayout.BeginHorizontal(GUI.skin.box, GUILayout.Width(160));
                         {
                             if (GUILayout.Button("Help"))
-                                InspectorPush(InspectorHelpObj.Create());
+                                InspectorPush(InspectorHelpObject.Create());
                             if (GUILayout.Button("Close"))
                                 InspectorClear();
                         }
@@ -454,7 +455,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                     DrawVariableName(entry);
 
                 if (entry.CanSetValue() &&
-                    CanCovert(EditorUtilities.ExtractText(value), entry.Type()))
+                    CanCovert(ToStringConverter.ObjectToString(value), entry.Type()))
                     DrawEditableValue(entry, value, GUILayout.ExpandWidth(true));
                 else
                     DrawValue(value, GUILayout.ExpandWidth(true));
@@ -487,7 +488,7 @@ namespace RuntimeUnityEditor.Core.Inspector
             if (_inspectorStack.Count != 0)
             {
                 _inspectorWindowRect = GUILayout.Window(_windowId, _inspectorWindowRect, InspectorWindow, "Inspector");
-                EditorUtilities.EatInputInRect(_inspectorWindowRect);
+                InterfaceMaker.EatInputInRect(_inspectorWindowRect);
             }
         }
 

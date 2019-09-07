@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using RuntimeUnityEditor.Core.Gizmos;
 using RuntimeUnityEditor.Core.Inspector.Entries;
+using RuntimeUnityEditor.Core.UI;
 using RuntimeUnityEditor.Core.Utils;
 using UnityEngine;
 using UnityEngine.Events;
@@ -185,7 +186,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             if (Enabled)
             {
                 _windowRect = GUILayout.Window(_windowId, _windowRect, WindowFunc, "Scene Object Browser");
-                EditorUtilities.EatInputInRect(_windowRect);
+                InterfaceMaker.EatInputInRect(_windowRect);
             }
         }
 

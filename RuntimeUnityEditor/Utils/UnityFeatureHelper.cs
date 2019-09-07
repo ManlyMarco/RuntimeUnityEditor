@@ -20,20 +20,20 @@ namespace RuntimeUnityEditor.Core.Utils
         {
             SupportsScenes = _scene != null && _sceneManager != null;
             if (!SupportsScenes)
-                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "[RuntimeEditor] UnityEngine.SceneManager and/or UnityEngine.SceneManagement.Scene are not available, some features will be disabled");
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "UnityEngine.SceneManager and/or UnityEngine.SceneManagement.Scene are not available, some features will be disabled");
 
             // Todo detect properly?
             SupportsCursorIndex = SupportsScenes;
             if (!SupportsCursorIndex)
-                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "[RuntimeEditor] TextEditor.cursorIndex is not available, some features will be disabled");
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "TextEditor.cursorIndex is not available, some features will be disabled");
 
             SupportsXml = _xml != null;
             if (!SupportsXml)
-                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "[RuntimeEditor] System.XML.dll is not available, REPL will be disabled");
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "System.XML.dll is not available, REPL will be disabled");
 
             SupportsVectrosity = _vectrosity != null;
             if (!SupportsVectrosity)
-                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "[RuntimeEditor] Vectrosity.dll is not available, drawing gizmos will be disabled");
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "Vectrosity.dll is not available, drawing gizmos will be disabled");
         }
 
         public static bool SupportsScenes { get; private set; }

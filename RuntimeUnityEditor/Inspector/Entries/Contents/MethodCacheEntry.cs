@@ -64,7 +64,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
             }
             catch (Exception ex)
             {
-                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, $"[CheatTools] Failed to evaluate the method {Name()} - {ex.Message}");
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, $"Failed to evaluate the method {Name()} - {ex.Message}");
                 _valueCache = ex;
                 return null;
             }

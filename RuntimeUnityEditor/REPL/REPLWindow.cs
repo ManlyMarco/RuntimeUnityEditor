@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using RuntimeUnityEditor.Core.REPL.MCS;
+using RuntimeUnityEditor.Core.UI;
 using RuntimeUnityEditor.Core.Utils;
 using UnityEngine;
 
@@ -109,7 +110,7 @@ namespace RuntimeUnityEditor.Core.REPL
             }
 
             _windowRect = GUILayout.Window(_windowId, _windowRect, WindowFunc, "C# REPL Console");
-            EditorUtilities.EatInputInRect(_windowRect);
+            InterfaceMaker.EatInputInRect(_windowRect);
         }
 
         private GUIStyle _completionsListingStyle;

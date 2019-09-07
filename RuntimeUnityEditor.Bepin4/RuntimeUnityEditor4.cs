@@ -37,7 +37,7 @@ namespace RuntimeUnityEditor.Bepin4
         {
             public void Log(LogLevel logLogLevel, object content)
             {
-                BepInEx.Logger.Log((BepInEx.Logging.LogLevel) logLogLevel, content);
+                BepInEx.Logger.Log((BepInEx.Logging.LogLevel) logLogLevel, "[RuntimeEditor]" + content);
             }
         }
     }
