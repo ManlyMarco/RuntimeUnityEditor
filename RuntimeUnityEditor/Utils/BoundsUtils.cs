@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using RuntimeUnityEditor.Core.ObjectTree;
 using UnityEngine;
-using Vectrosity;
 
 namespace RuntimeUnityEditor.Core.Utils
 {

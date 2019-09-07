@@ -184,7 +184,6 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
             if (Enabled)
             {
-                EditorUtilities.DrawSolidWindowBackground(_windowRect);
                 _windowRect = GUILayout.Window(_windowId, _windowRect, WindowFunc, "Scene Object Browser");
                 EditorUtilities.EatInputInRect(_windowRect);
             }

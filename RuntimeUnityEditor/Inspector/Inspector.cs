@@ -486,7 +486,6 @@ namespace RuntimeUnityEditor.Core.Inspector
 
             if (_inspectorStack.Count != 0)
             {
-                EditorUtilities.DrawSolidWindowBackground(_inspectorWindowRect);
                 _inspectorWindowRect = GUILayout.Window(_windowId, _inspectorWindowRect, InspectorWindow, "Inspector");
                 EditorUtilities.EatInputInRect(_inspectorWindowRect);
             }

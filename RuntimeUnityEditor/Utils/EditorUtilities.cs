@@ -17,20 +17,33 @@ namespace RuntimeUnityEditor.Core.Utils
                 Input.ResetInputAxes();
         }
 
-        private static Texture2D WindowBackground { get; set; }
-
-        public static void DrawSolidWindowBackground(Rect windowRect)
+        public static GUISkin CreateSkin()
         {
-            if (WindowBackground == null)
-            {
-                var windowBackground = new Texture2D(1, 1, TextureFormat.ARGB32, false);
-                windowBackground.SetPixel(0, 0, new Color(0.6f, 0.6f, 0.6f, 1));
-                windowBackground.Apply();
-                WindowBackground = windowBackground;
-            }
+            var newSkin = Object.Instantiate(GUI.skin);
 
-            // It's necessary to make a new GUIStyle here or the texture doesn't show up
-            GUI.Box(windowRect, GUIContent.none, new GUIStyle { normal = new GUIStyleState { background = WindowBackground } });
+            // Load the custom skin from resources
+            var texData = ResourceUtils.GetEmbeddedResource("guisharp-box.png");
+            var boxTex = UnityFeatureHelper.LoadTexture(texData);
+            newSkin.box.onNormal.background = null;
+            newSkin.box.normal.background = boxTex;
+            newSkin.box.normal.textColor = Color.white;
+
+            texData = ResourceUtils.GetEmbeddedResource("guisharp-window.png");
+            var winTex = UnityFeatureHelper.LoadTexture(texData);
+            newSkin.window.onNormal.background = null;
+            newSkin.window.normal.background = winTex;
+            newSkin.window.padding = new RectOffset(6, 6, 22, 6);
+            newSkin.window.border = new RectOffset(10, 10, 20, 10);
+            newSkin.window.normal.textColor = Color.white;
+
+            newSkin.button.padding = new RectOffset(4, 4, 3, 3);
+            newSkin.button.normal.textColor = Color.white;
+
+            newSkin.textField.normal.textColor = Color.white;
+
+            newSkin.label.normal.textColor = Color.white;
+
+            return newSkin;
         }
 
         public static void DrawSeparator()

@@ -35,7 +35,7 @@ namespace RuntimeUnityEditor.Core.Utils
             if (!SupportsVectrosity)
                 RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "[RuntimeEditor] Vectrosity.dll is not available, drawing gizmos will be disabled");
         }
-        
+
         public static bool SupportsScenes { get; private set; }
         public static bool SupportsXml { get; }
         public static bool SupportsCursorIndex { get; }
@@ -74,7 +74,7 @@ namespace RuntimeUnityEditor.Core.Utils
                     return false;
                 }
             }
-            
+
             // Generated in most versions unless disabled
             if (TryOpen(Path.Combine(Application.dataPath, "output_log.txt"))) return;
 
@@ -105,6 +105,28 @@ namespace RuntimeUnityEditor.Core.Utils
             }
 
             RuntimeUnityEditorCore.Logger.Log(LogLevel.Message | LogLevel.Error, "No log files were found");
+        }
+
+        public static Texture2D LoadTexture(byte[] texData)
+        {
+            var tex = new Texture2D(1, 1, TextureFormat.ARGB32, false);
+
+            // Around Unity 2018 the LoadImage and other export/import methods got moved from Texture2D to extension methods
+            var loadMethod = typeof(Texture2D).GetMethod("LoadImage", new[] { typeof(byte[]) });
+            if (loadMethod != null)
+            {
+                loadMethod.Invoke(tex, new object[] { texData });
+            }
+            else
+            {
+                var converter = Type.GetType("UnityEngine.ImageConversion, UnityEngine.ImageConversionModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null");
+                if (converter == null) throw new ArgumentNullException(nameof(converter));
+                var converterMethod = converter.GetMethod("LoadImage", new[] { typeof(Texture2D), typeof(byte[]) });
+                if (converterMethod == null) throw new ArgumentNullException(nameof(converterMethod));
+                converterMethod.Invoke(null, new object[] { tex, texData });
+            }
+
+            return tex;
         }
     }
 }

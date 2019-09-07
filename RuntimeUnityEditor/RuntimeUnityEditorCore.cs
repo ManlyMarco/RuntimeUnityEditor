@@ -3,6 +3,7 @@ using System.IO;
 using RuntimeUnityEditor.Core.Gizmos;
 using RuntimeUnityEditor.Core.ObjectTree;
 using RuntimeUnityEditor.Core.REPL;
+using RuntimeUnityEditor.Core.Utils;
 using UnityEngine;
 
 namespace RuntimeUnityEditor.Core
@@ -26,8 +27,9 @@ namespace RuntimeUnityEditor.Core
 
         private CursorLockMode _previousCursorLockState;
         private bool _previousCursorVisible;
+        private GUISkin _customSkin;
 
-        public RuntimeUnityEditorCore(MonoBehaviour pluginObject, ILoggerWrapper logger, string configPath)
+        internal RuntimeUnityEditorCore(MonoBehaviour pluginObject, ILoggerWrapper logger, string configPath)
         {
             if (Instance != null)
                 throw new InvalidOperationException("Can only create one instance of the Core object");
@@ -46,14 +48,14 @@ namespace RuntimeUnityEditor.Core
                     Inspector.InspectorPush(stackEntry);
             };
 
-            if (Utils.UnityFeatureHelper.SupportsVectrosity)
+            if (UnityFeatureHelper.SupportsVectrosity)
             {
                 GizmoDrawer = new GizmoDrawer(pluginObject);
                 TreeViewer.TreeSelectionChangedCallback = transform => GizmoDrawer.UpdateState(transform);
             }
 
-            if (Utils.UnityFeatureHelper.SupportsCursorIndex &&
-                Utils.UnityFeatureHelper.SupportsXml)
+            if (UnityFeatureHelper.SupportsCursorIndex &&
+                UnityFeatureHelper.SupportsXml)
             {
                 try
                 {
@@ -67,16 +69,34 @@ namespace RuntimeUnityEditor.Core
             }
         }
 
-        public void OnGUI()
+        internal void OnGUI()
         {
             if (Show)
             {
+                if (_customSkin == null)
+                {
+                    try
+                    {
+                        _customSkin = EditorUtilities.CreateSkin();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Log(LogLevel.Warning, "Could not load custom GUISkin - " + ex.Message);
+                        _customSkin = GUI.skin;
+                    }
+                }
+
+                var originalSkin = GUI.skin;
+                GUI.skin = _customSkin;
+
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
 
                 Inspector.DisplayInspector();
                 TreeViewer.DisplayViewer();
                 Repl?.DisplayWindow();
+
+                GUI.skin = originalSkin;
             }
         }
 
@@ -116,7 +136,7 @@ namespace RuntimeUnityEditor.Core
             }
         }
 
-        public void Update()
+        internal void Update()
         {
             if (Input.GetKeyDown(ShowHotkey))
                 Show = !Show;
