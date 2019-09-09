@@ -2,12 +2,12 @@
 
 namespace RuntimeUnityEditor.Core.Inspector.Entries
 {
-    public class CallbackCacheEntey<T> : CacheEntryBase
+    public class CallbackCacheEntry<T> : CacheEntryBase
     {
         private readonly string _message;
         private readonly Func<T> _callback;
 
-        public CallbackCacheEntey(string name, string message, Func<T> callback) : base(name)
+        public CallbackCacheEntry(string name, string message, Func<T> callback) : base(name)
         {
             _message = message;
             _callback = callback ?? throw new ArgumentNullException(nameof(callback));
