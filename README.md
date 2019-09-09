@@ -2,7 +2,7 @@
 In-game inspector, editor and interactive console for applications made with Unity3D game engine. It's designed for debugging and modding Unity games, but can also be used as an universal trainer.
 
 ### Features
-- Works on most Unity games supported by BepInEx
+- Works on most Unity games supported by [BepInEx](https://github.com/BepInEx/BepInEx)
 - GameObject and component browser
 - Object inspector that allows modifying values of objects in real time
 - REPL C# console
