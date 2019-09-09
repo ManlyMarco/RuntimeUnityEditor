@@ -85,13 +85,11 @@ namespace RuntimeUnityEditor.Core.Inspector
             {
                 if (objectToOpen is Component cmp)
                 {
-                    _fieldCache.Add(new CallbackCacheEntry<Action>("Open in Scene Object Browser", "Navigate to GameObject this Component is attached to",
-                        () => { _treelistShowCallback(cmp.transform); return null; }));
+                    _fieldCache.Add(new CallbackCacheEntry("Open in Scene Object Browser", "Navigate to GameObject this Component is attached to", () => _treelistShowCallback(cmp.transform)));
                 }
                 else if (objectToOpen is GameObject castedObj)
                 {
-                    _fieldCache.Add(new CallbackCacheEntry<Action>("Open in Scene Object Browser", "Navigate to this object in the Scene Object Browser",
-                        () => { _treelistShowCallback(castedObj.transform); return null; }));
+                    _fieldCache.Add(new CallbackCacheEntry("Open in Scene Object Browser", "Navigate to this object in the Scene Object Browser", () => _treelistShowCallback(castedObj.transform)));
                     _fieldCache.Add(new ReadonlyCacheEntry("Child objects", castedObj.transform.Cast<Transform>().ToArray()));
                     _fieldCache.Add(new ReadonlyCacheEntry("Components", castedObj.GetComponents<Component>()));
                 }
