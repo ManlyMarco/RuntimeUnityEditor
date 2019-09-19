@@ -116,5 +116,17 @@ namespace RuntimeUnityEditor.Core.Utils
             catch (ReflectionTypeLoadException e) { return e.Types.Where(x => x != null); }
             catch { return Enumerable.Empty<Type>(); }
         }
+
+        public static string GetFullTransfromPath(this Transform target)
+        {
+            var name = target.name;
+            var parent = target.parent;
+            while (parent != null)
+            {
+                name = $"{parent.name}/{name}";
+                parent = parent.parent;
+            }
+            return name;
+        }
     }
 }

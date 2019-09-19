@@ -260,7 +260,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         {
             GUILayout.BeginVertical(GUI.skin.box);
             {
-                var fullTransfromPath = GetFullTransfromPath(SelectedTransform);
+                var fullTransfromPath = SelectedTransform.GetFullTransfromPath();
 
                 GUILayout.TextArea(fullTransfromPath, GUI.skin.label);
 
@@ -469,18 +469,6 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             GUILayout.EndHorizontal();
         }
 
-        private static string GetFullTransfromPath(Transform target)
-        {
-            var name = target.name;
-            var parent = target.parent;
-            while (parent != null)
-            {
-                name = $"{parent.name}/{name}";
-                parent = parent.parent;
-            }
-            return name;
-        }
-
         private string _searchText = string.Empty;
         private void DisplayObjectTree()
         {
@@ -500,7 +488,6 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             }
             GUILayout.EndVertical();
         }
-
 
         private void DisplayTreeSearchBox()
         {
