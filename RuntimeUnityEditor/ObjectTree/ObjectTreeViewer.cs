@@ -63,15 +63,22 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         }
 
         private bool _wireframe;
+        private bool _actuallyInsideOnGui;
 
         private IEnumerator SetWireframeCo()
         {
             while (true)
             {
+                yield return null;
+
+                _actuallyInsideOnGui = true;
+
                 yield return new WaitForEndOfFrame();
 
                 if (GL.wireframe != _wireframe)
                     GL.wireframe = _wireframe;
+
+                _actuallyInsideOnGui = false;
             }
         }
 
@@ -174,7 +181,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
         public void DisplayViewer()
         {
-            if (_wireframe && Event.current.type == EventType.layout)
+            if (_wireframe && _actuallyInsideOnGui && Event.current.type == EventType.layout)
                 GL.wireframe = false;
 
             if (Enabled)
