@@ -24,7 +24,8 @@ namespace RuntimeUnityEditor.Core
         internal static MonoBehaviour PluginObject { get; private set; }
         internal static ILoggerWrapper Logger { get; private set; }
 
-        internal static GizmoDrawer GizmoDrawer { get; private set; }
+        private readonly GizmoDrawer _gizmoDrawer;
+        private readonly GameObjectSearcher _gameObjectSearcher = new GameObjectSearcher();
 
         private CursorLockMode _previousCursorLockState;
         private bool _previousCursorVisible;
@@ -40,7 +41,7 @@ namespace RuntimeUnityEditor.Core
 
             Inspector = new Inspector.Inspector(targetTransform => TreeViewer.SelectAndShowObject(targetTransform));
 
-            TreeViewer = new ObjectTreeViewer(pluginObject);
+            TreeViewer = new ObjectTreeViewer(pluginObject, _gameObjectSearcher);
             TreeViewer.InspectorOpenCallback = items =>
             {
                 Inspector.InspectorClear();
@@ -50,8 +51,8 @@ namespace RuntimeUnityEditor.Core
 
             if (UnityFeatureHelper.SupportsVectrosity)
             {
-                GizmoDrawer = new GizmoDrawer(pluginObject);
-                TreeViewer.TreeSelectionChangedCallback = transform => GizmoDrawer.UpdateState(transform);
+                _gizmoDrawer = new GizmoDrawer(pluginObject);
+                TreeViewer.TreeSelectionChangedCallback = transform => _gizmoDrawer.UpdateState(transform);
             }
 
             if (UnityFeatureHelper.SupportsCursorIndex &&
@@ -109,17 +110,17 @@ namespace RuntimeUnityEditor.Core
 
                 TreeViewer.Enabled = value;
 
-                if (GizmoDrawer != null)
+                if (_gizmoDrawer != null)
                 {
-                    GizmoDrawer.Show = value;
-                    GizmoDrawer.UpdateState(TreeViewer.SelectedTransform);
+                    _gizmoDrawer.Show = value;
+                    _gizmoDrawer.UpdateState(TreeViewer.SelectedTransform);
                 }
 
                 if (value)
                 {
                     SetWindowSizes();
-
-                    TreeViewer.UpdateCaches();
+                    
+                    RefreshGameObjectSearcher(true);
                 }
             }
         }
@@ -129,7 +130,18 @@ namespace RuntimeUnityEditor.Core
             if (Input.GetKeyDown(ShowHotkey))
                 Show = !Show;
 
-            Inspector.InspectorUpdate();
+            if (Show)
+            {
+                Inspector.InspectorUpdate();
+                RefreshGameObjectSearcher(false);
+            }
+        }
+
+        private void RefreshGameObjectSearcher(bool full)
+        {
+            bool GizmoFilter(GameObject o) => o.name.StartsWith(GizmoDrawer.GizmoObjectName);
+            var gizmosExist = _gizmoDrawer != null && _gizmoDrawer.Lines.Count > 0;
+            _gameObjectSearcher.Refresh(full, gizmosExist ? GizmoFilter : (Predicate<GameObject>)null);
         }
 
         private void SetWindowSizes()

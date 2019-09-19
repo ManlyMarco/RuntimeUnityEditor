@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Reflection;
 using RuntimeUnityEditor.Core.Gizmos;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.UI;
@@ -27,7 +26,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         private Rect _windowRect;
         private bool _scrollTreeToSelected;
         private bool _enabled;
-        private List<GameObject> _cachedRootGameObjects;
+        private readonly GameObjectSearcher _gameObjectSearcher;
         private readonly Dictionary<Image, Texture2D> _imagePreviewCache = new Dictionary<Image, Texture2D>();
         private readonly GUILayoutOption _drawVector3FieldWidth = GUILayout.Width(38);
         private readonly GUILayoutOption _drawVector3FieldHeight = GUILayout.Height(19);
@@ -50,8 +49,12 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             Enabled = true;
         }
 
-        public ObjectTreeViewer(MonoBehaviour pluginObject)
+        public ObjectTreeViewer(MonoBehaviour pluginObject, GameObjectSearcher gameObjectSearcher)
         {
+            if (pluginObject == null) throw new ArgumentNullException(nameof(pluginObject));
+            if (gameObjectSearcher == null) throw new ArgumentNullException(nameof(gameObjectSearcher));
+
+            _gameObjectSearcher = gameObjectSearcher;
             _windowId = GetHashCode();
 
             pluginObject.StartCoroutine(SetWireframeCo());
@@ -60,7 +63,6 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         private bool _wireframe;
 
         private IEnumerator SetWireframeCo()
-
         {
             while (true)
             {
@@ -77,7 +79,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             set
             {
                 if (value && !_enabled)
-                    UpdateCaches();
+                    ClearCaches();
 
                 _enabled = value;
             }
@@ -93,19 +95,9 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             }
         }
 
-        public void UpdateCaches()
+        public void ClearCaches()
         {
-            _cachedRootGameObjects = GetAllRootGameObjects();
-
             _imagePreviewCache.Clear();
-        }
-
-        private static List<GameObject> GetAllRootGameObjects()
-        {
-            return Resources.FindObjectsOfTypeAll<Transform>()
-                                                .Where(t => t.parent == null)
-                                                .Select(x => x.gameObject)
-                                                .ToList();
         }
 
         private void OnInspectorOpen(params InspectorStackEntryBase[] items)
@@ -487,7 +479,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             return name;
         }
 
-        private string searchText = string.Empty;
+        private string _searchText = string.Empty;
         private void DisplayObjectTree()
         {
             GUILayout.BeginVertical(GUI.skin.box);
@@ -497,7 +489,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 _treeScrollPosition = GUILayout.BeginScrollView(_treeScrollPosition,
                     GUILayout.Height(_windowRect.height / 3), GUILayout.ExpandWidth(true));
                 {
-                    foreach (var rootGameObject in GetObjectsToDisplay())
+                    foreach (var rootGameObject in _gameObjectSearcher.GetSearchedOrAllObjects())
                     {
                         DisplayObjectTreeHelper(rootGameObject, 0);
                     }
@@ -508,33 +500,17 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         }
 
 
-        private IEnumerable<GameObject> GetObjectsToDisplay()
-        {
-            if (_searchResults != null)
-            {
-                _searchResults.RemoveAll(o => o == null);
-                return _searchResults;
-            }
-
-            _cachedRootGameObjects.RemoveAll(o => o == null);
-
-            if (UnityFeatureHelper.SupportsScenes)
-                _cachedRootGameObjects.AddRange(UnityFeatureHelper.GetSceneGameObjects().Except(_cachedRootGameObjects));
-
-            return _cachedRootGameObjects.Where(x => !x.name.StartsWith(GizmoDrawer.GizmoObjectName, StringComparison.Ordinal)).OrderBy(x => x.name);
-        }
-
         private void DisplayTreeSearchBox()
         {
             GUILayout.BeginHorizontal();
             {
                 GUI.SetNextControlName("searchbox");
-                searchText = GUILayout.TextField(searchText, GUILayout.ExpandWidth(true));
+                _searchText = GUILayout.TextField(_searchText, GUILayout.ExpandWidth(true));
 
                 if (GUILayout.Button("Clear", GUILayout.ExpandWidth(false)))
                 {
-                    searchText = string.Empty;
-                    Search(searchText, false);
+                    _searchText = string.Empty;
+                    _gameObjectSearcher.Search(_searchText, false);
                     SelectAndShowObject(SelectedTransform);
                 }
             }
@@ -543,20 +519,20 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             GUILayout.BeginHorizontal();
             {
                 if (GUILayout.Button("Search scene"))
-                    Search(searchText, false);
+                    _gameObjectSearcher.Search(_searchText, false);
 
                 if (Event.current.isKey && Event.current.keyCode == KeyCode.Return && GUI.GetNameOfFocusedControl() == "searchbox")
                 {
-                    Search(searchText, false);
+                    _gameObjectSearcher.Search(_searchText, false);
                     Event.current.Use();
                 }
 
                 if (GUILayout.Button("Deep scene"))
-                    Search(searchText, true);
+                    _gameObjectSearcher.Search(_searchText, true);
 
                 if (GUILayout.Button("Search static"))
                 {
-                    if (string.IsNullOrEmpty(searchText))
+                    if (string.IsNullOrEmpty(_searchText))
                     {
                         RuntimeUnityEditorCore.Logger.Log(LogLevel.Message | LogLevel.Warning, "Can't search for empty string");
                     }
@@ -564,7 +540,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                     {
                         var matchedTypes = AppDomain.CurrentDomain.GetAssemblies()
                             .SelectMany(Extensions.GetTypesSafe)
-                            .Where(x => x.GetSourceCodeRepresentation().Contains(searchText, StringComparison.OrdinalIgnoreCase));
+                            .Where(x => x.GetSourceCodeRepresentation().Contains(_searchText, StringComparison.OrdinalIgnoreCase));
 
                         var stackEntries = matchedTypes.Select(t => new StaticStackEntry(t, t.FullName)).ToList();
 
@@ -578,62 +554,6 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 }
             }
             GUILayout.EndHorizontal();
-
-        }
-
-        private List<GameObject> _searchResults;
-
-        private void Search(string searchString, bool searchProperties)
-        {
-            if (string.IsNullOrEmpty(searchString))
-            {
-                _searchResults = null;
-            }
-            else
-            {
-                _searchResults = GetAllRootGameObjects()
-                    .SelectMany(x => x.GetComponentsInChildren<Transform>(true))
-                    .Where(x => x.name.Contains(searchString, StringComparison.InvariantCultureIgnoreCase) || x.GetComponents<Component>().Any(c => SearchInComponent(searchString, c, searchProperties)))
-                    .OrderBy(x => x.name)
-                    .Select(x => x.gameObject)
-                    .ToList();
-            }
-        }
-
-        private static bool SearchInComponent(string searchString, Component c, bool searchProperties)
-        {
-            var type = c.GetType();
-            if (type.Name.Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
-                return true;
-
-            if (!searchProperties)
-                return false;
-
-            var nameBlacklist = new[] { "parent", "parentInternal", "root", "transform", "gameObject" };
-            var typeBlacklist = new[] { typeof(bool) };
-
-            foreach (var prop in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                .Where(x => x.CanRead && !nameBlacklist.Contains(x.Name) && !typeBlacklist.Contains(x.PropertyType)))
-            {
-                try
-                {
-                    if (prop.GetValue(c, null).ToString().Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
-                        return true;
-                }
-                catch { }
-            }
-            foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                .Where(x => !nameBlacklist.Contains(x.Name) && !typeBlacklist.Contains(x.FieldType)))
-            {
-                try
-                {
-                    if (field.GetValue(c).ToString().Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
-                        return true;
-                }
-                catch { }
-            }
-
-            return false;
         }
     }
 }

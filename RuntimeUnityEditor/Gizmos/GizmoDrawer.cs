@@ -13,6 +13,8 @@ namespace RuntimeUnityEditor.Core.Gizmos
         private readonly List<IGizmoEntry> _lines = new List<IGizmoEntry>();
         private bool _show;
 
+        public ICollection<IGizmoEntry> Lines => _lines;
+
         public GizmoDrawer(MonoBehaviour coroutineTarget)
         {
             coroutineTarget.StartCoroutine(EndOfFrame());
