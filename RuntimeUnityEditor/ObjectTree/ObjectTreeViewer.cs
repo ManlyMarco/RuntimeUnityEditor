@@ -38,6 +38,8 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         {
             SelectedTransform = target;
 
+            if (target == null) return;
+
             target = target.parent;
             while (target != null)
             {
