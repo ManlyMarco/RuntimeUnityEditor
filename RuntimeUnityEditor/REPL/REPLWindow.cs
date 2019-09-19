@@ -147,7 +147,7 @@ namespace RuntimeUnityEditor.Core.REPL
                 GUILayout.BeginHorizontal();
                 {
                     GUI.SetNextControlName("replInput");
-                    _inputField = GUILayout.TextField(_inputField);
+                    _inputField = GUILayout.TextArea(_inputField);
 
                     if (_refocus)
                     {
@@ -169,7 +169,7 @@ namespace RuntimeUnityEditor.Core.REPL
                     if (GUILayout.Button("History", GUILayout.ExpandWidth(false)))
                     {
                         _sb.AppendLine();
-                        _sb.AppendLine("# History of entered commands:");
+                        _sb.AppendLine("# History of reed commands:");
                         foreach (var h in _history)
                             _sb.AppendLine(h);
 
@@ -287,7 +287,7 @@ namespace RuntimeUnityEditor.Core.REPL
                 _newCursorLocation = -1;
             }
 
-            if (Event.current.isKey && Event.current.keyCode == KeyCode.Return)
+            if (Event.current.isKey && Event.current.keyCode == KeyCode.Return && !Event.current.shift)
             {
                 AcceptInput();
                 Event.current.Use();
@@ -348,6 +348,7 @@ namespace RuntimeUnityEditor.Core.REPL
 
         private void AcceptInput()
         {
+            _inputField = _inputField.Trim();
             _history.Add(_inputField);
             if (_history.Count > HistoryLimit)
                 _history.RemoveRange(0, _history.Count - HistoryLimit);
