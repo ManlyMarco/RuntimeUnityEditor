@@ -287,15 +287,20 @@ namespace RuntimeUnityEditor.Core.REPL
                 _newCursorLocation = -1;
             }
 
-            if (Event.current.isKey && Event.current.keyCode == KeyCode.Return && !Event.current.shift)
-            {
-                AcceptInput();
-                Event.current.Use();
-            }
-
             if (Event.current.isKey)
             {
-                if (Event.current.keyCode == KeyCode.UpArrow)
+                if (Event.current.keyCode == KeyCode.Return)
+                {
+                    if (!Event.current.shift)
+                    {
+                        // Fix pressing enter adding a newline
+                        if (_textEditor.cursorIndex - 1 >= 0)
+                            _inputField = _inputField.Remove(_textEditor.cursorIndex - 1, 1);
+                        AcceptInput();
+                        Event.current.Use();
+                    }
+                }
+                else if (Event.current.keyCode == KeyCode.UpArrow)
                 {
                     FetchHistory(-1);
                     Event.current.Use();
@@ -349,6 +354,9 @@ namespace RuntimeUnityEditor.Core.REPL
         private void AcceptInput()
         {
             _inputField = _inputField.Trim();
+
+            if (_inputField == "") return;
+
             _history.Add(_inputField);
             if (_history.Count > HistoryLimit)
                 _history.RemoveRange(0, _history.Count - HistoryLimit);
