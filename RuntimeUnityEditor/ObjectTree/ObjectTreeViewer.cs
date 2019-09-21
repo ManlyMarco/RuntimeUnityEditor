@@ -517,7 +517,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 if (GUILayout.Button("Search scene"))
                     _gameObjectSearcher.Search(_searchText, false);
 
-                if (Event.current.isKey && Event.current.keyCode == KeyCode.Return && GUI.GetNameOfFocusedControl() == "searchbox")
+                if (Event.current.isKey && (Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter) && GUI.GetNameOfFocusedControl() == "searchbox")
                 {
                     _gameObjectSearcher.Search(_searchText, false);
                     Event.current.Use();

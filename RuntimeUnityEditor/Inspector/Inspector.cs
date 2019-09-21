@@ -475,7 +475,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                 };
             }
 
-            if (Event.current.isKey && Event.current.keyCode == KeyCode.Return) _userHasHitReturn = true;
+            if (Event.current.isKey && (Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter)) _userHasHitReturn = true;
 
             while (_inspectorStack.Count > 0 && !_inspectorStack.Peek().EntryIsValid())
             {
