@@ -287,29 +287,31 @@ namespace RuntimeUnityEditor.Core.REPL
                 _newCursorLocation = -1;
             }
 
-            if (Event.current.isKey)
+            var currentEvent = Event.current;
+            if (currentEvent.isKey)
             {
-                if (Event.current.keyCode == KeyCode.Return)
+                if (currentEvent.keyCode == KeyCode.Return || currentEvent.keyCode == KeyCode.KeypadEnter)
                 {
-                    if (!Event.current.shift)
+                    if (!currentEvent.shift)
                     {
-                        // Fix pressing enter adding a newline
+                        // Fix pressing enter adding a newline in textarea
                         if (_textEditor.cursorIndex - 1 >= 0)
                             _inputField = _inputField.Remove(_textEditor.cursorIndex - 1, 1);
+
                         AcceptInput();
-                        Event.current.Use();
+                        currentEvent.Use();
                     }
                 }
-                else if (Event.current.keyCode == KeyCode.UpArrow)
+                else if (currentEvent.keyCode == KeyCode.UpArrow)
                 {
                     FetchHistory(-1);
-                    Event.current.Use();
+                    currentEvent.Use();
                     ClearSuggestions();
                 }
-                else if (Event.current.keyCode == KeyCode.DownArrow)
+                else if (currentEvent.keyCode == KeyCode.DownArrow)
                 {
                     FetchHistory(1);
-                    Event.current.Use();
+                    currentEvent.Use();
                     ClearSuggestions();
                 }
             }
