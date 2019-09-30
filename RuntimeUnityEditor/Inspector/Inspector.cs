@@ -32,7 +32,13 @@ namespace RuntimeUnityEditor.Core.Inspector
         private string _currentlyEditingText;
         private bool _userHasHitReturn;
 
-        private string _searchString;
+        private string _searchString = "";
+        private string SearchString
+        {
+            get => _searchString;
+            // The string can't be null under unity 5.x or we crash
+            set => _searchString = value ?? "";
+        }
         private bool _focusSearchBox;
 
         private readonly Dictionary<Type, bool> _canCovertCache = new Dictionary<Type, bool>();
@@ -252,7 +258,7 @@ namespace RuntimeUnityEditor.Core.Inspector
         private void InspectorPop()
         {
             _focusSearchBox = true;
-            _searchString = null;
+            SearchString = null;
 
             _inspectorStack.Pop();
             LoadStackEntry(_inspectorStack.Peek());
@@ -261,7 +267,7 @@ namespace RuntimeUnityEditor.Core.Inspector
         public void InspectorPush(InspectorStackEntryBase stackEntry)
         {
             _focusSearchBox = true;
-            _searchString = null;
+            SearchString = null;
 
             _inspectorStack.Push(stackEntry);
             LoadStackEntry(stackEntry);
@@ -302,7 +308,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                             GUILayout.Label("Filter:", GUILayout.ExpandWidth(false));
 
                             GUI.SetNextControlName(SearchBoxName);
-                            _searchString = GUILayout.TextField(_searchString, GUILayout.ExpandWidth(true));
+                            SearchString = GUILayout.TextField(SearchString, GUILayout.ExpandWidth(true));
 
                             if (_focusSearchBox)
                             {
@@ -404,9 +410,9 @@ namespace RuntimeUnityEditor.Core.Inspector
             {
                 GUILayout.BeginVertical();
                 {
-                    var visibleFields = string.IsNullOrEmpty(_searchString) ?
+                    var visibleFields = string.IsNullOrEmpty(SearchString) ?
                         _fieldCache :
-                        _fieldCache.Where(x => x.Name().Contains(_searchString, StringComparison.OrdinalIgnoreCase) || x.TypeName().Contains(_searchString, StringComparison.OrdinalIgnoreCase)).ToList();
+                        _fieldCache.Where(x => x.Name().Contains(SearchString, StringComparison.OrdinalIgnoreCase) || x.TypeName().Contains(SearchString, StringComparison.OrdinalIgnoreCase)).ToList();
 
                     var firstIndex = (int)(currentItem.ScrollPosition.y / InspectorRecordHeight);
 
