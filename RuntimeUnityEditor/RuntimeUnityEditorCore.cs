@@ -103,8 +103,11 @@ namespace RuntimeUnityEditor.Core
                     }
                     else
                     {
-                        Cursor.lockState = _previousCursorLockState;
-                        Cursor.visible = _previousCursorVisible;
+                        if (!_previousCursorVisible || _previousCursorLockState != CursorLockMode.None)
+                        {
+                            Cursor.lockState = _previousCursorLockState;
+                            Cursor.visible = _previousCursorVisible;
+                        }
                     }
                 }
 
@@ -119,7 +122,7 @@ namespace RuntimeUnityEditor.Core
                 if (value)
                 {
                     SetWindowSizes();
-                    
+
                     RefreshGameObjectSearcher(true);
                 }
             }
@@ -134,6 +137,18 @@ namespace RuntimeUnityEditor.Core
             {
                 Inspector.InspectorUpdate();
                 RefreshGameObjectSearcher(false);
+
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+            }
+        }
+
+        internal void LateUpdate()
+        {
+            if (Show)
+            {
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
             }
         }
 

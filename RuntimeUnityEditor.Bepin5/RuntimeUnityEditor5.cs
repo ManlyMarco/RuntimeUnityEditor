@@ -32,6 +32,11 @@ namespace RuntimeUnityEditor.Bepin5
             Instance.Update();
         }
 
+        private void LateUpdate()
+        {
+            Instance.LateUpdate();
+        }
+
         private sealed class Logger5 : ILoggerWrapper
         {
             private readonly ManualLogSource _logger;

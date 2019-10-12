@@ -33,6 +33,11 @@ namespace RuntimeUnityEditor.Bepin4
             Instance.Update();
         }
 
+        private void LateUpdate()
+        {
+            Instance.LateUpdate();
+        }
+
         private sealed class Logger : ILoggerWrapper
         {
             public void Log(LogLevel logLogLevel, object content)
