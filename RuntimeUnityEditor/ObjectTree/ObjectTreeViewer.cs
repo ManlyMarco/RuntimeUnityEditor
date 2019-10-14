@@ -236,6 +236,8 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             }
             GUILayout.EndHorizontal();
 
+            AssetBundleManagerHelper.DrawButtonIfAvailable();
+
             GizmoDrawer.DisplayControls();
         }
 

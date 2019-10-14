@@ -59,6 +59,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DnSpyHelper.cs" />
+    <Compile Include="Utils\AssetBundleManagerHelper.cs" />
     <Compile Include="ObjectTree\GameObjectSearcher.cs" />
     <Compile Include="Gizmos\IGizmoEntry.cs" />
     <Compile Include="Gizmos\RendererGizmo.cs" />
