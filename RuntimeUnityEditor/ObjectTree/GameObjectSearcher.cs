@@ -79,6 +79,8 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
         private static bool SearchInComponent(string searchString, Component c, bool searchProperties)
         {
+            if (c == null) return false;
+
             var type = c.GetType();
             if (type.Name.Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
                 return true;
