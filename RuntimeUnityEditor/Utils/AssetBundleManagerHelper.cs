@@ -39,7 +39,7 @@ namespace RuntimeUnityEditor.Core.Utils
                 }
                 catch (Exception e)
                 {
-                    RuntimeUnityEditorCore.Logger.Log(LogLevel.Message | LogLevel.Error, "Failed to clear the cache - " + e);
+                    RuntimeUnityEditorCore.Logger.Log(LogLevel.Message | LogLevel.Error, "Failed to clear the AssetBundle cache - " + e);
                 }
             }
         }
