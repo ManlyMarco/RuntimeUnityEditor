@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using RuntimeUnityEditor.Core.Gizmos;
+using RuntimeUnityEditor.Core.Inspector;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.UI;
 using RuntimeUnityEditor.Core.Utils;
@@ -394,8 +395,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                     case Slider b:
                         {
                             for (var i = 0; i < b.onValueChanged.GetPersistentEventCount(); ++i)
-                                GUILayout.Label(
-                                    $"{b.onValueChanged.GetPersistentTarget(i).GetType().FullName}.{b.onValueChanged.GetPersistentMethodName(i)}");
+                                GUILayout.Label(ToStringConverter.EventEntryToString(b.onValueChanged, i));
                             break;
                         }
                     case Text text:
@@ -412,28 +412,24 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                         break;
                     case Button b:
                         {
-                            for (var i = 0; i < b.onClick.GetPersistentEventCount(); ++i)
-                                GUILayout.Label($"{b.onClick.GetPersistentTarget(i).GetType().FullName ?? "[NULL]"}.{b.onClick.GetPersistentMethodName(i)}");
+                            var eventObj = b.onClick;
+                            for (var i = 0; i < eventObj.GetPersistentEventCount(); ++i)
+                                GUILayout.Label(ToStringConverter.EventEntryToString(eventObj, i));
 
-                            var calls = (IList)b.onClick.GetPrivateExplicit<UnityEventBase>("m_Calls").GetPrivate("m_RuntimeCalls");
+                            var calls = (IList)eventObj.GetPrivateExplicit<UnityEventBase>("m_Calls").GetPrivate("m_RuntimeCalls");
                             foreach (var call in calls)
-                            {
-                                var unityAction = (UnityAction)call.GetPrivate("Delegate");
-                                GUILayout.Label($"{unityAction.Target?.GetType().FullName ?? "[NULL]"}.{unityAction.Method.Name}");
-                            }
+                                GUILayout.Label(ToStringConverter.ObjectToString(call.GetPrivate("Delegate")));
                             break;
                         }
                     case Toggle b:
                         {
-                            for (var i = 0; i < b.onValueChanged.GetPersistentEventCount(); ++i)
-                                GUILayout.Label($"{b.onValueChanged.GetPersistentTarget(i).GetType().FullName ?? "[NULL]"}.{b.onValueChanged.GetPersistentMethodName(i)}");
+                            var eventObj = b.onValueChanged;
+                            for (var i = 0; i < eventObj.GetPersistentEventCount(); ++i)
+                                GUILayout.Label(ToStringConverter.EventEntryToString(b.onValueChanged, i));
 
                             var calls = (IList)b.onValueChanged.GetPrivateExplicit<UnityEventBase>("m_Calls").GetPrivate("m_RuntimeCalls");
                             foreach (var call in calls)
-                            {
-                                var unityAction = (UnityAction<bool>)call.GetPrivate("Delegate");
-                                GUILayout.Label($"{unityAction.Target?.GetType().FullName ?? "[NULL]"}.{unityAction.Method.Name}");
-                            }
+                                GUILayout.Label(ToStringConverter.ObjectToString(call.GetPrivate("Delegate")));
                             break;
                         }
                     case RectTransform rt:

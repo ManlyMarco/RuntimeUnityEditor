@@ -1,4 +1,6 @@
-﻿namespace RuntimeUnityEditor.Core.Inspector.Entries
+﻿using RuntimeUnityEditor.Core.Utils;
+
+namespace RuntimeUnityEditor.Core.Inspector.Entries
 {
     public class ReadonlyListCacheEntry : ReadonlyCacheEntry
     {
@@ -13,7 +15,10 @@
 
         public override string ToString()
         {
-            return Object?.ToString() ?? "[NULL]";
+            var isNull = Object.IsNullOrDestroyed();
+            if (isNull != null) return "[" + isNull + "]";
+
+            return Object.ToString();
         }
     }
 }

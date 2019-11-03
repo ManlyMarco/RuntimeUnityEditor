@@ -2,7 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using RuntimeUnityEditor.Core.Utils;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace RuntimeUnityEditor.Core.Inspector
 {
@@ -17,7 +19,9 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         public static string ObjectToString(object value)
         {
-            if (value == null) return "NULL";
+            var isNull = value.IsNullOrDestroyed();
+            if (isNull != null) return isNull;
+
             switch (value)
             {
                 case string str:
@@ -28,6 +32,8 @@ namespace RuntimeUnityEditor.Core.Inspector
                     return o.name;
                 case Exception ex:
                     return "EXCEPTION: " + ex.Message;
+                case Delegate d:
+                    return DelegateToString(d);
             }
 
             var valueType = value.GetType();
@@ -70,6 +76,25 @@ namespace RuntimeUnityEditor.Core.Inspector
             {
                 return valueType.Name;
             }
+        }
+
+        private static string DelegateToString(Delegate unityAction)
+        {
+            if (unityAction == null) return "[NULL]";
+            string str;
+            var isNull = unityAction.Target.IsNullOrDestroyed();
+            if (isNull != null) str = "[" + isNull + "]";
+            else str = unityAction.Target.GetType().FullName;
+            var actionString = $"{str}.{unityAction.Method.Name}";
+            return actionString;
+        }
+
+        internal static string EventEntryToString(UnityEventBase eventObj, int i)
+        {
+            if (eventObj == null) return "[NULL]";
+            if (i < 0 || i >= eventObj.GetPersistentEventCount()) return "[Event index out of range]";
+            // It's fine to use ? here because GetType works fine on disposed objects and we want to know the type name
+            return $"{eventObj.GetPersistentTarget(i)?.GetType().FullName ?? "[NULL]"}.{eventObj.GetPersistentMethodName(i)}";
         }
     }
 }

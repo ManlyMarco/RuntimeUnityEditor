@@ -128,5 +128,18 @@ namespace RuntimeUnityEditor.Core.Utils
             }
             return name;
         }
+
+        internal static string IsNullOrDestroyed(this object value)
+        {
+            if (ReferenceEquals(value, null)) return "NULL";
+
+            if (value is UnityEngine.Object uobj)
+            {
+                // This is necessary because the is operator ignores the == override that makes Objects look like null
+                if (uobj.Equals(null)) return "NULL (Destroyed)";
+            }
+
+            return null;
+        }
     }
 }
