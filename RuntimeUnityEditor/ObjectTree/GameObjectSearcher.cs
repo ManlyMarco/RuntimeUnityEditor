@@ -24,21 +24,28 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
         public IEnumerable<GameObject> GetRootObjects()
         {
-            return _cachedRootGameObjects ?? Enumerable.Empty<GameObject>();
+            if (_cachedRootGameObjects != null)
+            {
+                _cachedRootGameObjects.RemoveAll(o => o == null);
+                return _cachedRootGameObjects;
+            }
+            return Enumerable.Empty<GameObject>();
         }
 
         public IEnumerable<GameObject> GetSearchedOrAllObjects()
         {
-            return _searchResults ?? GetRootObjects();
+            if (_searchResults != null)
+            {
+                _searchResults.RemoveAll(o => o == null);
+                return _searchResults;
+            }
+            return GetRootObjects();
         }
 
         public void Refresh(bool full, Predicate<GameObject> objectFilter)
         {
             if (_searchResults != null)
-            {
-                _searchResults.RemoveAll(o => o == null);
                 return;
-            }
 
             if (_cachedRootGameObjects == null || full)
             {
@@ -46,7 +53,9 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 full = true;
             }
             else
+            {
                 _cachedRootGameObjects.RemoveAll(o => o == null);
+            }
 
             if (UnityFeatureHelper.SupportsScenes && !full)
             {
@@ -68,7 +77,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 _searchResults = null;
             else
             {
-                _searchResults = _cachedRootGameObjects
+                _searchResults = GetRootObjects()
                     .SelectMany(x => x.GetComponentsInChildren<Transform>(true))
                     .Where(x => x.name.Contains(searchString, StringComparison.InvariantCultureIgnoreCase) || x.GetComponents<Component>().Any(c => SearchInComponent(searchString, c, searchProperties)))
                     .OrderBy(x => x.name, StringComparer.InvariantCultureIgnoreCase)
