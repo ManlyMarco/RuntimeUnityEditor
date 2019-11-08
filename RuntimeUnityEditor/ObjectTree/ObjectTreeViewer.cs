@@ -25,6 +25,8 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         private Transform _selectedTransform;
         private Vector2 _treeScrollPosition;
         private Rect _windowRect;
+        private float _objectTreeHeight;
+        private int _singleObjectTreeItemHeight;
         private bool _scrollTreeToSelected;
         private bool _enabled;
         private readonly GameObjectSearcher _gameObjectSearcher;
@@ -118,66 +120,86 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         public void UpdateWindowSize(Rect windowRect)
         {
             _windowRect = windowRect;
+            _objectTreeHeight = _windowRect.height / 3;
         }
 
-        private void DisplayObjectTreeHelper(GameObject go, int indent)
+        private void DisplayObjectTreeHelper(GameObject go, int indent, ref int currentCount)
         {
-            var c = GUI.color;
-            if (SelectedTransform == go.transform)
-            {
-                GUI.color = Color.cyan;
-                if (_scrollTreeToSelected && Event.current.type == EventType.Repaint)
-                {
-                    _scrollTreeToSelected = false;
-                    _treeScrollPosition.y = GUILayoutUtility.GetLastRect().y - 50;
-                }
-            }
-            else if (!go.activeSelf)
-            {
-                GUI.color = new Color(1, 1, 1, 0.6f);
-            }
+            currentCount++;
 
-            GUILayout.BeginHorizontal();
+            var needsHeightMeasure = _singleObjectTreeItemHeight == 0;
+
+            var isVisible = currentCount * _singleObjectTreeItemHeight >= _treeScrollPosition.y &&
+                            (currentCount - 1) * _singleObjectTreeItemHeight <= _treeScrollPosition.y + _objectTreeHeight;
+
+            if (needsHeightMeasure || isVisible)
             {
-                GUILayout.Space(indent * 20f);
+                var c = GUI.color;
+                if (SelectedTransform == go.transform)
+                {
+                    GUI.color = Color.cyan;
+                    if (_scrollTreeToSelected && Event.current.type == EventType.Repaint)
+                    {
+                        _scrollTreeToSelected = false;
+                        _treeScrollPosition.y = GUILayoutUtility.GetLastRect().y - 50;
+                    }
+                }
+                else if (!go.activeSelf)
+                {
+                    GUI.color = new Color(1, 1, 1, 0.6f);
+                }
 
                 GUILayout.BeginHorizontal();
                 {
-                    if (go.transform.childCount != 0)
-                    {
-                        if (GUILayout.Toggle(_openedObjects.Contains(go), "", GUILayout.ExpandWidth(false)))
-                            _openedObjects.Add(go);
-                        else
-                            _openedObjects.Remove(go);
-                    }
-                    else
-                    {
-                        GUILayout.Space(20f);
-                    }
+                    GUILayout.Space(indent * 20f);
 
-                    if (GUILayout.Button(go.name, GUI.skin.label, GUILayout.ExpandWidth(true), GUILayout.MinWidth(200)))
+                    GUILayout.BeginHorizontal();
                     {
-                        if (SelectedTransform == go.transform)
+                        if (go.transform.childCount != 0)
                         {
-                            // Toggle on/off
-                            if (!_openedObjects.Add(go))
+                            if (GUILayout.Toggle(_openedObjects.Contains(go), "", GUILayout.ExpandWidth(false)))
+                                _openedObjects.Add(go);
+                            else
                                 _openedObjects.Remove(go);
                         }
                         else
                         {
-                            SelectedTransform = go.transform;
+                            GUILayout.Space(20f);
                         }
-                    }
 
-                    GUI.color = c;
+                        if (GUILayout.Button(go.name, GUI.skin.label, GUILayout.ExpandWidth(true), GUILayout.MinWidth(200)))
+                        {
+                            if (SelectedTransform == go.transform)
+                            {
+                                // Toggle on/off
+                                if (!_openedObjects.Add(go))
+                                    _openedObjects.Remove(go);
+                            }
+                            else
+                            {
+                                SelectedTransform = go.transform;
+                            }
+                        }
+
+                        GUI.color = c;
+                    }
+                    GUILayout.EndHorizontal();
                 }
                 GUILayout.EndHorizontal();
+
+                if (needsHeightMeasure && Event.current.type == EventType.repaint)
+                    _singleObjectTreeItemHeight = Mathf.CeilToInt(GUILayoutUtility.GetLastRect().height);
             }
-            GUILayout.EndHorizontal();
+            else
+            {
+                GUILayout.Space(_singleObjectTreeItemHeight);
+            }
 
             if (_openedObjects.Contains(go))
+            {
                 for (var i = 0; i < go.transform.childCount; ++i)
-                    DisplayObjectTreeHelper(go.transform.GetChild(i).gameObject, indent + 1);
+                    DisplayObjectTreeHelper(go.transform.GetChild(i).gameObject, indent + 1, ref currentCount);
+            }
         }
 
         public void DisplayViewer()
@@ -482,12 +504,11 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 DisplayTreeSearchBox();
 
                 _treeScrollPosition = GUILayout.BeginScrollView(_treeScrollPosition,
-                    GUILayout.Height(_windowRect.height / 3), GUILayout.ExpandWidth(true));
+                    GUILayout.Height(_objectTreeHeight), GUILayout.ExpandWidth(true));
                 {
+                    var currentCount = 0;
                     foreach (var rootGameObject in _gameObjectSearcher.GetSearchedOrAllObjects())
-                    {
-                        DisplayObjectTreeHelper(rootGameObject, 0);
-                    }
+                        DisplayObjectTreeHelper(rootGameObject, 0, ref currentCount);
                 }
                 GUILayout.EndScrollView();
             }
