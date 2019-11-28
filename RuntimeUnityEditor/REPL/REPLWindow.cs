@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -13,11 +14,11 @@ namespace RuntimeUnityEditor.Core.REPL
 {
     public sealed class ReplWindow
     {
+        private readonly string _autostartFilename;
         private static readonly char[] _inputSplitChars = { ',', ';', '<', '>', '(', ')', '[', ']', '=', '|', '&' };
 
         private const int HistoryLimit = 50;
 
-        private readonly string _autostartFilename;
         private readonly ScriptEvaluator _evaluator;
 
         private readonly List<string> _history = new List<string>();
@@ -56,37 +57,39 @@ namespace RuntimeUnityEditor.Core.REPL
 
         public ReplWindow(string autostartFilename)
         {
+            _autostartFilename = autostartFilename;
             _windowId = GetHashCode();
 
             _sb.AppendLine("Welcome to C# REPL (read-evaluate-print loop)! Enter \"help\" to get a list of common methods.");
 
             _evaluator = new ScriptEvaluator(new StringWriter(_sb)) { InteractiveBaseClass = typeof(REPL) };
 
-            var envSetup = new[]
+            IEnumerator DelayedAutostart()
             {
-                "using System;",
-                "using UnityEngine;",
-                "using System.Linq;",
-                "using System.Collections;",
-                "using System.Collections.Generic;",
-            };
+                yield return null;
 
-            foreach (var define in envSetup)
-                Evaluate(define);
+                var envSetup = "using System;" +
+                               "using UnityEngine;" +
+                               "using System.Linq;" +
+                               "using System.Collections;" +
+                               "using System.Collections.Generic;";
 
-            _autostartFilename = autostartFilename;
+                Evaluate(envSetup);
+                RunAutostart(autostartFilename);
+            }
+            RuntimeUnityEditorCore.PluginObject.StartCoroutine(DelayedAutostart());
         }
 
-        internal void RunAutostart()
+        private void RunAutostart(string autostartFilename)
         {
-            if (File.Exists(_autostartFilename))
+            if (File.Exists(autostartFilename))
             {
-                var allLines = File.ReadAllLines(_autostartFilename).Select(x => x.Trim('\t', ' ', '\r', '\n')).Where(x => !string.IsNullOrEmpty(x) && !x.StartsWith("//")).ToArray();
+                var allLines = File.ReadAllLines(autostartFilename).Select(x => x.Trim('\t', ' ', '\r', '\n')).Where(x => !string.IsNullOrEmpty(x) && !x.StartsWith("//")).ToArray();
                 if (allLines.Length > 0)
                 {
-                    var message = "Executing code from " + _autostartFilename;
+                    var message = "Executing code from " + autostartFilename;
                     RuntimeUnityEditorCore.Logger.Log(LogLevel.Info, message);
-                    _sb.AppendLine(message);
+                    AppendLogLine(message);
                     foreach (var line in allLines)
                         Evaluate(line);
                 }
@@ -168,23 +171,23 @@ namespace RuntimeUnityEditor.Core.REPL
 
                     if (GUILayout.Button("History", GUILayout.ExpandWidth(false)))
                     {
-                        _sb.AppendLine();
-                        _sb.AppendLine("# History of reed commands:");
+                        AppendLogLine("");
+                        AppendLogLine("# History of reed commands:");
                         foreach (var h in _history)
-                            _sb.AppendLine(h);
+                            AppendLogLine(h);
 
                         ScrollToBottom();
                     }
 
                     if (GUILayout.Button("Autostart", GUILayout.ExpandWidth(false)))
                     {
-                        _sb.AppendLine("Opening autostart file at " + _autostartFilename);
+                        AppendLogLine("Opening autostart file at " + _autostartFilename);
 
                         if (!File.Exists(_autostartFilename))
                             File.WriteAllText(_autostartFilename, "// This C# code will be executed by the REPL near the end of plugin initialization. Only single-line statements are supported. Use echo(string) to write to REPL log and message(string) to write to global log.\n\n");
 
                         try { Process.Start(_autostartFilename); }
-                        catch (Exception e) { _sb.AppendLine(e.Message); }
+                        catch (Exception e) { AppendLogLine(e.Message); }
 
                         ScrollToBottom();
                     }
@@ -218,7 +221,7 @@ namespace RuntimeUnityEditor.Core.REPL
             }
             catch (Exception e)
             {
-                _sb.AppendLine(e.ToString());
+                AppendLogLine(e.ToString());
             }
 
             return ret;
@@ -375,10 +378,10 @@ namespace RuntimeUnityEditor.Core.REPL
                 catch (SystemException) { }
             }
 
-            _sb.AppendLine($"> {_inputField}");
+            AppendLogLine($"> {_inputField}");
             var result = Evaluate(_inputField);
             if (result != null && !Equals(result, VoidType.Value))
-                _sb.AppendLine(result.ToString());
+                AppendLogLine(result.ToString());
 
             ScrollToBottom();
 

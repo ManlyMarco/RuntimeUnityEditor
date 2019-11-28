@@ -61,7 +61,6 @@ namespace RuntimeUnityEditor.Core
                 try
                 {
                     Repl = new ReplWindow(Path.Combine(configPath, "RuntimeUnityEditor.Autostart.cs"));
-                    Repl.RunAutostart();
                 }
                 catch (Exception ex)
                 {
