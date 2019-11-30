@@ -11,7 +11,7 @@ namespace RuntimeUnityEditor.Core
 {
     public class RuntimeUnityEditorCore
     {
-        public const string Version = "1.10";
+        public const string Version = "1.10.1";
         public const string GUID = "RuntimeUnityEditor";
 
         public Inspector.Inspector Inspector { get; }
