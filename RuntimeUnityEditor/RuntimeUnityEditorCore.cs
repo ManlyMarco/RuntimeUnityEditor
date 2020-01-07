@@ -55,8 +55,7 @@ namespace RuntimeUnityEditor.Core
                 TreeViewer.TreeSelectionChangedCallback = transform => _gizmoDrawer.UpdateState(transform);
             }
 
-            if (UnityFeatureHelper.SupportsCursorIndex &&
-                UnityFeatureHelper.SupportsXml)
+            if (UnityFeatureHelper.SupportsCursorIndex)
             {
                 try
                 {
