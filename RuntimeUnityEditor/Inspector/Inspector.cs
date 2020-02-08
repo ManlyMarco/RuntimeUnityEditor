@@ -79,10 +79,11 @@ namespace RuntimeUnityEditor.Core.Inspector
             return cacheItems;
         }
 
-        private void CacheAllMembers(object objectToOpen)
+        private void CacheAllMembers(InstanceStackEntry entry)
         {
             _fieldCache.Clear();
 
+            var objectToOpen = entry?.Instance;
             if (objectToOpen == null) return;
 
             var type = objectToOpen.GetType();
@@ -121,17 +122,20 @@ namespace RuntimeUnityEditor.Core.Inspector
                         .Cast<ICacheEntry>());
                 }
 
+                // No need if it's not a value type, only used to propagate changes back so it's redundant with classes
+                var parent = entry.Parent?.Type().IsValueType == true ? entry.Parent : null;
+
                 // Instance members
                 _fieldCache.AddRange(type
-                    .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance |
-                               BindingFlags.FlattenHierarchy)
-                    .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
-                    .Select(f => new FieldCacheEntry(objectToOpen, f)).Cast<ICacheEntry>());
+                .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance |
+                           BindingFlags.FlattenHierarchy)
+                .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
+                .Select(f => new FieldCacheEntry(objectToOpen, f, parent)).Cast<ICacheEntry>());
                 _fieldCache.AddRange(type
                     .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance |
                                    BindingFlags.FlattenHierarchy)
                     .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
-                    .Select(p => new PropertyCacheEntry(objectToOpen, p)).Cast<ICacheEntry>());
+                    .Select(p => new PropertyCacheEntry(objectToOpen, p, parent)).Cast<ICacheEntry>());
                 _fieldCache.AddRange(MethodsToCacheEntries(objectToOpen, type,
                     type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance |
                                     BindingFlags.FlattenHierarchy)));
@@ -144,15 +148,15 @@ namespace RuntimeUnityEditor.Core.Inspector
             }
         }
 
-        private void CacheStaticMembers(Type type)
+        private void CacheStaticMembers(StaticStackEntry entry)
         {
             _fieldCache.Clear();
 
-            if (type == null) return;
+            if (entry?.StaticType == null) return;
 
             try
             {
-                CacheStaticMembersHelper(type);
+                CacheStaticMembersHelper(entry.StaticType);
             }
             catch (Exception ex)
             {
@@ -244,7 +248,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                     if (val is InspectorStackEntryBase sb)
                         _nextToPush = sb;
                     else
-                        _nextToPush = new InstanceStackEntry(val, field.Name());
+                        _nextToPush = new InstanceStackEntry(val, field.Name(), field);
                 }
             }
         }
@@ -285,10 +289,10 @@ namespace RuntimeUnityEditor.Core.Inspector
             switch (stackEntry)
             {
                 case InstanceStackEntry instanceStackEntry:
-                    CacheAllMembers(instanceStackEntry.Instance);
+                    CacheAllMembers(instanceStackEntry);
                     break;
                 case StaticStackEntry staticStackEntry:
-                    CacheStaticMembers(staticStackEntry.StaticType);
+                    CacheStaticMembers(staticStackEntry);
                     break;
                 default:
                     throw new InvalidEnumArgumentException("Invalid stack entry type: " + stackEntry.GetType().FullName);
