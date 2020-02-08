@@ -181,28 +181,73 @@ namespace RuntimeUnityEditor.Core.Inspector
                                 BindingFlags.FlattenHierarchy)));
         }
 
-        private bool CanCovert(string value, Type type)
+        private bool CanEditValue(ICacheEntry field, object value)
         {
-            if (_canCovertCache.ContainsKey(type))
-                return _canCovertCache[type];
+            var valueType = field.Type();
+            if (valueType == typeof(string))
+                return true;
+
+            if (_canCovertCache.ContainsKey(valueType))
+                return _canCovertCache[valueType];
+
+            if (TomlTypeConverter.GetConverter(valueType) != null)
+            {
+                _canCovertCache[valueType] = true;
+                return true;
+            }
 
             try
             {
-                var _ = Convert.ChangeType(value, type);
-                _canCovertCache[type] = true;
+                var converted = ToStringConverter.ObjectToString(value);
+                var _ = Convert.ChangeType(converted, valueType);
+                _canCovertCache[valueType] = true;
                 return true;
             }
             catch
             {
-                _canCovertCache[type] = false;
+                _canCovertCache[valueType] = false;
                 return false;
             }
+        }
+
+        private static void SetEditValue(ICacheEntry field, object value, string result)
+        {
+            var valueType = field.Type();
+            object converted;
+            if (valueType == typeof(string))
+            {
+                converted = result;
+            }
+            else
+            {
+                var typeConverter = TomlTypeConverter.GetConverter(valueType);
+                converted = typeConverter != null ? typeConverter.ConvertToObject(result, valueType) : Convert.ChangeType(result, valueType);
+            }
+
+            if (!Equals(converted, value))
+                field.SetValue(converted);
+        }
+
+        private static string GetEditValue(ICacheEntry field, object value)
+        {
+            var valueType = field.Type();
+
+            if (valueType == typeof(string))
+                return (string)value ?? "";
+
+            var isNull = value.IsNullOrDestroyed();
+            if (isNull != null) return isNull;
+
+            var typeConverter = TomlTypeConverter.GetConverter(valueType);
+            if (typeConverter != null) return typeConverter.ConvertToString(value, valueType);
+
+            return ToStringConverter.ObjectToString(value);
         }
 
         private void DrawEditableValue(ICacheEntry field, object value, params GUILayoutOption[] layoutParams)
         {
             var isBeingEdited = _currentlyEditingTag == field;
-            var text = isBeingEdited ? _currentlyEditingText : ToStringConverter.ObjectToString(value);
+            var text = isBeingEdited ? _currentlyEditingText : GetEditValue(field, value);
             var result = GUILayout.TextField(text, layoutParams);
 
             if (!Equals(text, result) || isBeingEdited)
@@ -212,9 +257,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                     _userHasHitReturn = false;
                     try
                     {
-                        var converted = Convert.ChangeType(result, field.Type());
-                        if (!Equals(converted, value))
-                            field.SetValue(converted);
+                        SetEditValue(field, value, result);
                     }
                     catch (Exception ex)
                     {
@@ -463,7 +506,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                     DrawVariableName(entry);
 
                 if (entry.CanSetValue() &&
-                    CanCovert(ToStringConverter.ObjectToString(value), entry.Type()))
+                    CanEditValue(entry, value))
                     DrawEditableValue(entry, value, GUILayout.ExpandWidth(true));
                 else
                     DrawValue(value, GUILayout.ExpandWidth(true));
