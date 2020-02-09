@@ -131,10 +131,11 @@ namespace RuntimeUnityEditor.Core.REPL
                         foreach (var suggestion in _suggestions)
                         {
                             _completionsListingStyle.normal.textColor = suggestion.GetTextColor();
-                            if (!GUILayout.Button(suggestion.Full, _completionsListingStyle, GUILayout.ExpandWidth(true)))
-                                continue;
-                            AcceptSuggestion(suggestion.Addition);
-                            break;
+                            if (GUILayout.Button(suggestion.Full, _completionsListingStyle, GUILayout.ExpandWidth(true)))
+                            {
+                                AcceptSuggestion(suggestion.Addition);
+                                break;
+                            }
                         }
                     }
                     else
@@ -203,9 +204,13 @@ namespace RuntimeUnityEditor.Core.REPL
 
         private void AcceptSuggestion(string suggestion)
         {
-            _inputField = _inputField.Insert(_textEditor.cursorIndex, suggestion);
+            int cursorIndex = _textEditor.cursorIndex;
+            _inputField = _inputField.Insert(cursorIndex, suggestion);
             _newCursorLocation = _textEditor.cursorIndex + suggestion.Length;
             ClearSuggestions();
+
+            _refocus = true;
+            _refocusCursorIndex = cursorIndex + suggestion.Length;
         }
 
         public object Evaluate(string str)
