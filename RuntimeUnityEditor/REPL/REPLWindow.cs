@@ -231,6 +231,8 @@ namespace RuntimeUnityEditor.Core.REPL
 
         private void FetchHistory(int move)
         {
+            if (_history.Count == 0) return;
+
             _historyPosition += move;
             _historyPosition %= _history.Count;
             if (_historyPosition < 0)
