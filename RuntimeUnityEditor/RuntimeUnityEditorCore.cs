@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.IO;
 using RuntimeUnityEditor.Core.Gizmos;
 using RuntimeUnityEditor.Core.ObjectTree;
@@ -16,7 +17,7 @@ namespace RuntimeUnityEditor.Core
 
         public Inspector.Inspector Inspector { get; }
         public ObjectTreeViewer TreeViewer { get; }
-        public ReplWindow Repl { get; }
+        public ReplWindow Repl { get; private set; }
 
         public KeyCode ShowHotkey { get; set; } = KeyCode.F12;
 
@@ -60,11 +61,27 @@ namespace RuntimeUnityEditor.Core
                 try
                 {
                     Repl = new ReplWindow(Path.Combine(configPath, "RuntimeUnityEditor.Autostart.cs"));
+                    PluginObject.StartCoroutine(DelayedReplSetup());
                 }
                 catch (Exception ex)
                 {
                     Logger.Log(LogLevel.Warning, "Failed to load REPL - " + ex.Message);
+                    Repl = null;
                 }
+            }
+        }
+
+        private IEnumerator DelayedReplSetup()
+        {
+            yield return null;
+            try
+            {
+                Repl.RunEnvSetup();
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(LogLevel.Warning, "Failed to load REPL - " + ex.Message);
+                Repl = null;
             }
         }
 

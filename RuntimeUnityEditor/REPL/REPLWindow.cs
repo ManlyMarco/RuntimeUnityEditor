@@ -63,21 +63,18 @@ namespace RuntimeUnityEditor.Core.REPL
             _sb.AppendLine("Welcome to C# REPL (read-evaluate-print loop)! Enter \"help\" to get a list of common methods.");
 
             _evaluator = new ScriptEvaluator(new StringWriter(_sb)) { InteractiveBaseClass = typeof(REPL) };
+        }
 
-            IEnumerator DelayedAutostart()
-            {
-                yield return null;
+        public void RunEnvSetup()
+        {
+            var envSetup = "using System;" +
+                           "using UnityEngine;" +
+                           "using System.Linq;" +
+                           "using System.Collections;" +
+                           "using System.Collections.Generic;";
 
-                var envSetup = "using System;" +
-                               "using UnityEngine;" +
-                               "using System.Linq;" +
-                               "using System.Collections;" +
-                               "using System.Collections.Generic;";
-
-                Evaluate(envSetup);
-                RunAutostart(autostartFilename);
-            }
-            RuntimeUnityEditorCore.PluginObject.StartCoroutine(DelayedAutostart());
+            Evaluate(envSetup);
+            RunAutostart(_autostartFilename);
         }
 
         private void RunAutostart(string autostartFilename)
@@ -172,7 +169,7 @@ namespace RuntimeUnityEditor.Core.REPL
                     if (GUILayout.Button("History", GUILayout.ExpandWidth(false)))
                     {
                         AppendLogLine("");
-                        AppendLogLine("# History of reed commands:");
+                        AppendLogLine("# History of executed commands:");
                         foreach (var h in _history)
                             AppendLogLine(h);
 
@@ -290,6 +287,8 @@ namespace RuntimeUnityEditor.Core.REPL
                 _newCursorLocation = -1;
             }
 
+            var input = _inputField;
+
             var currentEvent = Event.current;
             if (currentEvent.isKey)
             {
@@ -305,21 +304,23 @@ namespace RuntimeUnityEditor.Core.REPL
                         currentEvent.Use();
                     }
                 }
-                else if (currentEvent.keyCode == KeyCode.UpArrow)
+                else if(input == null || !input.Contains('\n')) // todo change to always be alt + up/dn and have arrows for suggestions?
                 {
-                    FetchHistory(-1);
-                    currentEvent.Use();
-                    ClearSuggestions();
-                }
-                else if (currentEvent.keyCode == KeyCode.DownArrow)
-                {
-                    FetchHistory(1);
-                    currentEvent.Use();
-                    ClearSuggestions();
+                    if (currentEvent.keyCode == KeyCode.UpArrow)
+                    {
+                        FetchHistory(-1);
+                        currentEvent.Use();
+                        ClearSuggestions();
+                    }
+                    else if (currentEvent.keyCode == KeyCode.DownArrow)
+                    {
+                        FetchHistory(1);
+                        currentEvent.Use();
+                        ClearSuggestions();
+                    }
                 }
             }
 
-            var input = _inputField;
             if (!string.IsNullOrEmpty(input))
             {
                 try
