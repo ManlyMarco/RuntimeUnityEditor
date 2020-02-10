@@ -1,253 +1,58 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.UI;
 using RuntimeUnityEditor.Core.Utils;
 using UnityEngine;
-using Component = UnityEngine.Component;
 
 namespace RuntimeUnityEditor.Core.Inspector
 {
-    public sealed class Inspector
+    public sealed partial class Inspector
     {
         private const int InspectorRecordHeight = 25;
-        private readonly Action<Transform> _treelistShowCallback;
         private readonly GUILayoutOption[] _inspectorTypeWidth = { GUILayout.Width(170), GUILayout.MaxWidth(170) };
         private readonly GUILayoutOption[] _inspectorNameWidth = { GUILayout.Width(240), GUILayout.MaxWidth(240) };
         private readonly GUILayoutOption _inspectorRecordHeight = GUILayout.Height(InspectorRecordHeight);
         private readonly GUILayoutOption _dnSpyButtonOptions = GUILayout.Width(19);
+        private readonly int _windowId;
+
+        private InspectorTab _currentTab;
+        [CanBeNull] private InspectorTab CurrentTab => _currentTab ?? (_currentTab = _tabs.FirstOrDefault());
+
+        private readonly List<InspectorTab> _tabs = new List<InspectorTab>();
 
         private GUIStyle _alignedButtonStyle;
-
         private Rect _inspectorWindowRect;
-        private Vector2 _inspectorStackScrollPos;
 
-        private int _currentVisibleCount;
         private object _currentlyEditingTag;
         private string _currentlyEditingText;
         private bool _userHasHitReturn;
 
+        private bool _focusSearchBox;
+        private const string SearchBoxName = "InspectorFilterBox";
         private string _searchString = "";
-        private string SearchString
+
+        public string SearchString
         {
             get => _searchString;
             // The string can't be null under unity 5.x or we crash
             set => _searchString = value ?? "";
         }
-        private bool _focusSearchBox;
 
-        private readonly Dictionary<Type, bool> _canCovertCache = new Dictionary<Type, bool>();
-        private readonly List<ICacheEntry> _fieldCache = new List<ICacheEntry>();
-        private readonly Stack<InspectorStackEntryBase> _inspectorStack = new Stack<InspectorStackEntryBase>();
+        private static Action<Transform> _treeListShowCallback;
 
-        private InspectorStackEntryBase _nextToPush;
-        private readonly int _windowId;
-
-        private InspectorStackEntryBase CurrentStackItem => _inspectorStack.Peek();
-
-        public Inspector(Action<Transform> treelistShowCallback)
+        public Inspector(Action<Transform> treeListShowCallback)
         {
-            _treelistShowCallback = treelistShowCallback ?? throw new ArgumentNullException(nameof(treelistShowCallback));
+            _treeListShowCallback = treeListShowCallback ?? throw new ArgumentNullException(nameof(treeListShowCallback));
             _windowId = GetHashCode();
-        }
-
-        private static IEnumerable<ICacheEntry> MethodsToCacheEntries(object instance, Type instanceType, MethodInfo[] methodsToCheck)
-        {
-            var cacheItems = methodsToCheck
-                .Where(x => !x.IsConstructor && !x.IsSpecialName && x.GetParameters().Length == 0)
-                .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
-                .Where(x => x.Name != "MemberwiseClone" && x.Name != "obj_address") // Instant game crash
-                .Select(m =>
-                {
-                    if (m.ContainsGenericParameters)
-                        try
-                        {
-                            return m.MakeGenericMethod(instanceType);
-                        }
-                        catch (Exception)
-                        {
-                            return null;
-                        }
-                    return m;
-                }).Where(x => x != null)
-                .Select(m => new MethodCacheEntry(instance, m)).Cast<ICacheEntry>();
-            return cacheItems;
-        }
-
-        private void CacheAllMembers(InstanceStackEntry entry)
-        {
-            _fieldCache.Clear();
-
-            var objectToOpen = entry?.Instance;
-            if (objectToOpen == null) return;
-
-            var type = objectToOpen.GetType();
-
-            try
-            {
-                if (objectToOpen is Component cmp)
-                {
-                    _fieldCache.Add(new CallbackCacheEntry("Open in Scene Object Browser", "Navigate to GameObject this Component is attached to", () => _treelistShowCallback(cmp.transform)));
-                }
-                else if (objectToOpen is GameObject castedObj)
-                {
-                    _fieldCache.Add(new CallbackCacheEntry("Open in Scene Object Browser", "Navigate to this object in the Scene Object Browser", () => _treelistShowCallback(castedObj.transform)));
-                    _fieldCache.Add(new ReadonlyCacheEntry("Child objects", castedObj.transform.Cast<Transform>().ToArray()));
-                    _fieldCache.Add(new ReadonlyCacheEntry("Components", castedObj.GetComponents<Component>()));
-                }
-
-                // If we somehow enter a string, this allows user to see what the string actually says
-                if (type == typeof(string))
-                {
-                    _fieldCache.Add(new ReadonlyCacheEntry("this", objectToOpen));
-                }
-                else if (objectToOpen is Transform)
-                {
-                    // Prevent the list overloads from listing subcomponents
-                }
-                else if (objectToOpen is IList list)
-                {
-                    for (var i = 0; i < list.Count; i++)
-                        _fieldCache.Add(new ListCacheEntry(list, i));
-                }
-                else if (objectToOpen is IEnumerable enumerable)
-                {
-                    _fieldCache.AddRange(enumerable.Cast<object>()
-                        .Select((x, y) => x is ICacheEntry ? x : new ReadonlyListCacheEntry(x, y))
-                        .Cast<ICacheEntry>());
-                }
-
-                // No need if it's not a value type, only used to propagate changes back so it's redundant with classes
-                var parent = entry.Parent?.Type().IsValueType == true ? entry.Parent : null;
-
-                // Instance members
-                _fieldCache.AddRange(type
-                .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance |
-                           BindingFlags.FlattenHierarchy)
-                .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
-                .Select(f => new FieldCacheEntry(objectToOpen, f, parent)).Cast<ICacheEntry>());
-                _fieldCache.AddRange(type
-                    .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance |
-                                   BindingFlags.FlattenHierarchy)
-                    .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
-                    .Select(p => new PropertyCacheEntry(objectToOpen, p, parent)).Cast<ICacheEntry>());
-                _fieldCache.AddRange(MethodsToCacheEntries(objectToOpen, type,
-                    type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance |
-                                    BindingFlags.FlattenHierarchy)));
-
-                CacheStaticMembersHelper(type);
-            }
-            catch (Exception ex)
-            {
-                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "[Inspector] CacheFields crash: " + ex);
-            }
-        }
-
-        private void CacheStaticMembers(StaticStackEntry entry)
-        {
-            _fieldCache.Clear();
-
-            if (entry?.StaticType == null) return;
-
-            try
-            {
-                CacheStaticMembersHelper(entry.StaticType);
-            }
-            catch (Exception ex)
-            {
-                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "[Inspector] CacheFields crash: " + ex);
-            }
-        }
-
-        private void CacheStaticMembersHelper(Type type)
-        {
-            _fieldCache.AddRange(type
-                .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static |
-                           BindingFlags.FlattenHierarchy)
-                .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
-                .Select(f => new FieldCacheEntry(null, f)).Cast<ICacheEntry>());
-            _fieldCache.AddRange(type
-                .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static |
-                               BindingFlags.FlattenHierarchy)
-                .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
-                .Select(p => new PropertyCacheEntry(null, p)).Cast<ICacheEntry>());
-            _fieldCache.AddRange(MethodsToCacheEntries(null, type,
-                type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static |
-                                BindingFlags.FlattenHierarchy)));
-        }
-
-        private bool CanEditValue(ICacheEntry field, object value)
-        {
-            var valueType = field.Type();
-            if (valueType == typeof(string))
-                return true;
-
-            if (_canCovertCache.ContainsKey(valueType))
-                return _canCovertCache[valueType];
-
-            if (TomlTypeConverter.GetConverter(valueType) != null)
-            {
-                _canCovertCache[valueType] = true;
-                return true;
-            }
-
-            try
-            {
-                var converted = ToStringConverter.ObjectToString(value);
-                var _ = Convert.ChangeType(converted, valueType);
-                _canCovertCache[valueType] = true;
-                return true;
-            }
-            catch
-            {
-                _canCovertCache[valueType] = false;
-                return false;
-            }
-        }
-
-        private static void SetEditValue(ICacheEntry field, object value, string result)
-        {
-            var valueType = field.Type();
-            object converted;
-            if (valueType == typeof(string))
-            {
-                converted = result;
-            }
-            else
-            {
-                var typeConverter = TomlTypeConverter.GetConverter(valueType);
-                converted = typeConverter != null ? typeConverter.ConvertToObject(result, valueType) : Convert.ChangeType(result, valueType);
-            }
-
-            if (!Equals(converted, value))
-                field.SetValue(converted);
-        }
-
-        private static string GetEditValue(ICacheEntry field, object value)
-        {
-            var valueType = field.Type();
-
-            if (valueType == typeof(string))
-                return (string)value ?? "";
-
-            var isNull = value.IsNullOrDestroyed();
-            if (isNull != null) return isNull;
-
-            var typeConverter = TomlTypeConverter.GetConverter(valueType);
-            if (typeConverter != null) return typeConverter.ConvertToString(value, valueType);
-
-            return ToStringConverter.ObjectToString(value);
         }
 
         private void DrawEditableValue(ICacheEntry field, object value, params GUILayoutOption[] layoutParams)
         {
             var isBeingEdited = _currentlyEditingTag == field;
-            var text = isBeingEdited ? _currentlyEditingText : GetEditValue(field, value);
+            var text = isBeingEdited ? _currentlyEditingText : ToStringConverter.GetEditValue(field, value);
             var result = GUILayout.TextField(text, layoutParams);
 
             if (!Equals(text, result) || isBeingEdited)
@@ -257,7 +62,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                     _userHasHitReturn = false;
                     try
                     {
-                        SetEditValue(field, value, result);
+                        ToStringConverter.SetEditValue(field, value, result);
                     }
                     catch (Exception ex)
                     {
@@ -271,35 +76,33 @@ namespace RuntimeUnityEditor.Core.Inspector
                 }
         }
 
-        private void DrawValue(object value, params GUILayoutOption[] layoutParams)
-        {
-            GUILayout.TextArea(ToStringConverter.ObjectToString(value), GUI.skin.label, layoutParams);
-        }
-
-        private void DrawVariableName(ICacheEntry field)
-        {
-            GUILayout.TextArea(field.Name(), GUI.skin.label, _inspectorNameWidth);
-        }
-
         private void DrawVariableNameEnterButton(ICacheEntry field)
         {
+            if (_alignedButtonStyle == null)
+            {
+                _alignedButtonStyle = new GUIStyle(GUI.skin.button)
+                {
+                    alignment = TextAnchor.MiddleLeft,
+                    wordWrap = true
+                };
+            }
+
             if (GUILayout.Button(field.Name(), _alignedButtonStyle, _inspectorNameWidth))
             {
                 var val = field.EnterValue();
                 if (val != null)
                 {
                     if (val is InspectorStackEntryBase sb)
-                        _nextToPush = sb;
+                        InspectorPush(sb);
                     else
-                        _nextToPush = new InstanceStackEntry(val, field.Name(), field);
+                        InspectorPush(new InstanceStackEntry(val, field.Name(), field));
                 }
             }
         }
 
         public void InspectorClear()
         {
-            _inspectorStack.Clear();
-            CacheAllMembers(null);
+            CurrentTab.InspectorClear();
         }
 
         private void InspectorPop()
@@ -307,8 +110,7 @@ namespace RuntimeUnityEditor.Core.Inspector
             _focusSearchBox = true;
             SearchString = null;
 
-            _inspectorStack.Pop();
-            LoadStackEntry(_inspectorStack.Peek());
+            CurrentTab.InspectorPop();
         }
 
         public void InspectorPush(InspectorStackEntryBase stackEntry)
@@ -316,30 +118,14 @@ namespace RuntimeUnityEditor.Core.Inspector
             _focusSearchBox = true;
             SearchString = null;
 
-            _inspectorStack.Push(stackEntry);
-            LoadStackEntry(stackEntry);
+            CurrentTab.InspectorPush(stackEntry);
         }
 
         public object GetInspectedObject()
         {
-            if (_inspectorStack.Count > 0 && _inspectorStack.Peek() is InstanceStackEntry se)
+            if (CurrentTab.CurrentStackItem is InstanceStackEntry se)
                 return se.Instance;
             return null;
-        }
-
-        private void LoadStackEntry(InspectorStackEntryBase stackEntry)
-        {
-            switch (stackEntry)
-            {
-                case InstanceStackEntry instanceStackEntry:
-                    CacheAllMembers(instanceStackEntry);
-                    break;
-                case StaticStackEntry staticStackEntry:
-                    CacheStaticMembers(staticStackEntry);
-                    break;
-                default:
-                    throw new InvalidEnumArgumentException("Invalid stack entry type: " + stackEntry.GetType().FullName);
-            }
         }
 
         private void InspectorWindow(int id)
@@ -375,7 +161,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                                     EditorUtilities.GetMonoBehaviourScanner().OrderBy(x => x.Name()), "MonoBehaviours"),
                                 new KeyValuePair<object, string>(EditorUtilities.GetTransformScanner().OrderBy(x => x.Name()),
                                     "Transforms")
-                                //                            new KeyValuePair<object, string>(GetTypeScanner(_inspectorStack.Peek().GetType()).OrderBy(x=>x.Name()), _inspectorStack.Peek().GetType().ToString()+"s"),
+                                //                            new KeyValuePair<object, string>(GetTypeScanner(CurrentTab.InspectorStack.Peek().GetType()).OrderBy(x=>x.Name()), CurrentTab.InspectorStack.Peek().GetType().ToString()+"s"),
                             })
                             {
                                 if (obj.Key == null) continue;
@@ -392,28 +178,29 @@ namespace RuntimeUnityEditor.Core.Inspector
 
                         GUILayout.BeginHorizontal(GUI.skin.box, GUILayout.Width(160));
                         {
-                            if (GUILayout.Button("Help"))
+                            if (GUILayout.Button("Help")) 
                                 InspectorPush(InspectorHelpObject.Create());
-                            if (GUILayout.Button("Close"))
+                            if (GUILayout.Button("Close")) 
                                 InspectorClear();
                         }
                         GUILayout.EndHorizontal();
                     }
                     GUILayout.EndHorizontal();
 
-                    _inspectorStackScrollPos = GUILayout.BeginScrollView(_inspectorStackScrollPos, true, false,
-                        GUI.skin.horizontalScrollbar, GUIStyle.none, GUIStyle.none, GUILayout.Height(46));
+                    CurrentTab.InspectorStackScrollPos = GUILayout.BeginScrollView(CurrentTab.InspectorStackScrollPos, true, false,
+                         GUI.skin.horizontalScrollbar, GUIStyle.none, GUIStyle.none, GUILayout.Height(46));
                     {
                         GUILayout.BeginHorizontal(GUI.skin.box, GUILayout.ExpandWidth(false),
                             GUILayout.ExpandHeight(false));
-                        foreach (var item in _inspectorStack.Reverse().ToArray())
+                        foreach (var item in CurrentTab.InspectorStack.Reverse().ToArray())
+                        {
                             if (GUILayout.Button(item.Name, GUILayout.ExpandWidth(false)))
                             {
-                                while (_inspectorStack.Peek() != item)
-                                    InspectorPop();
+                                while (CurrentTab.InspectorStack.Peek() != item) InspectorPop();
 
                                 return;
                             }
+                        }
                         GUILayout.EndHorizontal();
                     }
                     GUILayout.EndScrollView();
@@ -446,27 +233,25 @@ namespace RuntimeUnityEditor.Core.Inspector
             GUI.DragWindow();
         }
 
-        private const string SearchBoxName = "InspectorFilterBox";
-
         private void DrawContentScrollView()
         {
-            if (_inspectorStack.Count == 0) return;
+            if (CurrentTab.InspectorStack.Count == 0) return;
 
-            var currentItem = CurrentStackItem;
+            var currentItem = CurrentTab.CurrentStackItem;
             currentItem.ScrollPosition = GUILayout.BeginScrollView(currentItem.ScrollPosition);
             {
                 GUILayout.BeginVertical();
                 {
                     var visibleFields = string.IsNullOrEmpty(SearchString) ?
-                        _fieldCache :
-                        _fieldCache.Where(x => x.Name().Contains(SearchString, StringComparison.OrdinalIgnoreCase) || x.TypeName().Contains(SearchString, StringComparison.OrdinalIgnoreCase)).ToList();
+                        CurrentTab.FieldCache :
+                        CurrentTab.FieldCache.Where(x => x.Name().Contains(SearchString, StringComparison.OrdinalIgnoreCase) || x.TypeName().Contains(SearchString, StringComparison.OrdinalIgnoreCase)).ToList();
 
                     var firstIndex = (int)(currentItem.ScrollPosition.y / InspectorRecordHeight);
 
                     GUILayout.Space(firstIndex * InspectorRecordHeight);
 
-                    _currentVisibleCount = (int)(_inspectorWindowRect.height / InspectorRecordHeight) - 4;
-                    for (var index = firstIndex; index < Mathf.Min(visibleFields.Count, firstIndex + _currentVisibleCount); index++)
+                    var currentVisibleCount = (int)(_inspectorWindowRect.height / InspectorRecordHeight) - 4;
+                    for (var index = firstIndex; index < Mathf.Min(visibleFields.Count, firstIndex + currentVisibleCount); index++)
                     {
                         var entry = visibleFields[index];
                         try
@@ -480,7 +265,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                     }
                     try
                     {
-                        GUILayout.Space(Mathf.Max(_inspectorWindowRect.height / 2, (visibleFields.Count - firstIndex - _currentVisibleCount) * InspectorRecordHeight));
+                        GUILayout.Space(Mathf.Max(_inspectorWindowRect.height / 2, (visibleFields.Count - firstIndex - currentVisibleCount) * InspectorRecordHeight));
                     }
                     catch
                     {
@@ -494,22 +279,21 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         private void DrawSingleContentEntry(ICacheEntry entry)
         {
-            GUILayout.BeginHorizontal((_inspectorRecordHeight));
+            GUILayout.BeginHorizontal(_inspectorRecordHeight);
             {
-                GUILayout.Label(entry.TypeName(), (_inspectorTypeWidth));
+                GUILayout.Label(entry.TypeName(), _inspectorTypeWidth);
 
                 var value = entry.GetValue();
 
                 if (entry.CanEnterValue() || value is Exception)
                     DrawVariableNameEnterButton(entry);
                 else
-                    DrawVariableName(entry);
+                    GUILayout.TextArea(entry.Name(), GUI.skin.label, _inspectorNameWidth);
 
-                if (entry.CanSetValue() &&
-                    CanEditValue(entry, value))
+                if (entry.CanSetValue() && ToStringConverter.CanEditValue(entry, value))
                     DrawEditableValue(entry, value, GUILayout.ExpandWidth(true));
                 else
-                    DrawValue(value, GUILayout.ExpandWidth(true));
+                    GUILayout.TextArea(ToStringConverter.ObjectToString(value), GUI.skin.label, GUILayout.ExpandWidth(true));
 
                 if (DnSpyHelper.IsAvailable && GUILayout.Button("^", _dnSpyButtonOptions))
                     DnSpyHelper.OpenInDnSpy(entry);
@@ -519,24 +303,15 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         public void DisplayInspector()
         {
-            if (_alignedButtonStyle == null)
-            {
-                _alignedButtonStyle = new GUIStyle(GUI.skin.button)
-                {
-                    alignment = TextAnchor.MiddleLeft,
-                    wordWrap = true
-                };
-            }
-
             if (Event.current.isKey && (Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter)) _userHasHitReturn = true;
 
-            while (_inspectorStack.Count > 0 && !_inspectorStack.Peek().EntryIsValid())
+            while (CurrentTab.InspectorStack.Count > 0 && !CurrentTab.InspectorStack.Peek().EntryIsValid())
             {
-                var se = _inspectorStack.Pop();
+                var se = CurrentTab.InspectorStack.Pop();
                 RuntimeUnityEditorCore.Logger.Log(LogLevel.Message, $"[Inspector] Removed invalid/removed stack object: \"{se.Name}\"");
             }
 
-            if (_inspectorStack.Count != 0)
+            if (CurrentTab.InspectorStack.Count != 0)
             {
                 _inspectorWindowRect = GUILayout.Window(_windowId, _inspectorWindowRect, InspectorWindow, "Inspector");
                 InterfaceMaker.EatInputInRect(_inspectorWindowRect);
@@ -550,12 +325,6 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         public void InspectorUpdate()
         {
-            if (_nextToPush != null)
-            {
-                InspectorPush(_nextToPush);
-
-                _nextToPush = null;
-            }
         }
     }
 }

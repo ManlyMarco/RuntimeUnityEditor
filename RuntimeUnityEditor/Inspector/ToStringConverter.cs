@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.Utils;
 using UnityEngine;
 using UnityEngine.Events;
@@ -95,6 +96,71 @@ namespace RuntimeUnityEditor.Core.Inspector
             if (i < 0 || i >= eventObj.GetPersistentEventCount()) return "[Event index out of range]";
             // It's fine to use ? here because GetType works fine on disposed objects and we want to know the type name
             return $"{eventObj.GetPersistentTarget(i)?.GetType().FullName ?? "[NULL]"}.{eventObj.GetPersistentMethodName(i)}";
+        }
+
+        private static readonly Dictionary<Type, bool> _canCovertCache = new Dictionary<Type, bool>();
+
+        public static bool CanEditValue(ICacheEntry field, object value)
+        {
+            var valueType = field.Type();
+            if (valueType == typeof(string))
+                return true;
+
+            if (_canCovertCache.ContainsKey(valueType))
+                return _canCovertCache[valueType];
+
+            if (TomlTypeConverter.GetConverter(valueType) != null)
+            {
+                _canCovertCache[valueType] = true;
+                return true;
+            }
+
+            try
+            {
+                var converted = ToStringConverter.ObjectToString(value);
+                var _ = Convert.ChangeType(converted, valueType);
+                _canCovertCache[valueType] = true;
+                return true;
+            }
+            catch
+            {
+                _canCovertCache[valueType] = false;
+                return false;
+            }
+        }
+
+        public static void SetEditValue(ICacheEntry field, object value, string result)
+        {
+            var valueType = field.Type();
+            object converted;
+            if (valueType == typeof(string))
+            {
+                converted = result;
+            }
+            else
+            {
+                var typeConverter = TomlTypeConverter.GetConverter(valueType);
+                converted = typeConverter != null ? typeConverter.ConvertToObject(result, valueType) : Convert.ChangeType(result, valueType);
+            }
+
+            if (!Equals(converted, value))
+                field.SetValue(converted);
+        }
+
+        public static string GetEditValue(ICacheEntry field, object value)
+        {
+            var valueType = field.Type();
+
+            if (valueType == typeof(string))
+                return (string)value ?? "";
+
+            var isNull = value.IsNullOrDestroyed();
+            if (isNull != null) return isNull;
+
+            var typeConverter = TomlTypeConverter.GetConverter(valueType);
+            if (typeConverter != null) return typeConverter.ConvertToString(value, valueType);
+
+            return ToStringConverter.ObjectToString(value);
         }
     }
 }
