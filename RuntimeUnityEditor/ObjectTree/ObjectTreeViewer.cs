@@ -562,9 +562,9 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                         if (stackEntries.Count == 0)
                             RuntimeUnityEditorCore.Logger.Log(LogLevel.Message | LogLevel.Warning, "No static type names contained the search string");
                         else if (stackEntries.Count == 1)
-                            RuntimeUnityEditorCore.Instance.Inspector.InspectorPush(stackEntries.Single());
+                            RuntimeUnityEditorCore.Instance.Inspector.Push(stackEntries.Single(), true);
                         else
-                            RuntimeUnityEditorCore.Instance.Inspector.InspectorPush(new InstanceStackEntry(stackEntries, "Static type search"));
+                            RuntimeUnityEditorCore.Instance.Inspector.Push(new InstanceStackEntry(stackEntries, "Static type search"), true);
                     }
                 }
             }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.UI;
 using RuntimeUnityEditor.Core.Utils;
@@ -18,10 +17,10 @@ namespace RuntimeUnityEditor.Core.Inspector
         private readonly GUILayoutOption _dnSpyButtonOptions = GUILayout.Width(19);
         private readonly int _windowId;
 
-        private InspectorTab _currentTab;
-        [CanBeNull] private InspectorTab CurrentTab => _currentTab ?? (_currentTab = _tabs.FirstOrDefault());
-
         private readonly List<InspectorTab> _tabs = new List<InspectorTab>();
+        private InspectorTab _currentTab;
+        private InspectorTab GetCurrentTab() => _currentTab ?? (_currentTab = _tabs.FirstOrDefault());
+        private Vector2 _tabScrollPos = Vector2.zero;
 
         private GUIStyle _alignedButtonStyle;
         private Rect _inspectorWindowRect;
@@ -29,6 +28,8 @@ namespace RuntimeUnityEditor.Core.Inspector
         private object _currentlyEditingTag;
         private string _currentlyEditingText;
         private bool _userHasHitReturn;
+
+        public bool Show { get; set; }
 
         private bool _focusSearchBox;
         private const string SearchBoxName = "InspectorFilterBox";
@@ -92,38 +93,48 @@ namespace RuntimeUnityEditor.Core.Inspector
                 var val = field.EnterValue();
                 if (val != null)
                 {
-                    if (val is InspectorStackEntryBase sb)
-                        InspectorPush(sb);
-                    else
-                        InspectorPush(new InstanceStackEntry(val, field.Name(), field));
+                    var entry = val as InspectorStackEntryBase ?? new InstanceStackEntry(val, field.Name(), field);
+                    Push(entry, IsContextClick());
                 }
             }
         }
 
-        public void InspectorClear()
-        {
-            CurrentTab.InspectorClear();
-        }
+        [Obsolete("Use push and Show instead")]
+        public void InspectorClear() { }
 
-        private void InspectorPop()
-        {
-            _focusSearchBox = true;
-            SearchString = null;
-
-            CurrentTab.InspectorPop();
-        }
-
+        [Obsolete("Use push instead")]
         public void InspectorPush(InspectorStackEntryBase stackEntry)
         {
+            Push(stackEntry, true);
+        }
+
+        public void Push(InspectorStackEntryBase stackEntry, bool newTab)
+        {
             _focusSearchBox = true;
             SearchString = null;
 
-            CurrentTab.InspectorPush(stackEntry);
+            var tab = GetCurrentTab();
+            if (tab == null || newTab)
+            {
+                tab = new InspectorTab();
+                _tabs.Add(tab);
+                _currentTab = tab;
+            }
+            tab.Push(stackEntry);
+
+            Show = true;
+        }
+
+        private void RemoveTab(InspectorTab tab)
+        {
+            _tabs.Remove(tab);
+            if (_currentTab == tab)
+                _currentTab = null;
         }
 
         public object GetInspectedObject()
         {
-            if (CurrentTab.CurrentStackItem is InstanceStackEntry se)
+            if (GetCurrentTab()?.CurrentStackItem is InstanceStackEntry se)
                 return se.Instance;
             return null;
         }
@@ -166,10 +177,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                             {
                                 if (obj.Key == null) continue;
                                 if (GUILayout.Button(obj.Value, GUILayout.ExpandWidth(false)))
-                                {
-                                    InspectorClear();
-                                    InspectorPush(new InstanceStackEntry(obj.Key, obj.Value));
-                                }
+                                    Push(new InstanceStackEntry(obj.Key, obj.Value), true);
                             }
                         }
                         GUILayout.EndHorizontal();
@@ -178,73 +186,141 @@ namespace RuntimeUnityEditor.Core.Inspector
 
                         GUILayout.BeginHorizontal(GUI.skin.box, GUILayout.Width(160));
                         {
-                            if (GUILayout.Button("Help")) 
-                                InspectorPush(InspectorHelpObject.Create());
-                            if (GUILayout.Button("Close")) 
-                                InspectorClear();
+                            if (GUILayout.Button("Help"))
+                                Push(InspectorHelpObject.Create(), true);
+                            if (GUILayout.Button("Close"))
+                                Show = false;
                         }
                         GUILayout.EndHorizontal();
                     }
                     GUILayout.EndHorizontal();
 
-                    CurrentTab.InspectorStackScrollPos = GUILayout.BeginScrollView(CurrentTab.InspectorStackScrollPos, true, false,
-                         GUI.skin.horizontalScrollbar, GUIStyle.none, GUIStyle.none, GUILayout.Height(46));
+                    var currentTab = GetCurrentTab();
+                    var defaultGuiColor = GUI.color;
+                    if (_tabs.Count >= 2)
                     {
-                        GUILayout.BeginHorizontal(GUI.skin.box, GUILayout.ExpandWidth(false),
-                            GUILayout.ExpandHeight(false));
-                        foreach (var item in CurrentTab.InspectorStack.Reverse().ToArray())
+                        _tabScrollPos = GUILayout.BeginScrollView(_tabScrollPos, false, false,
+                            GUI.skin.horizontalScrollbar, GUIStyle.none, GUIStyle.none); //, GUILayout.Height(46)
                         {
-                            if (GUILayout.Button(item.Name, GUILayout.ExpandWidth(false)))
+                            GUILayout.BeginHorizontal(GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
+                            for (var index = 0; index < _tabs.Count; index++)
                             {
-                                while (CurrentTab.InspectorStack.Peek() != item) InspectorPop();
+                                var tab = _tabs[index];
 
-                                return;
+                                if (currentTab == tab)
+                                    GUI.color = Color.cyan;
+
+                                if (GUILayout.Button($"Tab {index + 1}: {LimitStringLengthForPreview(tab?.CurrentStackItem?.Name, 18)}", GUILayout.ExpandWidth(false)))
+                                {
+                                    if (IsContextClick())
+                                        RemoveTab(tab);
+                                    else
+                                        _currentTab = tab;
+
+                                    GUI.color = defaultGuiColor;
+                                    return;
+                                }
+
+                                GUI.color = defaultGuiColor;
                             }
-                        }
-                        GUILayout.EndHorizontal();
-                    }
-                    GUILayout.EndScrollView();
 
-                    GUILayout.BeginVertical(GUI.skin.box);
+                            GUILayout.FlexibleSpace();
+                            GUI.color = new Color(1, 1, 1, 0.6f);
+                            if(GUILayout.Button("Close all"))
+                            {
+                                _tabs.Clear();
+                                _currentTab = null;
+                            }
+                            GUI.color = defaultGuiColor;
+
+                            GUILayout.EndHorizontal();
+                        }
+                        GUILayout.EndScrollView();
+                    }
+
+                    if (currentTab != null)
                     {
-                        GUILayout.BeginHorizontal();
+                        currentTab.InspectorStackScrollPos = GUILayout.BeginScrollView(currentTab.InspectorStackScrollPos, false, false,
+                            GUI.skin.horizontalScrollbar, GUIStyle.none, GUIStyle.none); //, GUILayout.Height(46)
                         {
-                            GUILayout.Space(1);
-                            GUILayout.Label("Value/return type", GUI.skin.box, _inspectorTypeWidth);
-                            GUILayout.Space(2);
-                            GUILayout.Label("Member name", GUI.skin.box, _inspectorNameWidth);
-                            GUILayout.Space(1);
-                            GUILayout.Label("Value", GUI.skin.box, GUILayout.ExpandWidth(true));
-                        }
-                        GUILayout.EndHorizontal();
+                            GUILayout.BeginHorizontal(GUI.skin.box, GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
+                            var stackEntries = currentTab.InspectorStack.Reverse().ToArray();
+                            for (var i = 0; i < stackEntries.Length; i++)
+                            {
+                                var item = stackEntries[i];
 
-                        DrawContentScrollView();
+                                if (i + 1 == stackEntries.Length)
+                                    GUI.color = Color.cyan;
+
+                                if (GUILayout.Button(LimitStringLengthForPreview(item.Name, 90), GUILayout.ExpandWidth(false)))
+                                {
+                                    currentTab.PopUntil(item);
+                                    GUI.color = defaultGuiColor;
+                                    return;
+                                }
+
+                                if (i + 1 < stackEntries.Length)
+                                    GUILayout.Label(">", GUILayout.ExpandWidth(false));
+
+                                GUI.color = defaultGuiColor;
+                            }
+                            GUILayout.EndHorizontal();
+                        }
+                        GUILayout.EndScrollView();
+
+                        GUILayout.BeginVertical(GUI.skin.box);
+                        {
+                            GUILayout.BeginHorizontal();
+                            {
+                                GUILayout.Space(1);
+                                GUILayout.Label("Value/return type", GUI.skin.box, _inspectorTypeWidth);
+                                GUILayout.Space(2);
+                                GUILayout.Label("Member name", GUI.skin.box, _inspectorNameWidth);
+                                GUILayout.Space(1);
+                                GUILayout.Label("Value", GUI.skin.box, GUILayout.ExpandWidth(true));
+                            }
+                            GUILayout.EndHorizontal();
+
+                            DrawContentScrollView(currentTab);
+                        }
+                        GUILayout.EndVertical();
                     }
-                    GUILayout.EndVertical();
                 }
                 GUILayout.EndVertical();
             }
             catch (Exception ex)
             {
                 RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, "[Inspector] GUI crash: " + ex);
-                InspectorClear();
+                //CurrentTab?.Pop();
             }
 
             GUI.DragWindow();
         }
 
-        private void DrawContentScrollView()
+        private static string LimitStringLengthForPreview(string name, int maxLetters)
         {
-            if (CurrentTab.InspectorStack.Count == 0) return;
+            if (name == null) name = "NULL";
+            if (name.Length >= maxLetters) name = name.Substring(0, maxLetters - 2) + "...";
+            return name;
+        }
 
-            var currentItem = CurrentTab.CurrentStackItem;
+        private static bool IsContextClick()
+        {
+            return Event.current.button >= 1;
+        }
+
+        private void DrawContentScrollView(InspectorTab tab)
+        {
+            if (tab == null || tab.InspectorStack.Count == 0) return;
+
+            var currentItem = tab.CurrentStackItem;
             currentItem.ScrollPosition = GUILayout.BeginScrollView(currentItem.ScrollPosition);
             {
                 GUILayout.BeginVertical();
                 {
                     var visibleFields = string.IsNullOrEmpty(SearchString) ?
-                        CurrentTab.FieldCache :
-                        CurrentTab.FieldCache.Where(x => x.Name().Contains(SearchString, StringComparison.OrdinalIgnoreCase) || x.TypeName().Contains(SearchString, StringComparison.OrdinalIgnoreCase)).ToList();
+                        tab.FieldCache :
+                        tab.FieldCache.Where(x => x.Name().Contains(SearchString, StringComparison.OrdinalIgnoreCase) || x.TypeName().Contains(SearchString, StringComparison.OrdinalIgnoreCase)).ToList();
 
                     var firstIndex = (int)(currentItem.ScrollPosition.y / InspectorRecordHeight);
 
@@ -303,28 +379,29 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         public void DisplayInspector()
         {
+            if (!Show) return;
+
             if (Event.current.isKey && (Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter)) _userHasHitReturn = true;
 
-            while (CurrentTab.InspectorStack.Count > 0 && !CurrentTab.InspectorStack.Peek().EntryIsValid())
+            // Clean up dead tab contents
+            foreach (var tab in _tabs.ToList())
             {
-                var se = CurrentTab.InspectorStack.Pop();
-                RuntimeUnityEditorCore.Logger.Log(LogLevel.Message, $"[Inspector] Removed invalid/removed stack object: \"{se.Name}\"");
+                while (tab.InspectorStack.Count > 0 && !tab.InspectorStack.Peek().EntryIsValid())
+                {
+                    RuntimeUnityEditorCore.Logger.Log(LogLevel.Message, $"[Inspector] Removed invalid/removed stack object: \"{tab.InspectorStack.Peek().Name}\"");
+                    tab.Pop();
+                }
+
+                if (tab.InspectorStack.Count == 0) RemoveTab(tab);
             }
 
-            if (CurrentTab.InspectorStack.Count != 0)
-            {
-                _inspectorWindowRect = GUILayout.Window(_windowId, _inspectorWindowRect, InspectorWindow, "Inspector");
-                InterfaceMaker.EatInputInRect(_inspectorWindowRect);
-            }
+            _inspectorWindowRect = GUILayout.Window(_windowId, _inspectorWindowRect, InspectorWindow, "Inspector");
+            InterfaceMaker.EatInputInRect(_inspectorWindowRect);
         }
 
         public void UpdateWindowSize(Rect windowRect)
         {
             _inspectorWindowRect = windowRect;
-        }
-
-        public void InspectorUpdate()
-        {
         }
     }
 }

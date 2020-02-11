@@ -21,19 +21,19 @@ namespace RuntimeUnityEditor.Core.Inspector
             public Stack<InspectorStackEntryBase> InspectorStack { get; } = new Stack<InspectorStackEntryBase>();
             public Vector2 InspectorStackScrollPos { get; set; }
 
-            public void InspectorClear()
+            public void Clear()
             {
                 InspectorStack.Clear();
                 CacheAllMembers(null);
             }
 
-            public void InspectorPop()
+            public void Pop()
             {
                 InspectorStack.Pop();
                 LoadStackEntry(InspectorStack.Peek());
             }
 
-            public void InspectorPush(InspectorStackEntryBase stackEntry)
+            public void Push(InspectorStackEntryBase stackEntry)
             {
                 InspectorStack.Push(stackEntry);
                 LoadStackEntry(stackEntry);
@@ -185,6 +185,13 @@ namespace RuntimeUnityEditor.Core.Inspector
                         throw new InvalidEnumArgumentException(
                             "Invalid stack entry type: " + stackEntry.GetType().FullName);
                 }
+            }
+
+            public void PopUntil(InspectorStackEntryBase item)
+            {
+                if(CurrentStackItem == item) return;
+                while (CurrentStackItem != null && CurrentStackItem != item) InspectorStack.Pop();
+                LoadStackEntry(CurrentStackItem);
             }
         }
     }

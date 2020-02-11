@@ -45,9 +45,11 @@ namespace RuntimeUnityEditor.Core
             TreeViewer = new ObjectTreeViewer(pluginObject, _gameObjectSearcher);
             TreeViewer.InspectorOpenCallback = items =>
             {
-                Inspector.InspectorClear();
-                foreach (var stackEntry in items)
-                    Inspector.InspectorPush(stackEntry);
+                for (var i = 0; i < items.Length; i++)
+                {
+                    var stackEntry = items[i];
+                    Inspector.Push(stackEntry, i == 0);
+                }
             };
 
             if (UnityFeatureHelper.SupportsVectrosity)
@@ -150,7 +152,6 @@ namespace RuntimeUnityEditor.Core
 
             if (Show)
             {
-                Inspector.InspectorUpdate();
                 RefreshGameObjectSearcher(false);
 
                 Cursor.lockState = CursorLockMode.None;
