@@ -46,7 +46,7 @@
     <Reference Include="System.XML" />
     <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\IllusionLibs.HoneySelect.UnityEngine.5.3.5\lib\net35\UnityEngine.dll</HintPath>
-      <Private>False</Private>
+      <Private>True</Private>
     </Reference>
     <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\IllusionLibs.HoneySelect.UnityEngine.UI.5.3.5\lib\net35\UnityEngine.UI.dll</HintPath>

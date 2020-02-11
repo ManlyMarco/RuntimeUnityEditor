@@ -12,7 +12,7 @@
       Parallel="true"
       Internalize="true"
       DebugInfo="false"
-      LibraryPath="$(SolutionDir)Libs\"
+      LibraryPath="$(OutputPath)"
       InputAssemblies="@(InputAssemblies)"
       TargetKind="Dll"
       TargetPlatformVersion="v2"
@@ -20,5 +20,6 @@
     />
 
     <Delete Files="@(InputAssemblies)" />
+    <Delete Files="$(OutputPath)\UnityEngine.dll" />
   </Target>
 </Project>
