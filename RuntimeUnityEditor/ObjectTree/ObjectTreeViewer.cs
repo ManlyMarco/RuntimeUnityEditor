@@ -231,31 +231,39 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
         private void DisplayControls()
         {
-            GUILayout.BeginHorizontal(GUI.skin.box);
+            GUILayout.BeginHorizontal();
             {
-                if (SelectedTransform == null) GUI.enabled = false;
-                if (GUILayout.Button("Dump", GUILayout.ExpandWidth(false)))
-                    SceneDumper.DumpObjects(SelectedTransform?.gameObject);
-                GUI.enabled = true;
+                GUILayout.BeginHorizontal(GUI.skin.box);
+                {
+                    GUILayout.Label("Time", GUILayout.ExpandWidth(false));
 
-                if (GUILayout.Button("Log", GUILayout.ExpandWidth(false)))
-                    UnityFeatureHelper.OpenLog();
+                    if (GUILayout.Button(">", GUILayout.ExpandWidth(false)))
+                        Time.timeScale = 1;
+                    if (GUILayout.Button("||", GUILayout.ExpandWidth(false)))
+                        Time.timeScale = 0;
 
-                GUILayout.FlexibleSpace();
+                    if (float.TryParse(GUILayout.TextField(Time.timeScale.ToString("F2", CultureInfo.InvariantCulture), _drawVector3FieldWidth), NumberStyles.Any, CultureInfo.InvariantCulture, out var newVal))
+                        Time.timeScale = newVal;
+                }
+                GUILayout.EndHorizontal();
 
-                GUILayout.Label("Time", GUILayout.ExpandWidth(false));
+                GUILayout.BeginHorizontal(GUI.skin.box);
+                {
+                    if (SelectedTransform == null) GUI.enabled = false;
+                    if (GUILayout.Button("Dump", GUILayout.ExpandWidth(false)))
+                        SceneDumper.DumpObjects(SelectedTransform?.gameObject);
+                    GUI.enabled = true;
 
-                if (GUILayout.Button(">", GUILayout.ExpandWidth(false)))
-                    Time.timeScale = 1;
-                if (GUILayout.Button("||", GUILayout.ExpandWidth(false)))
-                    Time.timeScale = 0;
+                    if (GUILayout.Button("Log", GUILayout.ExpandWidth(false)))
+                        UnityFeatureHelper.OpenLog();
 
-                if (float.TryParse(GUILayout.TextField(Time.timeScale.ToString("F2", CultureInfo.InvariantCulture), _drawVector3FieldWidth), NumberStyles.Any, CultureInfo.InvariantCulture, out var newVal))
-                    Time.timeScale = newVal;
+                    GUILayout.FlexibleSpace();
 
-                GUILayout.FlexibleSpace();
+                    RuntimeUnityEditorCore.Instance.ShowRepl = GUILayout.Toggle(RuntimeUnityEditorCore.Instance.ShowRepl, "REPL");
 
-                _wireframe = GUILayout.Toggle(_wireframe, "Wireframe");
+                    _wireframe = GUILayout.Toggle(_wireframe, "Wireframe");
+                }
+                GUILayout.EndHorizontal();
             }
             GUILayout.EndHorizontal();
 

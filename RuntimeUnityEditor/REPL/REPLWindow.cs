@@ -35,6 +35,8 @@ namespace RuntimeUnityEditor.Core.REPL
         private TextEditor _textEditor;
         private int _newCursorLocation = -1;
 
+        public bool Show { get; set; } = true;
+
         private HashSet<string> _namespaces;
         private HashSet<string> Namespaces
         {
@@ -95,6 +97,8 @@ namespace RuntimeUnityEditor.Core.REPL
 
         public void DisplayWindow()
         {
+            if(!Show) return;
+
             if (_completionsListingStyle == null)
             {
                 _completionsListingStyle = new GUIStyle(GUI.skin.button)

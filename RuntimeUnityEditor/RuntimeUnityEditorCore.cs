@@ -19,7 +19,46 @@ namespace RuntimeUnityEditor.Core
         public ObjectTreeViewer TreeViewer { get; }
         public ReplWindow Repl { get; private set; }
 
-        public KeyCode ShowHotkey { get; set; } = KeyCode.F12;
+        public event EventHandler SettingsChanged;
+
+        public KeyCode ShowHotkey
+        {
+            get => _showHotkey;
+            set
+            {
+                if (_showHotkey != value)
+                {
+                    _showHotkey = value;
+                    SettingsChanged?.Invoke(this, EventArgs.Empty);
+                }
+            }
+        }
+
+        public bool ShowRepl
+        {
+            get => Repl != null && Repl.Show;
+            set
+            {
+                if (Repl != null && Repl.Show != value)
+                {
+                    Repl.Show = value;
+                    SettingsChanged?.Invoke(this, EventArgs.Empty);
+                }
+            }
+        }
+
+        public bool ShowInspector
+        {
+            get => Inspector != null && Inspector.Show;
+            set
+            {
+                if (Inspector != null && Inspector.Show != value)
+                {
+                    Inspector.Show = value;
+                    SettingsChanged?.Invoke(this, EventArgs.Empty);
+                }
+            }
+        }
 
         internal static RuntimeUnityEditorCore Instance { get; private set; }
         internal static MonoBehaviour PluginObject { get; private set; }
@@ -30,6 +69,7 @@ namespace RuntimeUnityEditor.Core
 
         private CursorLockMode _previousCursorLockState;
         private bool _previousCursorVisible;
+        private KeyCode _showHotkey = KeyCode.F12;
 
         internal RuntimeUnityEditorCore(MonoBehaviour pluginObject, ILoggerWrapper logger, string configPath)
         {

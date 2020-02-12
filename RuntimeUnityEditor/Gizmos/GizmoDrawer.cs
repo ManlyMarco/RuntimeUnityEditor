@@ -35,9 +35,10 @@ namespace RuntimeUnityEditor.Core.Gizmos
 
             GUILayout.BeginHorizontal(GUI.skin.box);
             {
-                ShowGizmos = GUILayout.Toggle(ShowGizmos, "Show gizmos for selection");
-                ShowGizmosOutsideEditor = GUILayout.Toggle(ShowGizmosOutsideEditor, "Always show");
+                GUILayout.Label("Gizmos");
                 GUILayout.FlexibleSpace();
+                ShowGizmos = GUILayout.Toggle(ShowGizmos, "Show selection");
+                ShowGizmosOutsideEditor = GUILayout.Toggle(ShowGizmosOutsideEditor, "When closed");
             }
             GUILayout.EndHorizontal();
         }

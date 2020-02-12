@@ -2,6 +2,7 @@
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using RuntimeUnityEditor.Core;
+using UnityEngine;
 using LogLevel = RuntimeUnityEditor.Core.LogLevel;
 
 namespace RuntimeUnityEditor.Bepin5
@@ -9,7 +10,10 @@ namespace RuntimeUnityEditor.Bepin5
     [BepInPlugin(RuntimeUnityEditorCore.GUID, "Runtime Unity Editor", RuntimeUnityEditorCore.Version)]
     public class RuntimeUnityEditor5 : BaseUnityPlugin
     {
-        public ConfigWrapper<string> DnSpyPath { get; private set; }
+        public ConfigEntry<string> DnSpyPath { get; private set; }
+        public ConfigEntry<bool> ShowRepl { get; private set; }
+        public ConfigEntry<KeyboardShortcut> Hotkey { get; private set; }
+        
 
         public static RuntimeUnityEditorCore Instance { get; private set; }
 
@@ -22,9 +26,23 @@ namespace RuntimeUnityEditor.Bepin5
         {
             Instance = new RuntimeUnityEditorCore(this, new Logger5(Logger), Paths.ConfigPath);
 
-            DnSpyPath = Config.Wrap(null, "Path to dnSpy.exe", "Full path to dnSpy that will enable integration with Inspector. When correctly configured, you will see a new ^ buttons that will open the members in dnSpy.", string.Empty);
+            DnSpyPath = Config.Bind("Inspector", "Path to dnSpy.exe", string.Empty, "Full path to dnSpy that will enable integration with Inspector. When correctly configured, you will see a new ^ buttons that will open the members in dnSpy.");
             DnSpyPath.SettingChanged += (sender, args) => DnSpyHelper.DnSpyPath = DnSpyPath.Value;
             DnSpyHelper.DnSpyPath = DnSpyPath.Value;
+            
+            ShowRepl = Config.Bind("General", "Show REPL console", true);
+            ShowRepl.SettingChanged += (sender, args) => Instance.ShowRepl = ShowRepl.Value;
+            Instance.ShowRepl = ShowRepl.Value;
+            
+            Hotkey = Config.Bind("General", "Open/close runtime editor", new KeyboardShortcut(KeyCode.F12));
+            Hotkey.SettingChanged += (sender, args) => Instance.ShowHotkey = Hotkey.Value.MainKey;
+            Instance.ShowHotkey = Hotkey.Value.MainKey;
+
+            Instance.SettingsChanged += (sender, args) =>
+            {
+                Hotkey.Value = new KeyboardShortcut(Instance.ShowHotkey);
+                ShowRepl.Value = Instance.ShowRepl;
+            };
         }
 
         private void Update()
@@ -48,7 +66,7 @@ namespace RuntimeUnityEditor.Bepin5
 
             public void Log(LogLevel logLogLevel, object content)
             {
-                _logger.Log((BepInEx.Logging.LogLevel) logLogLevel, content);
+                _logger.Log((BepInEx.Logging.LogLevel)logLogLevel, content);
             }
         }
     }
