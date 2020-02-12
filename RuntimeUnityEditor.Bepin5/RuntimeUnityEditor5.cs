@@ -13,7 +13,7 @@ namespace RuntimeUnityEditor.Bepin5
         public ConfigEntry<string> DnSpyPath { get; private set; }
         public ConfigEntry<bool> ShowRepl { get; private set; }
         public ConfigEntry<KeyboardShortcut> Hotkey { get; private set; }
-        
+
 
         public static RuntimeUnityEditorCore Instance { get; private set; }
 
@@ -29,11 +29,14 @@ namespace RuntimeUnityEditor.Bepin5
             DnSpyPath = Config.Bind("Inspector", "Path to dnSpy.exe", string.Empty, "Full path to dnSpy that will enable integration with Inspector. When correctly configured, you will see a new ^ buttons that will open the members in dnSpy.");
             DnSpyPath.SettingChanged += (sender, args) => DnSpyHelper.DnSpyPath = DnSpyPath.Value;
             DnSpyHelper.DnSpyPath = DnSpyPath.Value;
-            
-            ShowRepl = Config.Bind("General", "Show REPL console", true);
-            ShowRepl.SettingChanged += (sender, args) => Instance.ShowRepl = ShowRepl.Value;
-            Instance.ShowRepl = ShowRepl.Value;
-            
+
+            if (Instance.Repl != null)
+            {
+                ShowRepl = Config.Bind("General", "Show REPL console", true);
+                ShowRepl.SettingChanged += (sender, args) => Instance.ShowRepl = ShowRepl.Value;
+                Instance.ShowRepl = ShowRepl.Value;
+            }
+
             Hotkey = Config.Bind("General", "Open/close runtime editor", new KeyboardShortcut(KeyCode.F12));
             Hotkey.SettingChanged += (sender, args) => Instance.ShowHotkey = Hotkey.Value.MainKey;
             Instance.ShowHotkey = Hotkey.Value.MainKey;
@@ -41,7 +44,7 @@ namespace RuntimeUnityEditor.Bepin5
             Instance.SettingsChanged += (sender, args) =>
             {
                 Hotkey.Value = new KeyboardShortcut(Instance.ShowHotkey);
-                ShowRepl.Value = Instance.ShowRepl;
+                if (ShowRepl != null) ShowRepl.Value = Instance.ShowRepl;
             };
         }
 

@@ -263,7 +263,8 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
                     GUILayout.FlexibleSpace();
 
-                    RuntimeUnityEditorCore.Instance.ShowRepl = GUILayout.Toggle(RuntimeUnityEditorCore.Instance.ShowRepl, "REPL");
+                    if (RuntimeUnityEditorCore.Instance.Repl != null)
+                        RuntimeUnityEditorCore.Instance.ShowRepl = GUILayout.Toggle(RuntimeUnityEditorCore.Instance.ShowRepl, "REPL");
 
                     _wireframe = GUILayout.Toggle(_wireframe, "Wireframe");
                 }
@@ -304,7 +305,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                         if (component == null)
                             continue;
 
-                        if(!string.IsNullOrEmpty(_searchTextComponents) && !GameObjectSearcher.SearchInComponent(_searchTextComponents, component, false))
+                        if (!string.IsNullOrEmpty(_searchTextComponents) && !GameObjectSearcher.SearchInComponent(_searchTextComponents, component, false))
                             continue;
 
                         DrawSingleComponent(component);
