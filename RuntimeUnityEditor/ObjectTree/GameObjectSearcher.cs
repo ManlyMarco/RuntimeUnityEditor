@@ -86,7 +86,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             }
         }
 
-        private static bool SearchInComponent(string searchString, Component c, bool searchProperties)
+        public static bool SearchInComponent(string searchString, Component c, bool searchProperties)
         {
             if (c == null) return false;
 

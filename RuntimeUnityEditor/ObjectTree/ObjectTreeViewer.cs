@@ -99,11 +99,15 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
         public Transform SelectedTransform
         {
-            get { return _selectedTransform; }
+            get => _selectedTransform;
             set
             {
-                _selectedTransform = value;
-                TreeSelectionChangedCallback?.Invoke(_selectedTransform);
+                if (_selectedTransform != value)
+                {
+                    _selectedTransform = value;
+                    _searchTextComponents = "";
+                    TreeSelectionChangedCallback?.Invoke(_selectedTransform);
+                }
             }
         }
 
@@ -284,9 +288,23 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 {
                     DrawTransformControls();
 
+                    GUILayout.BeginHorizontal();
+                    {
+                        GUILayout.Label("Search components ", GUILayout.ExpandWidth(false));
+
+                        _searchTextComponents = GUILayout.TextField(_searchTextComponents, GUILayout.ExpandWidth(true));
+
+                        if (GUILayout.Button("Clear", GUILayout.ExpandWidth(false)))
+                            _searchTextComponents = string.Empty;
+                    }
+                    GUILayout.EndHorizontal();
+
                     foreach (var component in SelectedTransform.GetComponents<Component>())
                     {
                         if (component == null)
+                            continue;
+
+                        if(!string.IsNullOrEmpty(_searchTextComponents) && !GameObjectSearcher.SearchInComponent(_searchTextComponents, component, false))
                             continue;
 
                         DrawSingleComponent(component);
@@ -505,6 +523,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         }
 
         private string _searchText = string.Empty;
+        private string _searchTextComponents = string.Empty;
         private void DisplayObjectTree()
         {
             GUILayout.BeginVertical(GUI.skin.box);
