@@ -209,7 +209,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
             if (Enabled)
             {
-                _windowRect = GUILayout.Window(_windowId, _windowRect, WindowFunc, "Scene Object Browser");
+                _windowRect = GUILayout.Window(_windowId, _windowRect, WindowFunc, "Scene Browser - RuntimeUnityEditor v" + RuntimeUnityEditorCore.Version);
                 InterfaceMaker.EatInputInRect(_windowRect);
             }
         }
