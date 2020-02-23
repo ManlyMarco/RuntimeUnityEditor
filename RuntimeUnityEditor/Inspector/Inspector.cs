@@ -226,7 +226,7 @@ namespace RuntimeUnityEditor.Core.Inspector
 
                             GUILayout.FlexibleSpace();
                             GUI.color = new Color(1, 1, 1, 0.6f);
-                            if(GUILayout.Button("Close all"))
+                            if (GUILayout.Button("Close all"))
                             {
                                 _tabs.Clear();
                                 _currentTab = null;
@@ -311,7 +311,12 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         private void DrawContentScrollView(InspectorTab tab)
         {
-            if (tab == null || tab.InspectorStack.Count == 0) return;
+            if (tab == null || tab.InspectorStack.Count == 0)
+            {
+                GUILayout.Label("No object opened");
+                GUILayout.FlexibleSpace();
+                return;
+            }
 
             var currentItem = tab.CurrentStackItem;
             currentItem.ScrollPosition = GUILayout.BeginScrollView(currentItem.ScrollPosition);
@@ -347,6 +352,9 @@ namespace RuntimeUnityEditor.Core.Inspector
                     {
                         // Needed to avoid GUILayout: Mismatched LayoutGroup.Repaint crashes on large lists
                     }
+
+                    // Fixes layout exploding when searching
+                    GUILayout.FlexibleSpace();
                 }
                 GUILayout.EndVertical();
             }
