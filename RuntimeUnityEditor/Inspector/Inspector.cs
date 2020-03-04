@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.UI;
 using RuntimeUnityEditor.Core.Utils;
@@ -218,7 +219,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                                         _currentTab = tab;
 
                                     GUI.color = defaultGuiColor;
-                                    return;
+                                    break;
                                 }
 
                                 GUI.color = defaultGuiColor;
@@ -285,6 +286,12 @@ namespace RuntimeUnityEditor.Core.Inspector
                         }
                         GUILayout.EndVertical();
                     }
+                    else
+                    {
+                        GUILayout.Label("Nothing to show. Click on objects in the scene browser to open them in a new tab.");
+                        GUILayout.Label("Tip: You can right click on a member inside inspector to open in a new tab, and on a tab to close it.");
+                        GUILayout.FlexibleSpace();
+                    }
                 }
                 GUILayout.EndVertical();
             }
@@ -313,7 +320,6 @@ namespace RuntimeUnityEditor.Core.Inspector
         {
             if (tab == null || tab.InspectorStack.Count == 0)
             {
-                GUILayout.Label("No object opened");
                 GUILayout.FlexibleSpace();
                 return;
             }
@@ -346,15 +352,14 @@ namespace RuntimeUnityEditor.Core.Inspector
                     }
                     try
                     {
-                        GUILayout.Space(Mathf.Max(_inspectorWindowRect.height / 2, (visibleFields.Count - firstIndex - currentVisibleCount) * InspectorRecordHeight));
+                        GUILayout.Space(Mathf.FloorToInt(Mathf.Max(_inspectorWindowRect.height / 2, (visibleFields.Count - firstIndex - currentVisibleCount) * InspectorRecordHeight)));
+                        // Fixes layout exploding when searching
+                        GUILayout.FlexibleSpace();
                     }
                     catch
                     {
                         // Needed to avoid GUILayout: Mismatched LayoutGroup.Repaint crashes on large lists
                     }
-
-                    // Fixes layout exploding when searching
-                    GUILayout.FlexibleSpace();
                 }
                 GUILayout.EndVertical();
             }
