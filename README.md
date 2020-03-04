@@ -20,9 +20,13 @@ In-game inspector, editor and interactive console for applications made with Uni
 Note: If the plugin fails to load under BepInEx 4 with a type load exception, move RuntimeUnityEditor.Core.dll to BepInEx/core folder.
 
 ### How to build
-- At least VS 2017 is recommended.
-- The mcs dependency is https://github.com/denikson/mcs-unity
-- You have to reference UnityEngine.dll from Unity 5.x, before it was split. The new UnityEngine.dll forwards all of the split types into their new respective dll files, therefore doing this allows runtime editor to run on any Unity version.
+1. Get Visual Studio 2019 (recommended) or the latest version of Visual Studio 2017.
+2. Clone the repository recursively (`git clone --recursive https://github.com/ManlyMarco/RuntimeUnityEditor`). 
+3. Open the solution in Visual Studio and hit Build All.
+
+Notes:
+- If you already have the repository cloned or want to update the mcs submodule you need to run `git submodule update --init --recursive` on your local repository.
+- You have to reference UnityEngine.dll from Unity 5.x. The new UnityEngine.dll forwards all of the split types into their new respective dll files, therefore doing this allows runtime editor to run on any Unity version.
 
 ---
 
