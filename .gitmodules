@@ -1,0 +1,3 @@
+[submodule "modules/mcs"]
+	path = modules/mcs
+	url = https://github.com/denikson/mcs-unity
