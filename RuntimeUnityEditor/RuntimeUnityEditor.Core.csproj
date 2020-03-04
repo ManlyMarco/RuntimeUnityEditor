@@ -37,10 +37,6 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="mcs_custom">
-      <HintPath>..\Libs\mcs_custom.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.XML" />
@@ -117,6 +113,12 @@
   <ItemGroup>
     <EmbeddedResource Include="UI\guisharp-box.png" />
     <EmbeddedResource Include="UI\guisharp-window.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\modules\mcs\mcs\mcs.csproj">
+      <Project>{e4989e4c-0875-4528-9031-08e2c0e70103}</Project>
+      <Name>mcs</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\ILRepack.Lib.MSBuild.Task.2.0.16.1\build\ILRepack.Lib.MSBuild.Task.targets" Condition="Exists('..\packages\ILRepack.Lib.MSBuild.Task.2.0.16.1\build\ILRepack.Lib.MSBuild.Task.targets')" />
