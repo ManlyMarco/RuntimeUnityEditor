@@ -21,21 +21,26 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         internal Action<Transform> TreeSelectionChangedCallback;
 
         private readonly HashSet<GameObject> _openedObjects = new HashSet<GameObject>();
-        private Vector2 _propertiesScrollPosition;
         private Transform _selectedTransform;
+
+        private Vector2 _propertiesScrollPosition;
         private Vector2 _treeScrollPosition;
+        private readonly int _windowId;
         private Rect _windowRect;
         private float _objectTreeHeight;
         private int _singleObjectTreeItemHeight;
+
         private bool _scrollTreeToSelected;
+        private int _scrollTarget;
+
         private bool _enabled;
+
         private readonly GameObjectSearcher _gameObjectSearcher;
         private readonly Dictionary<Image, Texture2D> _imagePreviewCache = new Dictionary<Image, Texture2D>();
         private readonly GUILayoutOption _drawVector3FieldWidth = GUILayout.Width(38);
         private readonly GUILayoutOption _drawVector3FieldHeight = GUILayout.Height(19);
         private readonly GUILayoutOption _drawVector3SliderHeight = GUILayout.Height(10);
         private readonly GUILayoutOption _drawVector3SliderWidth = GUILayout.Width(33);
-        private readonly int _windowId;
 
         public void SelectAndShowObject(Transform target)
         {
@@ -136,17 +141,14 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             var isVisible = currentCount * _singleObjectTreeItemHeight >= _treeScrollPosition.y &&
                             (currentCount - 1) * _singleObjectTreeItemHeight <= _treeScrollPosition.y + _objectTreeHeight;
 
-            if (needsHeightMeasure || isVisible)
+            if (isVisible || needsHeightMeasure || _scrollTreeToSelected)
             {
                 var c = GUI.color;
                 if (SelectedTransform == go.transform)
                 {
                     GUI.color = Color.cyan;
                     if (_scrollTreeToSelected && Event.current.type == EventType.Repaint)
-                    {
-                        _scrollTreeToSelected = false;
-                        _treeScrollPosition.y = GUILayoutUtility.GetLastRect().y - 50;
-                    }
+                        _scrollTarget = (int)(GUILayoutUtility.GetLastRect().y - 50);
                 }
                 else if (!go.activeSelf)
                 {
@@ -537,6 +539,12 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                     var currentCount = 0;
                     foreach (var rootGameObject in _gameObjectSearcher.GetSearchedOrAllObjects())
                         DisplayObjectTreeHelper(rootGameObject, 0, ref currentCount);
+
+                    if (_scrollTreeToSelected && Event.current.type == EventType.layout)
+                    {
+                        _scrollTreeToSelected = false;
+                        _treeScrollPosition.y = _scrollTarget;
+                    }
                 }
                 GUILayout.EndScrollView();
             }
