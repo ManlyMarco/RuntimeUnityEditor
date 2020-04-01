@@ -53,29 +53,32 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         private void DrawEditableValue(ICacheEntry field, object value, params GUILayoutOption[] layoutParams)
         {
-            var isBeingEdited = _currentlyEditingTag == field;
-            var text = isBeingEdited ? _currentlyEditingText : ToStringConverter.GetEditValue(field, value);
-            var result = GUILayout.TextField(text, layoutParams);
+            try
+            {
+                var isBeingEdited = _currentlyEditingTag == field;
+                var text = isBeingEdited ? _currentlyEditingText : ToStringConverter.GetEditValue(field, value);
+                var result = GUILayout.TextField(text, layoutParams);
 
-            if (!Equals(text, result) || isBeingEdited)
-                if (_userHasHitReturn)
+                if (!Equals(text, result) || isBeingEdited)
                 {
-                    _currentlyEditingTag = null;
-                    _userHasHitReturn = false;
-                    try
+                    if (_userHasHitReturn)
                     {
+                        _currentlyEditingTag = null;
+                        _userHasHitReturn = false;
+
                         ToStringConverter.SetEditValue(field, value, result);
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, "[Inspector] Failed to set value - " + ex.Message);
+                        _currentlyEditingText = result;
+                        _currentlyEditingTag = field;
                     }
                 }
-                else
-                {
-                    _currentlyEditingText = result;
-                    _currentlyEditingTag = field;
-                }
+            }
+            catch (Exception ex)
+            {
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, "[Inspector] Failed to get or set value - " + ex.Message);
+            }
         }
 
         private void DrawVariableNameEnterButton(ICacheEntry field)

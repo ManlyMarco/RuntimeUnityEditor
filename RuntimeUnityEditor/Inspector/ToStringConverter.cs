@@ -151,8 +151,11 @@ namespace RuntimeUnityEditor.Core.Inspector
         {
             var valueType = field.Type();
 
-            if (valueType == typeof(string))
-                return (string)value ?? "";
+            if (value is string str)
+                return str;
+
+            if(value == null && valueType == typeof(string))
+                return "";
 
             var isNull = value.IsNullOrDestroyed();
             if (isNull != null) return isNull;
