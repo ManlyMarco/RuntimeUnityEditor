@@ -274,7 +274,15 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             }
             GUILayout.EndHorizontal();
 
-            AssetBundleManagerHelper.DrawButtonIfAvailable();
+            GUILayout.BeginHorizontal();
+            {
+                GUI.changed = false;
+                var n = GUILayout.Toggle(Application.runInBackground, "Run in background");
+                if (GUI.changed) Application.runInBackground = n;
+
+                AssetBundleManagerHelper.DrawButtonIfAvailable();
+            }
+            GUILayout.EndHorizontal();
 
             GizmoDrawer.DisplayControls();
         }
