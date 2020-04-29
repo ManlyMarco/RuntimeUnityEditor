@@ -103,11 +103,15 @@ namespace RuntimeUnityEditor.Core.Inspector
         public static bool CanEditValue(ICacheEntry field, object value)
         {
             var valueType = field.Type();
+
+            if (valueType == null)
+                return false;
+
             if (valueType == typeof(string))
                 return true;
 
-            if (_canCovertCache.ContainsKey(valueType))
-                return _canCovertCache[valueType];
+            if (_canCovertCache.TryGetValue(valueType, out var stored))
+                return stored;
 
             if (TomlTypeConverter.GetConverter(valueType) != null)
             {
