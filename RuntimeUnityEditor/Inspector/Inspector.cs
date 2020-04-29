@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.UI;
 using RuntimeUnityEditor.Core.Utils;
@@ -34,13 +33,19 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         private bool _focusSearchBox;
         private const string SearchBoxName = "InspectorFilterBox";
-        private string _searchString = "";
 
         public string SearchString
         {
-            get => _searchString;
-            // The string can't be null under unity 5.x or we crash
-            set => _searchString = value ?? "";
+            get
+            {
+                var currentStackItem = GetCurrentTab().CurrentStackItem;
+                return currentStackItem != null ? currentStackItem.SearchString : string.Empty;
+            }
+            set
+            {
+                var inspectorStackEntryBase = GetCurrentTab().CurrentStackItem;
+                if (inspectorStackEntryBase != null) inspectorStackEntryBase.SearchString = value;
+            }
         }
 
         private static Action<Transform> _treeListShowCallback;
@@ -53,31 +58,24 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         private void DrawEditableValue(ICacheEntry field, object value, params GUILayoutOption[] layoutParams)
         {
-            try
-            {
-                var isBeingEdited = _currentlyEditingTag == field;
-                var text = isBeingEdited ? _currentlyEditingText : ToStringConverter.GetEditValue(field, value);
-                var result = GUILayout.TextField(text, layoutParams);
+            var isBeingEdited = _currentlyEditingTag == field;
+            var text = isBeingEdited ? _currentlyEditingText : ToStringConverter.GetEditValue(field, value);
+            var result = GUILayout.TextField(text, layoutParams);
 
-                if (!Equals(text, result) || isBeingEdited)
+            if (!Equals(text, result) || isBeingEdited)
+            {
+                if (_userHasHitReturn)
                 {
-                    if (_userHasHitReturn)
-                    {
-                        _currentlyEditingTag = null;
-                        _userHasHitReturn = false;
+                    _currentlyEditingTag = null;
+                    _userHasHitReturn = false;
 
-                        ToStringConverter.SetEditValue(field, value, result);
-                    }
-                    else
-                    {
-                        _currentlyEditingText = result;
-                        _currentlyEditingTag = field;
-                    }
+                    ToStringConverter.SetEditValue(field, value, result);
                 }
-            }
-            catch (Exception ex)
-            {
-                RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, "[Inspector] Failed to get or set value - " + ex.Message);
+                else
+                {
+                    _currentlyEditingText = result;
+                    _currentlyEditingTag = field;
+                }
             }
         }
 
@@ -114,9 +112,6 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         public void Push(InspectorStackEntryBase stackEntry, bool newTab)
         {
-            _focusSearchBox = true;
-            SearchString = null;
-
             var tab = GetCurrentTab();
             if (tab == null || newTab)
             {
@@ -125,6 +120,9 @@ namespace RuntimeUnityEditor.Core.Inspector
                 _currentTab = tab;
             }
             tab.Push(stackEntry);
+
+            _focusSearchBox = true;
+            //tab.SearchString = string.Empty;
 
             Show = true;
         }
@@ -334,7 +332,15 @@ namespace RuntimeUnityEditor.Core.Inspector
                 {
                     var visibleFields = string.IsNullOrEmpty(SearchString) ?
                         tab.FieldCache :
-                        tab.FieldCache.Where(x => x.Name().Contains(SearchString, StringComparison.OrdinalIgnoreCase) || x.TypeName().Contains(SearchString, StringComparison.OrdinalIgnoreCase)).ToList();
+                        tab.FieldCache.Where(x =>
+                        {
+                            var name = x.Name();
+                            if (name != null && name.Contains(SearchString, StringComparison.OrdinalIgnoreCase)) return true;
+                            var typeName = x.TypeName();
+                            if (typeName != null && typeName.Contains(SearchString, StringComparison.OrdinalIgnoreCase)) return true;
+                            var value = x.GetValue();
+                            return value != null && value.ToString().Contains(SearchString, StringComparison.OrdinalIgnoreCase);
+                        }).ToList();
 
                     var firstIndex = (int)(currentItem.ScrollPosition.y / InspectorRecordHeight);
 
@@ -344,14 +350,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                     for (var index = firstIndex; index < Mathf.Min(visibleFields.Count, firstIndex + currentVisibleCount); index++)
                     {
                         var entry = visibleFields[index];
-                        try
-                        {
-                            DrawSingleContentEntry(entry);
-                        }
-                        catch (ArgumentException)
-                        {
-                            // Needed to avoid GUILayout: Mismatched LayoutGroup.Repaint crashes on large lists
-                        }
+                        DrawSingleContentEntry(entry);
                     }
                     try
                     {
@@ -373,22 +372,30 @@ namespace RuntimeUnityEditor.Core.Inspector
         {
             GUILayout.BeginHorizontal(_inspectorRecordHeight);
             {
-                GUILayout.Label(entry.TypeName(), _inspectorTypeWidth);
+                try
+                {
+                    GUILayout.Label(entry.TypeName(), _inspectorTypeWidth);
 
-                var value = entry.GetValue();
+                    var value = entry.GetValue();
 
-                if (entry.CanEnterValue() || value is Exception)
-                    DrawVariableNameEnterButton(entry);
-                else
-                    GUILayout.TextArea(entry.Name(), GUI.skin.label, _inspectorNameWidth);
+                    if (entry.CanEnterValue() || value is Exception)
+                        DrawVariableNameEnterButton(entry);
+                    else
+                        GUILayout.TextArea(entry.Name(), GUI.skin.label, _inspectorNameWidth);
 
-                if (entry.CanSetValue() && ToStringConverter.CanEditValue(entry, value))
-                    DrawEditableValue(entry, value, GUILayout.ExpandWidth(true));
-                else
-                    GUILayout.TextArea(ToStringConverter.ObjectToString(value), GUI.skin.label, GUILayout.ExpandWidth(true));
+                    if (entry.CanSetValue() && ToStringConverter.CanEditValue(entry, value))
+                        DrawEditableValue(entry, value, GUILayout.ExpandWidth(true));
+                    else
+                        GUILayout.TextArea(ToStringConverter.ObjectToString(value), GUI.skin.label, GUILayout.ExpandWidth(true));
 
-                if (DnSpyHelper.IsAvailable && GUILayout.Button("^", _dnSpyButtonOptions))
-                    DnSpyHelper.OpenInDnSpy(entry);
+                    if (DnSpyHelper.IsAvailable && GUILayout.Button("^", _dnSpyButtonOptions))
+                        DnSpyHelper.OpenInDnSpy(entry);
+                }
+                catch (Exception ex)
+                {
+                    RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, $"Failed to draw setting {entry?.Name()} - {ex.Message}");
+                    GUILayout.TextArea(ex.Message, GUI.skin.label, GUILayout.ExpandWidth(true));
+                }
             }
             GUILayout.EndHorizontal();
         }
