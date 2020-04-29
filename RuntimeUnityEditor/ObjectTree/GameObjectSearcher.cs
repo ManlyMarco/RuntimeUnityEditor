@@ -90,6 +90,9 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         {
             if (c == null) return false;
 
+            if (c.ToString().Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
+                return true;
+
             var type = c.GetType();
             if (type.Name.Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
                 return true;
