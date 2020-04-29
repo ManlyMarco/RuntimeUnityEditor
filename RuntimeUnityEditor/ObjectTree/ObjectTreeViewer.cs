@@ -548,10 +548,11 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                     foreach (var rootGameObject in _gameObjectSearcher.GetSearchedOrAllObjects())
                         DisplayObjectTreeHelper(rootGameObject, 0, ref currentCount);
 
-                    if (_scrollTreeToSelected && Event.current.type == EventType.layout)
+                    if (_scrollTreeToSelected && _scrollTarget > 0 && Event.current.type == EventType.layout)
                     {
                         _scrollTreeToSelected = false;
                         _treeScrollPosition.y = _scrollTarget;
+                        _scrollTarget = 0;
                     }
                 }
                 GUILayout.EndScrollView();
