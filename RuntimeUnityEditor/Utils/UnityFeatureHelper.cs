@@ -29,10 +29,32 @@ namespace RuntimeUnityEditor.Core.Utils
             SupportsVectrosity = _vectrosity != null;
             if (!SupportsVectrosity)
                 RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "Vectrosity.dll is not available, drawing gizmos will be disabled");
+
+            if (SupportsCursorIndex)
+            {
+                SupportsRepl = true;
+                try
+                {
+                    var profilerType = Type.GetType("MonoProfiler.MonoProfilerPatcher, MonoProfilerLoader", false)
+                        ?.GetProperty("IsInitialized", BindingFlags.Static | BindingFlags.Public);
+                    var profilerIsRunning = profilerType != null && (bool)profilerType.GetValue(null, null);
+
+                    if (profilerIsRunning)
+                    {
+                        RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "Disabling REPL because a profiler is running. This is to prevent the combination of access-modded mcs, profiler and monomod from crashing the process.");
+                        SupportsRepl = false;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, ex);
+                }
+            }
         }
 
         public static bool SupportsScenes { get; private set; }
         public static bool SupportsCursorIndex { get; }
+        public static bool SupportsRepl { get; }
         public static bool SupportsVectrosity { get; }
 
         public static IEnumerable<GameObject> GetSceneGameObjects()
