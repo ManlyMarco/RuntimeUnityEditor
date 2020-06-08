@@ -11,9 +11,9 @@ namespace RuntimeUnityEditor.Bepin5
     public class RuntimeUnityEditor5 : BaseUnityPlugin
     {
         public ConfigEntry<string> DnSpyPath { get; private set; }
+        public ConfigEntry<string> DnSpyArgs { get; private set; }
         public ConfigEntry<bool> ShowRepl { get; private set; }
         public ConfigEntry<KeyboardShortcut> Hotkey { get; private set; }
-
 
         public static RuntimeUnityEditorCore Instance { get; private set; }
 
@@ -29,6 +29,10 @@ namespace RuntimeUnityEditor.Bepin5
             DnSpyPath = Config.Bind("Inspector", "Path to dnSpy.exe", string.Empty, "Full path to dnSpy that will enable integration with Inspector. When correctly configured, you will see a new ^ buttons that will open the members in dnSpy.");
             DnSpyPath.SettingChanged += (sender, args) => DnSpyHelper.DnSpyPath = DnSpyPath.Value;
             DnSpyHelper.DnSpyPath = DnSpyPath.Value;
+
+            DnSpyArgs = Config.Bind("Inspector", "Optional dnSpy arguments", string.Empty, "Additional parameters that are added to the end of each call to dnSpy.");
+            DnSpyArgs.SettingChanged += (sender, args) => DnSpyHelper.DnSpyArgs = DnSpyArgs.Value;
+            DnSpyHelper.DnSpyArgs = DnSpyArgs.Value;
 
             if (Instance.Repl != null)
             {

@@ -11,7 +11,6 @@ namespace RuntimeUnityEditor.Core
     public static class DnSpyHelper
     {
         private static string _dnSpyPath;
-
         public static string DnSpyPath
         {
             get { return _dnSpyPath; }
@@ -28,6 +27,13 @@ namespace RuntimeUnityEditor.Core
                         RuntimeUnityEditorCore.Logger.Log(LogLevel.Error | LogLevel.Message, "[DnSpyHelper] Invalid dnSpy path. The path has to point to 64bit dnSpy.exe");
                 }
             }
+        }
+
+        private static string _dnSpyArgs;
+        public static string DnSpyArgs
+        {
+            get => _dnSpyArgs;
+            set => _dnSpyArgs = value ?? string.Empty;
         }
 
         public static bool IsAvailable { get; private set; }
@@ -97,6 +103,7 @@ namespace RuntimeUnityEditor.Core
 
         private static void StartDnSpy(string refString)
         {
+            refString = refString + " " + DnSpyArgs;
             RuntimeUnityEditorCore.Logger.Log(LogLevel.Info, $"[DnSpyHelper] Opening {DnSpyPath} {refString}");
             Process.Start(DnSpyPath, refString);
         }
