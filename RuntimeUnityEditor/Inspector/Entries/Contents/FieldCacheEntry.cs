@@ -50,7 +50,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
 
         public override bool CanSetValue()
         {
-            return (FieldInfo.Attributes & FieldAttributes.Literal) == 0 && (_parent == null || _parent.CanSetValue());
+            return (FieldInfo.Attributes & FieldAttributes.Literal) == 0 && !FieldInfo.IsInitOnly && (_parent == null || _parent.CanSetValue());
         }
     }
 }
