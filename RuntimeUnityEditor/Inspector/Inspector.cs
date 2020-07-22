@@ -38,12 +38,12 @@ namespace RuntimeUnityEditor.Core.Inspector
         {
             get
             {
-                var currentStackItem = GetCurrentTab().CurrentStackItem;
+                var currentStackItem = GetCurrentTab()?.CurrentStackItem;
                 return currentStackItem != null ? currentStackItem.SearchString : string.Empty;
             }
             set
             {
-                var inspectorStackEntryBase = GetCurrentTab().CurrentStackItem;
+                var inspectorStackEntryBase = GetCurrentTab()?.CurrentStackItem;
                 if (inspectorStackEntryBase != null) inspectorStackEntryBase.SearchString = value;
             }
         }
