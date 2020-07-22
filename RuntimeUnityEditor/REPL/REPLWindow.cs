@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -97,7 +96,7 @@ namespace RuntimeUnityEditor.Core.REPL
 
         public void DisplayWindow()
         {
-            if(!Show) return;
+            if (!Show) return;
 
             if (_completionsListingStyle == null)
             {
@@ -251,7 +250,10 @@ namespace RuntimeUnityEditor.Core.REPL
             {
                 _suggestions.Clear();
 
+                // Discard errors when searching for completions
+                var logLen = _sb.Length;
                 var completions = _evaluator.GetCompletions(input, out string prefix);
+                _sb.Length = logLen;
                 if (completions != null)
                 {
                     if (prefix == null)
@@ -315,7 +317,7 @@ namespace RuntimeUnityEditor.Core.REPL
                         currentEvent.Use();
                     }
                 }
-                else if(input == null || !input.Contains('\n')) // todo change to always be alt + up/dn and have arrows for suggestions?
+                else if (input == null || !input.Contains('\n')) // todo change to always be alt + up/dn and have arrows for suggestions?
                 {
                     if (currentEvent.keyCode == KeyCode.UpArrow)
                     {
