@@ -58,11 +58,12 @@ namespace RuntimeUnityEditor.Core.Gizmos
             _lines.Clear();
         }
 
+        private readonly WaitForEndOfFrame _waitForEndOfFrame = new WaitForEndOfFrame();
         private IEnumerator EndOfFrame()
         {
             while (true)
             {
-                yield return new WaitForEndOfFrame();
+                yield return _waitForEndOfFrame;
                 if (Show)
                 {
                     foreach (var x in _lines)

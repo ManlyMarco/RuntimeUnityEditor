@@ -73,6 +73,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         private bool _wireframe;
         private bool _actuallyInsideOnGui;
 
+        private readonly WaitForEndOfFrame _waitForEndOfFrame = new WaitForEndOfFrame();
         private IEnumerator SetWireframeCo()
         {
             while (true)
@@ -81,7 +82,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
                 _actuallyInsideOnGui = true;
 
-                yield return new WaitForEndOfFrame();
+                yield return _waitForEndOfFrame;
 
                 if (GL.wireframe != _wireframe)
                     GL.wireframe = _wireframe;
