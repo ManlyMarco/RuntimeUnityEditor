@@ -4,7 +4,7 @@ using RuntimeUnityEditor.Core;
 
 namespace RuntimeUnityEditor.Bepin4
 {
-    [BepInPlugin(RuntimeUnityEditorCore.GUID, "Runtime Unity Editor", RuntimeUnityEditorCore.Version)]
+    [BepInPlugin(RuntimeUnityEditorCore.GUID, "Runtime Unity Editor (Legacy)", RuntimeUnityEditorCore.Version)]
     public class RuntimeUnityEditor4 : BaseUnityPlugin
     {
         [DisplayName("Path to dnSpy.exe")]
