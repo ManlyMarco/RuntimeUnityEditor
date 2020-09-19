@@ -27,7 +27,17 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         internal static int MaxWindowY => (int)_inspectorWindowRect.height;
 
-        public bool Show { get; set; }
+        private bool _show;
+        public bool Show
+        {
+            get => _show;
+            set
+            {
+                if (_show == value) return;
+                _show = value;
+                VariableFieldDrawer.ClearCache();
+            }
+        }
 
         private bool _focusSearchBox;
         private const string SearchBoxName = "InspectorFilterBox";

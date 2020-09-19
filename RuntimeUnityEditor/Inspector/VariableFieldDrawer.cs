@@ -53,7 +53,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                     else
                         DrawComboboxField(setting, Enum.GetValues(t), value);
                 }
-                else if (SettingDrawHandlers.TryGetValue(setting.Type(), out var drawMethod))
+                else if (setting.CanEnterValue() && SettingDrawHandlers.TryGetValue(setting.Type(), out var drawMethod))
                     drawMethod(setting, value);
                 else
                 {
