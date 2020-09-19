@@ -59,10 +59,18 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
             if (UnityFeatureHelper.SupportsScenes && !full)
             {
-                var newItems = UnityFeatureHelper.GetSceneGameObjects().Except(_cachedRootGameObjects).ToList();
-                if (newItems.Count > 0)
+                var any = false;
+                var newItems = UnityFeatureHelper.GetSceneGameObjects();
+                foreach (var newItem in newItems)
                 {
-                    _cachedRootGameObjects.AddRange(newItems);
+                    if (_cachedRootGameObjects.Contains(newItem))
+                    {
+                        any = true;
+                        _cachedRootGameObjects.Add(newItem);
+                    }
+                }
+                if (any)
+                {
                     _cachedRootGameObjects.Sort((o1, o2) => string.Compare(o1.name, o2.name, StringComparison.InvariantCultureIgnoreCase));
                 }
             }
@@ -111,7 +119,10 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                     if (prop.GetValue(c, null).ToString().Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
                         return true;
                 }
-                catch { }
+                catch
+                {
+                    // Skip invalid values
+                }
             }
             foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
                 .Where(x => !nameBlacklist.Contains(x.Name) && !typeBlacklist.Contains(x.FieldType)))
@@ -121,7 +132,10 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                     if (field.GetValue(c).ToString().Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
                         return true;
                 }
-                catch { }
+                catch
+                {
+                    // Skip invalid values
+                }
             }
 
             return false;

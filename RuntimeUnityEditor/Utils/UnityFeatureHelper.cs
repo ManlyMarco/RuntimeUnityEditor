@@ -57,7 +57,7 @@ namespace RuntimeUnityEditor.Core.Utils
         public static bool SupportsRepl { get; }
         public static bool SupportsVectrosity { get; }
 
-        public static IEnumerable<GameObject> GetSceneGameObjects()
+        public static GameObject[] GetSceneGameObjects()
         {
             try
             {
@@ -66,7 +66,7 @@ namespace RuntimeUnityEditor.Core.Utils
             catch (Exception)
             {
                 SupportsScenes = false;
-                return Enumerable.Empty<GameObject>();
+                return new GameObject[0];
             }
         }
 
