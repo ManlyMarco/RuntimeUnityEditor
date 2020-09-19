@@ -81,6 +81,8 @@
     <Compile Include="REPL\REPLWindow.cs" />
     <Compile Include="RuntimeUnityEditorCore.cs" />
     <Compile Include="Utils\BoundsUtils.cs" />
+    <Compile Include="Utils\IMGUIUtils.cs" />
+    <Compile Include="Utils\MouseInspect.cs" />
     <Compile Include="Utils\ComboBox.cs" />
     <Compile Include="Utils\TomlTypeConverter.cs" />
     <Compile Include="Utils\EditorUtilities.cs" />

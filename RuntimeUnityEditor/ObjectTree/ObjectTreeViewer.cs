@@ -149,7 +149,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 {
                     GUI.color = Color.cyan;
                     if (_scrollTreeToSelected && Event.current.type == EventType.Repaint)
-                        _scrollTarget = (int)(GUILayoutUtility.GetLastRect().y - 50);
+                        _scrollTarget = (int)(GUILayoutUtility.GetLastRect().y - 150);
                 }
                 else if (!go.activeSelf)
                 {
@@ -258,7 +258,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 {
                     if (SelectedTransform == null) GUI.enabled = false;
                     if (GUILayout.Button("Dump", GUILayout.ExpandWidth(false)))
-                        SceneDumper.DumpObjects(SelectedTransform?.gameObject);
+                        SceneDumper.DumpObjects(SelectedTransform.gameObject);
                     GUI.enabled = true;
 
                     if (GUILayout.Button("Log", GUILayout.ExpandWidth(false)))
@@ -278,8 +278,10 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             GUILayout.BeginHorizontal();
             {
                 GUI.changed = false;
-                var n = GUILayout.Toggle(Application.runInBackground, "Run in background");
+                var n = GUILayout.Toggle(Application.runInBackground, "Run in bg");
                 if (GUI.changed) Application.runInBackground = n;
+
+                MouseInspect.Enable = GUILayout.Toggle(MouseInspect.Enable, "Mouse inspect");
 
                 AssetBundleManagerHelper.DrawButtonIfAvailable();
             }

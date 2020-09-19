@@ -30,7 +30,7 @@ namespace RuntimeUnityEditor.Core.Utils
 
         public static void DrawButtonIfAvailable()
         {
-            if (_abCacheUnloadMethod != null && GUILayout.Button("Clear AssetBundle Cache"))
+            if (_abCacheUnloadMethod != null && GUILayout.Button("Clear Bundle Cache"))
             {
                 try
                 {
