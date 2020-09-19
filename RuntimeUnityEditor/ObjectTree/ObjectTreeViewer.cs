@@ -149,7 +149,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 {
                     GUI.color = Color.cyan;
                     if (_scrollTreeToSelected && Event.current.type == EventType.Repaint)
-                        _scrollTarget = (int)(GUILayoutUtility.GetLastRect().y - 150);
+                        _scrollTarget = (int)(GUILayoutUtility.GetLastRect().y - 250);
                 }
                 else if (!go.activeSelf)
                 {
@@ -552,13 +552,6 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                     var currentCount = 0;
                     foreach (var rootGameObject in _gameObjectSearcher.GetSearchedOrAllObjects())
                         DisplayObjectTreeHelper(rootGameObject, 0, ref currentCount);
-
-                    if (_scrollTreeToSelected && _scrollTarget > 0 && Event.current.type == EventType.layout)
-                    {
-                        _scrollTreeToSelected = false;
-                        _treeScrollPosition.y = _scrollTarget;
-                        _scrollTarget = 0;
-                    }
                 }
                 GUILayout.EndScrollView();
             }
@@ -619,6 +612,16 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 }
             }
             GUILayout.EndHorizontal();
+        }
+
+        public void Update()
+        {
+            if (_scrollTreeToSelected && _scrollTarget > 0)
+            {
+                _scrollTreeToSelected = false;
+                _treeScrollPosition.y = _scrollTarget;
+                _scrollTarget = 0;
+            }
         }
     }
 }

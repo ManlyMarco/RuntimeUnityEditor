@@ -153,7 +153,7 @@ namespace RuntimeUnityEditor.Core
                 Inspector.DisplayInspector();
                 TreeViewer.DisplayViewer();
                 Repl?.DisplayWindow();
-
+                
                 MouseInspect.OnGUI();
 
                 // Restore old skin for maximum compatibility
@@ -211,6 +211,8 @@ namespace RuntimeUnityEditor.Core
 
                 Cursor.lockState = CursorLockMode.None;
                 Cursor.visible = true;
+
+                TreeViewer.Update();
 
                 MouseInspect.Update();
             }
