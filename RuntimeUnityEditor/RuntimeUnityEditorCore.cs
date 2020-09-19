@@ -60,7 +60,7 @@ namespace RuntimeUnityEditor.Core
             }
         }
 
-        internal static RuntimeUnityEditorCore Instance { get; private set; }
+        public static RuntimeUnityEditorCore Instance { get; private set; }
         internal static MonoBehaviour PluginObject { get; private set; }
         internal static ILoggerWrapper Logger { get; private set; }
 
