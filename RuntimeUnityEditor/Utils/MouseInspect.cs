@@ -55,7 +55,7 @@ namespace RuntimeUnityEditor.Core.Utils
             if (Enable && _objUnderMouse != null)
             {
                 var pos = Input.mousePosition;
-                var rect = new Rect(pos.x - Screen.width / 2, Screen.height - pos.y - 50, Screen.width, 50);
+                var rect = new Rect(pos.x - (int)(Screen.width / 2), Screen.height - pos.y - 50, Screen.width, 50);
 
                 var origAlign = GUI.skin.label.alignment;
                 GUI.skin.label.alignment = TextAnchor.MiddleCenter;

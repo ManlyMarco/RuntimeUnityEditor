@@ -47,6 +47,19 @@ namespace RuntimeUnityEditor.Core
             }
         }
 
+        public bool EnableMouseInspect
+        {
+            get => MouseInspect.Enable;
+            set
+            {
+                if (MouseInspect.Enable != value)
+                {
+                    MouseInspect.Enable = value;
+                    SettingsChanged?.Invoke(this, EventArgs.Empty);
+                }
+            }
+        }
+
         public bool ShowInspector
         {
             get => Inspector != null && Inspector.Show;
