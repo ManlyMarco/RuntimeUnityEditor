@@ -55,6 +55,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DnSpyHelper.cs" />
+    <Compile Include="Inspector\VariableFieldDrawer.cs" />
     <Compile Include="Inspector\Inspector.InspectorTab.cs" />
     <Compile Include="Utils\AssetBundleManagerHelper.cs" />
     <Compile Include="ObjectTree\GameObjectSearcher.cs" />
@@ -80,6 +81,7 @@
     <Compile Include="REPL\REPLWindow.cs" />
     <Compile Include="RuntimeUnityEditorCore.cs" />
     <Compile Include="Utils\BoundsUtils.cs" />
+    <Compile Include="Utils\ComboBox.cs" />
     <Compile Include="Utils\TomlTypeConverter.cs" />
     <Compile Include="Utils\EditorUtilities.cs" />
     <Compile Include="Utils\Extensions.cs" />

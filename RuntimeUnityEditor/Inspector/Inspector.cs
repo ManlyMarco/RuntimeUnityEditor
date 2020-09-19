@@ -23,11 +23,9 @@ namespace RuntimeUnityEditor.Core.Inspector
         private Vector2 _tabScrollPos = Vector2.zero;
 
         private GUIStyle _alignedButtonStyle;
-        private Rect _inspectorWindowRect;
+        private static Rect _inspectorWindowRect;
 
-        private object _currentlyEditingTag;
-        private string _currentlyEditingText;
-        private bool _userHasHitReturn;
+        internal static int MaxWindowY => (int)_inspectorWindowRect.height;
 
         public bool Show { get; set; }
 
@@ -54,29 +52,6 @@ namespace RuntimeUnityEditor.Core.Inspector
         {
             _treeListShowCallback = treeListShowCallback ?? throw new ArgumentNullException(nameof(treeListShowCallback));
             _windowId = GetHashCode();
-        }
-
-        private void DrawEditableValue(ICacheEntry field, object value, params GUILayoutOption[] layoutParams)
-        {
-            var isBeingEdited = _currentlyEditingTag == field;
-            var text = isBeingEdited ? _currentlyEditingText : ToStringConverter.GetEditValue(field, value);
-            var result = GUILayout.TextField(text, layoutParams);
-
-            if (!Equals(text, result) || isBeingEdited)
-            {
-                if (_userHasHitReturn)
-                {
-                    _currentlyEditingTag = null;
-                    _userHasHitReturn = false;
-
-                    ToStringConverter.SetEditValue(field, value, result);
-                }
-                else
-                {
-                    _currentlyEditingText = result;
-                    _currentlyEditingTag = field;
-                }
-            }
         }
 
         private void DrawVariableNameEnterButton(ICacheEntry field)
@@ -302,6 +277,8 @@ namespace RuntimeUnityEditor.Core.Inspector
                 //CurrentTab?.Pop();
             }
 
+            VariableFieldDrawer.DrawCurrentDropdown();
+
             GUI.DragWindow();
         }
 
@@ -383,10 +360,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                     else
                         GUILayout.TextArea(entry.Name(), GUI.skin.label, _inspectorNameWidth);
 
-                    if (entry.CanSetValue() && ToStringConverter.CanEditValue(entry, value))
-                        DrawEditableValue(entry, value, GUILayout.ExpandWidth(true));
-                    else
-                        GUILayout.TextArea(ToStringConverter.ObjectToString(value), GUI.skin.label, GUILayout.ExpandWidth(true));
+                    VariableFieldDrawer.DrawSettingValue(entry, value);
 
                     if (DnSpyHelper.IsAvailable && GUILayout.Button("^", _dnSpyButtonOptions))
                         DnSpyHelper.OpenInDnSpy(entry);
@@ -403,8 +377,6 @@ namespace RuntimeUnityEditor.Core.Inspector
         public void DisplayInspector()
         {
             if (!Show) return;
-
-            if (Event.current.isKey && (Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter)) _userHasHitReturn = true;
 
             // Clean up dead tab contents
             foreach (var tab in _tabs.ToList())

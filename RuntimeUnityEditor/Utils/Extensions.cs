@@ -141,5 +141,14 @@ namespace RuntimeUnityEditor.Core.Utils
 
             return null;
         }
+        
+        public static void FillTexture(this Texture2D tex, Color color)
+        {
+            for (var x = 0; x < tex.width; x++)
+            for (var y = 0; y < tex.height; y++)
+                tex.SetPixel(x, y, color);
+
+            tex.Apply(false);
+        }
     }
 }
