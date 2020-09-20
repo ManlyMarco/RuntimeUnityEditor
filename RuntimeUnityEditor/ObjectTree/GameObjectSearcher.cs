@@ -63,7 +63,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 var newItems = UnityFeatureHelper.GetSceneGameObjects();
                 foreach (var newItem in newItems)
                 {
-                    if (_cachedRootGameObjects.Contains(newItem))
+                    if (!_cachedRootGameObjects.Contains(newItem))
                     {
                         any = true;
                         _cachedRootGameObjects.Add(newItem);
