@@ -247,7 +247,7 @@ namespace RuntimeUnityEditor.Core.Inspector
 
             if (!_colorCache.TryGetValue(obj, out var cacheEntry))
             {
-                cacheEntry = new ColorCacheEntry { Tex = new Texture2D(40, 10, TextureFormat.ARGB32, false), Last = setting };
+                cacheEntry = new ColorCacheEntry { Tex = new Texture2D(14, 14, TextureFormat.ARGB32, false), Last = setting };
                 cacheEntry.Tex.FillTexture(setting);
                 _colorCache[obj] = cacheEntry;
             }
@@ -262,6 +262,27 @@ namespace RuntimeUnityEditor.Core.Inspector
             setting.a = GUILayout.HorizontalSlider(setting.a, 0f, 1f, GUILayout.ExpandWidth(true));
 
             GUILayout.Space(4);
+
+            GUI.changed = false;
+            var isBeingEdited = _currentlyEditingTag == obj;
+            var text = isBeingEdited ? _currentlyEditingText : TomlTypeConverter.ConvertToString(setting, typeof(Color));
+            text = GUILayout.TextField(text, GUILayout.Width(75));
+            if (GUI.changed && !text.Equals(TomlTypeConverter.ConvertToString(setting, typeof(Color))) || isBeingEdited)
+            {
+                if (_userHasHitReturn)
+                {
+                    _currentlyEditingTag = null;
+                    _userHasHitReturn = false;
+                    
+                    try { obj.SetValue(TomlTypeConverter.ConvertToValue<Color>(text)); }
+                    catch { }
+                }
+                else
+                {
+                    _currentlyEditingText = text;
+                    _currentlyEditingTag = obj;
+                }
+            }
 
             if (setting != cacheEntry.Last)
             {
