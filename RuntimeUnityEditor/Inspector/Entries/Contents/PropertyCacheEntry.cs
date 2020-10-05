@@ -20,6 +20,11 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         private readonly object _instance;
         private readonly ICacheEntry _parent;
 
+        public override bool CanEnterValue()
+        {
+            return PropertyInfo.CanRead && base.CanEnterValue();
+        }
+
         public override object GetValueToCache()
         {
             if (!PropertyInfo.CanRead)
