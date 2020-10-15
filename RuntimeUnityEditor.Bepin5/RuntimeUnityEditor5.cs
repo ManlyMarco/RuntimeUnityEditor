@@ -55,6 +55,7 @@ namespace RuntimeUnityEditor.Bepin5
                 Hotkey.Value = new KeyboardShortcut(Instance.ShowHotkey);
                 if (ShowRepl != null) ShowRepl.Value = Instance.ShowRepl;
                 DnSpyArgs.Value = DnSpyHelper.DnSpyArgs;
+                EnableMouseInspector.Value = Instance.EnableMouseInspect;
             };
         }
 
