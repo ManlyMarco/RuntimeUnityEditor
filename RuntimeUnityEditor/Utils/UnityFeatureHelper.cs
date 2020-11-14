@@ -13,9 +13,6 @@ namespace RuntimeUnityEditor.Core.Utils
         private static readonly Type _scene = Type.GetType("UnityEngine.SceneManagement.Scene, UnityEngine", false);
         private static readonly Type _vectrosity = Type.GetType("Vectrosity.VectorObject2D, Vectrosity", false);
 
-        private static readonly Type _colorUtility = Type.GetType("UnityEngine.ColorUtility, UnityEngine", false);
-        private static readonly Type _jsonUtility = Type.GetType("UnityEngine.JsonUtility, UnityEngine", false);
-
         static UnityFeatureHelper()
         {
             SupportsScenes = _scene != null && _sceneManager != null;
@@ -29,9 +26,6 @@ namespace RuntimeUnityEditor.Core.Utils
             SupportsVectrosity = _vectrosity != null;
             if (!SupportsVectrosity)
                 RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "Vectrosity.dll is not available, drawing gizmos will be disabled");
-
-            SupportsColorUtility = _colorUtility != null;
-            SupportsJsonUtility = _jsonUtility != null;
 
             if (SupportsCursorIndex)
             {
@@ -59,8 +53,6 @@ namespace RuntimeUnityEditor.Core.Utils
         public static bool SupportsCursorIndex { get; }
         public static bool SupportsRepl { get; }
         public static bool SupportsVectrosity { get; }
-        public static bool SupportsJsonUtility { get; }
-        public static bool SupportsColorUtility { get; }
 
         public static GameObject[] GetSceneGameObjects()
         {
