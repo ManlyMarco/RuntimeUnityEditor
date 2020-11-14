@@ -48,17 +48,27 @@ namespace RuntimeUnityEditor.Core.Utils
                     return c;
                 },
             });
-
-            var jsonConverter = new TypeConverter
+            
+            AddConverter(typeof(Vector2), new TypeConverter
             {
-                ConvertToString = (obj, type) => JsonUtility.ToJson(obj),
-                ConvertToObject = (str, type) => JsonUtility.FromJson(type: type, json: str),
-            };
-
-            AddConverter(typeof(Vector2), jsonConverter);
-            AddConverter(typeof(Vector3), jsonConverter);
-            AddConverter(typeof(Vector4), jsonConverter);
-            AddConverter(typeof(Quaternion), jsonConverter);
+                ConvertToString = (obj, type) => ToStringUtility.ObjectToString((Vector2)obj),
+                ConvertToObject = (str, type) => ToStringUtility.StringToVector2(str),
+            });
+            AddConverter(typeof(Vector3), new TypeConverter
+            {
+                ConvertToString = (obj, type) => ToStringUtility.ObjectToString((Vector3)obj),
+                ConvertToObject = (str, type) => ToStringUtility.StringToVector3(str),
+            });
+            AddConverter(typeof(Vector4), new TypeConverter
+            {
+                ConvertToString = (obj, type) => ToStringUtility.ObjectToString((Vector4)obj),
+                ConvertToObject = (str, type) => ToStringUtility.StringToVector4(str),
+            });
+            AddConverter(typeof(Quaternion), new TypeConverter
+            {
+                ConvertToString = (obj, type) => ToStringUtility.ObjectToString((Quaternion)obj),
+                ConvertToObject = (str, type) => ToStringUtility.StringToQuaternion(str),
+            });
         }
 
         /// <summary>

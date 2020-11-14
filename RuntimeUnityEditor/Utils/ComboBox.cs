@@ -90,9 +90,9 @@ namespace RuntimeUnityEditor.Core.Utils
                 var location = GUIUtility.GUIToScreenPoint(new Vector2(Rect.x, Rect.y + listStyle.CalcHeight(listContent[0], 1.0f)));
                 var size = new Vector2(Rect.width, listStyle.CalcHeight(listContent[0], 1.0f) * listContent.Length);
 
-                var innerRect = new Rect(Vector2.zero, size);
+                var innerRect = new Rect(0, 0, size.x, size.y);
 
-                var outerRectScreen = new Rect(location, size);
+                var outerRectScreen = new Rect(location.x, location.y, size.x, size.y);
                 if (outerRectScreen.yMax > _windowYmax)
                 {
                     outerRectScreen.height = _windowYmax - outerRectScreen.y;

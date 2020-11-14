@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using RuntimeUnityEditor.Core.REPL.MCS;
 using RuntimeUnityEditor.Core.UI;
@@ -34,6 +35,9 @@ namespace RuntimeUnityEditor.Core.REPL
         private TextEditor _textEditor;
         private int _newCursorLocation = -1;
 
+        private MemberInfo _cursorIndex;
+        private MemberInfo _selectIndex;
+        
         public bool Show { get; set; } = true;
 
         private HashSet<string> _namespaces;
@@ -155,15 +159,16 @@ namespace RuntimeUnityEditor.Core.REPL
 
                     if (_refocus)
                     {
-                        _refocusCursorIndex = _textEditor.cursorIndex;
-                        _refocusSelectIndex = _textEditor.selectIndex;
+                        _refocusCursorIndex = (int)ReflectionUtils.GetValue(_cursorIndex, _textEditor);
+                        _refocusSelectIndex = (int)ReflectionUtils.GetValue(_selectIndex, _textEditor);
                         GUI.FocusControl("replInput");
                         _refocus = false;
                     }
                     else if (_refocusCursorIndex >= 0)
                     {
-                        _textEditor.cursorIndex = _refocusCursorIndex;
-                        _textEditor.selectIndex = _refocusSelectIndex;
+                        ReflectionUtils.SetValue(_cursorIndex, _textEditor, _refocusCursorIndex);
+                        ReflectionUtils.SetValue(_selectIndex, _textEditor, _refocusSelectIndex);
+                        
                         _refocusCursorIndex = -1;
                     }
 
@@ -207,9 +212,9 @@ namespace RuntimeUnityEditor.Core.REPL
 
         private void AcceptSuggestion(string suggestion)
         {
-            int cursorIndex = _textEditor.cursorIndex;
+            int cursorIndex = (int)ReflectionUtils.GetValue(_cursorIndex, _textEditor);
             _inputField = _inputField.Insert(cursorIndex, suggestion);
-            _newCursorLocation = _textEditor.cursorIndex + suggestion.Length;
+            _newCursorLocation = (int)ReflectionUtils.GetValue(_cursorIndex, _textEditor) + suggestion.Length;
             ClearSuggestions();
 
             _refocus = true;
@@ -293,10 +298,24 @@ namespace RuntimeUnityEditor.Core.REPL
                 return;
 
             _textEditor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
+            
+            // Reflection for compatibility with Unity 4.x
+            var tEditor = typeof(TextEditor);
+            
+            _cursorIndex = tEditor.GetProperty("cursorIndex", BindingFlags.Instance | BindingFlags.Public);
+            _selectIndex = tEditor.GetProperty("selectIndex", BindingFlags.Instance | BindingFlags.Public);
+
+            if (_cursorIndex == null && _selectIndex == null)
+            {
+                _cursorIndex = tEditor.GetField("pos", BindingFlags.Instance | BindingFlags.Public);
+                _selectIndex = tEditor.GetField("selectPos", BindingFlags.Instance | BindingFlags.Public);
+            }
+            
             if (_newCursorLocation >= 0)
             {
-                _textEditor.cursorIndex = _newCursorLocation;
-                _textEditor.selectIndex = _newCursorLocation;
+                ReflectionUtils.SetValue(_cursorIndex, _textEditor, _newCursorLocation);
+                ReflectionUtils.SetValue(_selectIndex, _textEditor, _newCursorLocation);
+
                 _newCursorLocation = -1;
             }
 
@@ -310,8 +329,10 @@ namespace RuntimeUnityEditor.Core.REPL
                     if (!currentEvent.shift)
                     {
                         // Fix pressing enter adding a newline in textarea
-                        if (_textEditor.cursorIndex - 1 >= 0)
-                            _inputField = _inputField.Remove(_textEditor.cursorIndex - 1, 1);
+                        var index = (int)ReflectionUtils.GetValue(_cursorIndex, _textEditor);
+                        
+                        if (index - 1 >= 0)
+                            _inputField = _inputField.Remove(index - 1, 1);
 
                         AcceptInput();
                         currentEvent.Use();
@@ -339,7 +360,7 @@ namespace RuntimeUnityEditor.Core.REPL
                 try
                 {
                     // Separate input into parts, grab only the part with cursor in it
-                    var cursorIndex = _refocusCursorIndex >= 0 ? _refocusCursorIndex : _textEditor.cursorIndex;
+                    var cursorIndex = _refocusCursorIndex >= 0 ? _refocusCursorIndex : (int)ReflectionUtils.GetValue(_cursorIndex, _textEditor);
                     var start = cursorIndex <= 0 ? 0 : input.LastIndexOfAny(_inputSplitChars, cursorIndex - 1) + 1;
                     var end = cursorIndex <= 0 ? input.Length : input.IndexOfAny(_inputSplitChars, cursorIndex - 1);
                     if (end < 0 || end < start) end = input.Length;

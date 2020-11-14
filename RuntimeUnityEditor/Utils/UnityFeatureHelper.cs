@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace RuntimeUnityEditor.Core.Utils
 {
@@ -21,10 +19,9 @@ namespace RuntimeUnityEditor.Core.Utils
             if (!SupportsScenes)
                 RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "UnityEngine.SceneManager and/or UnityEngine.SceneManagement.Scene are not available, some features will be disabled");
 
-            // Todo detect properly?
-            SupportsCursorIndex = SupportsScenes;
+            SupportsCursorIndex = !(typeof(TextEditor).GetProperty("cursorIndex", BindingFlags.Instance | BindingFlags.Public) == null && typeof(TextEditor).GetField("pos", BindingFlags.Instance | BindingFlags.Public) == null);
             if (!SupportsCursorIndex)
-                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "TextEditor.cursorIndex is not available, some features will be disabled");
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "TextEditor.cursorIndex and TextEditor.pos are not available, some features will be disabled");
 
             SupportsVectrosity = _vectrosity != null;
             if (!SupportsVectrosity)
@@ -72,7 +69,14 @@ namespace RuntimeUnityEditor.Core.Utils
 
         public static GameObject[] GetSceneGameObjectsInternal()
         {
-            return SceneManager.GetActiveScene().GetRootGameObjects();
+            // Reflection for compatibility with Unity 4.x
+            var activeScene = _sceneManager.GetMethod("GetActiveScene", BindingFlags.Static | BindingFlags.Public);
+            var scene = activeScene.Invoke(null, null);
+            
+            var rootGameObjects = scene.GetType().GetMethod("GetRootGameObjects", BindingFlags.Instance | BindingFlags.Public, null, new Type[]{}, null);
+            var objects = rootGameObjects.Invoke(scene, null);
+
+            return (GameObject[])objects;
         }
 
         public static void OpenLog()
