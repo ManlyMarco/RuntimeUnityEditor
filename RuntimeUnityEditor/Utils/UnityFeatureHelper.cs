@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace RuntimeUnityEditor.Core.Utils
 {
@@ -15,20 +13,25 @@ namespace RuntimeUnityEditor.Core.Utils
         private static readonly Type _scene = Type.GetType("UnityEngine.SceneManagement.Scene, UnityEngine", false);
         private static readonly Type _vectrosity = Type.GetType("Vectrosity.VectorObject2D, Vectrosity", false);
 
+        private static readonly Type _colorUtility = Type.GetType("UnityEngine.ColorUtility, UnityEngine", false);
+        private static readonly Type _jsonUtility = Type.GetType("UnityEngine.JsonUtility, UnityEngine", false);
+
         static UnityFeatureHelper()
         {
             SupportsScenes = _scene != null && _sceneManager != null;
             if (!SupportsScenes)
                 RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "UnityEngine.SceneManager and/or UnityEngine.SceneManagement.Scene are not available, some features will be disabled");
 
-            // Todo detect properly?
-            SupportsCursorIndex = SupportsScenes;
+            SupportsCursorIndex = !(typeof(TextEditor).GetProperty("cursorIndex", BindingFlags.Instance | BindingFlags.Public) == null && typeof(TextEditor).GetField("pos", BindingFlags.Instance | BindingFlags.Public) == null);
             if (!SupportsCursorIndex)
-                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "TextEditor.cursorIndex is not available, some features will be disabled");
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "TextEditor.cursorIndex and TextEditor.pos are not available, some features will be disabled");
 
             SupportsVectrosity = _vectrosity != null;
             if (!SupportsVectrosity)
                 RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "Vectrosity.dll is not available, drawing gizmos will be disabled");
+
+            SupportsColorUtility = _colorUtility != null;
+            SupportsJsonUtility = _jsonUtility != null;
 
             if (SupportsCursorIndex)
             {
@@ -56,6 +59,8 @@ namespace RuntimeUnityEditor.Core.Utils
         public static bool SupportsCursorIndex { get; }
         public static bool SupportsRepl { get; }
         public static bool SupportsVectrosity { get; }
+        public static bool SupportsJsonUtility { get; }
+        public static bool SupportsColorUtility { get; }
 
         public static GameObject[] GetSceneGameObjects()
         {
@@ -72,7 +77,14 @@ namespace RuntimeUnityEditor.Core.Utils
 
         public static GameObject[] GetSceneGameObjectsInternal()
         {
-            return SceneManager.GetActiveScene().GetRootGameObjects();
+            // Reflection for compatibility with Unity 4.x
+            var activeScene = _sceneManager.GetMethod("GetActiveScene", BindingFlags.Static | BindingFlags.Public);
+            var scene = activeScene.Invoke(null, null);
+            
+            var rootGameObjects = scene.GetType().GetMethod("GetRootGameObjects", BindingFlags.Instance | BindingFlags.Public, null, new Type[]{}, null);
+            var objects = rootGameObjects.Invoke(scene, null);
+
+            return (GameObject[])objects;
         }
 
         public static void OpenLog()

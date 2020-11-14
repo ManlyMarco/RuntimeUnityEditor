@@ -39,7 +39,6 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.XML" />
     <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\IllusionLibs.HoneySelect.UnityEngine.5.3.5\lib\net35\UnityEngine.dll</HintPath>
       <Private>True</Private>
@@ -82,8 +81,10 @@
     <Compile Include="RuntimeUnityEditorCore.cs" />
     <Compile Include="Utils\BoundsUtils.cs" />
     <Compile Include="Utils\IMGUIUtils.cs" />
+    <Compile Include="Utils\DataUtility.cs" />
     <Compile Include="Utils\MouseInspect.cs" />
     <Compile Include="Utils\ComboBox.cs" />
+    <Compile Include="Utils\ReflectionUtils.cs" />
     <Compile Include="Utils\TomlTypeConverter.cs" />
     <Compile Include="Utils\EditorUtilities.cs" />
     <Compile Include="Utils\Extensions.cs" />

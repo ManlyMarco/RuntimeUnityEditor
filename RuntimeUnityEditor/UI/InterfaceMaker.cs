@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using RuntimeUnityEditor.Core.Utils;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -41,7 +42,8 @@ namespace RuntimeUnityEditor.Core.UI
 
         private static GUISkin CreateSkin()
         {
-            var newSkin = Object.Instantiate(GUI.skin);
+            // Reflection because unity 4.x refuses to instantiate if built with newer versions of UnityEngine
+            var newSkin = typeof(Object).GetMethod("Instantiate", BindingFlags.Static | BindingFlags.Public, null, new []{typeof(Object)}, null).Invoke(null, new object[] {GUI.skin}) as GUISkin;
             Object.DontDestroyOnLoad(newSkin);
 
             // Load the custom skin from resources
