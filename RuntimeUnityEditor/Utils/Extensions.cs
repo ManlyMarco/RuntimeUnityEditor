@@ -23,7 +23,7 @@ namespace RuntimeUnityEditor.Core.Utils
             var j = Array.IndexOf(arr, src) + 1;
             return (arr.Length == j) ? arr[0] : arr[j];
         }
-
+        
         public static object GetPrivateExplicit<T>(this T self, string name)
         {
             return typeof(T).GetField(name, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy).GetValue(self);
@@ -141,14 +141,41 @@ namespace RuntimeUnityEditor.Core.Utils
 
             return null;
         }
-        
+
         public static void FillTexture(this Texture2D tex, Color color)
         {
             for (var x = 0; x < tex.width; x++)
-            for (var y = 0; y < tex.height; y++)
-                tex.SetPixel(x, y, color);
+                for (var y = 0; y < tex.height; y++)
+                    tex.SetPixel(x, y, color);
 
             tex.Apply(false);
+        }
+
+        /// <summary>
+        /// Get all public and private fields, including from base classes
+        /// </summary>
+        public static IEnumerable<FieldInfo> GetAllFields(this Type t, bool getStatic)
+        {
+            var flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly | (getStatic ? BindingFlags.Static : BindingFlags.Instance);
+            return t.BaseType == null ? t.GetFields(flags) : t.GetFields(flags).Concat(GetAllFields(t.BaseType, getStatic));
+        }
+        
+        /// <summary>
+        /// Get all public and private properties, including from base classes
+        /// </summary>
+        public static IEnumerable<PropertyInfo> GetAllProperties(this Type t, bool getStatic)
+        {
+            var flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly | (getStatic ? BindingFlags.Static : BindingFlags.Instance);
+            return t.BaseType == null ? t.GetProperties(flags) : t.GetProperties(flags).Concat(GetAllProperties(t.BaseType, getStatic));
+        }
+
+        /// <summary>
+        /// Get all public and private methods, including from base classes
+        /// </summary>
+        public static IEnumerable<MethodInfo> GetAllMethods(this Type t, bool getStatic)
+        {
+            var flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly | (getStatic ? BindingFlags.Static : BindingFlags.Instance);
+            return t.BaseType == null ? t.GetMethods(flags) : t.GetMethods(flags).Concat(GetAllMethods(t.BaseType, getStatic));
         }
     }
 }

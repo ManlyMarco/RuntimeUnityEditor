@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using RuntimeUnityEditor.Core.Inspector.Entries;
+using RuntimeUnityEditor.Core.Utils;
 using UnityEngine;
 using Component = UnityEngine.Component;
 
@@ -40,7 +41,7 @@ namespace RuntimeUnityEditor.Core.Inspector
             }
 
             private static IEnumerable<ICacheEntry> MethodsToCacheEntries(object instance, Type instanceType,
-                MethodInfo[] methodsToCheck)
+                IEnumerable<MethodInfo> methodsToCheck)
             {
                 var cacheItems = methodsToCheck
                     .Where(x => !x.IsConstructor && !x.IsSpecialName && x.GetParameters().Length == 0)
@@ -116,19 +117,13 @@ namespace RuntimeUnityEditor.Core.Inspector
                     var parent = entry.Parent?.Type().IsValueType == true ? entry.Parent : null;
 
                     // Instance members
-                    _fieldCache.AddRange(type
-                        .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance |
-                                   BindingFlags.FlattenHierarchy)
+                    _fieldCache.AddRange(type.GetAllFields(false)
                         .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
                         .Select(f => new FieldCacheEntry(objectToOpen, f, parent)).Cast<ICacheEntry>());
-                    _fieldCache.AddRange(type
-                        .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance |
-                                       BindingFlags.FlattenHierarchy)
+                    _fieldCache.AddRange(type.GetAllProperties(false)
                         .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
                         .Select(p => new PropertyCacheEntry(objectToOpen, p, parent)).Cast<ICacheEntry>());
-                    _fieldCache.AddRange(MethodsToCacheEntries(objectToOpen, type,
-                        type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance |
-                                        BindingFlags.FlattenHierarchy)));
+                    _fieldCache.AddRange(MethodsToCacheEntries(objectToOpen, type, type.GetAllMethods(false)));
 
                     CacheStaticMembersHelper(type);
                 }
@@ -156,19 +151,13 @@ namespace RuntimeUnityEditor.Core.Inspector
 
             private void CacheStaticMembersHelper(Type type)
             {
-                _fieldCache.AddRange(type
-                    .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static |
-                               BindingFlags.FlattenHierarchy)
+                _fieldCache.AddRange(type.GetAllFields(true)
                     .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
                     .Select(f => new FieldCacheEntry(null, f)).Cast<ICacheEntry>());
-                _fieldCache.AddRange(type
-                    .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static |
-                                   BindingFlags.FlattenHierarchy)
+                _fieldCache.AddRange(type.GetAllProperties(true)
                     .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
                     .Select(p => new PropertyCacheEntry(null, p)).Cast<ICacheEntry>());
-                _fieldCache.AddRange(MethodsToCacheEntries(null, type,
-                    type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static |
-                                    BindingFlags.FlattenHierarchy)));
+                _fieldCache.AddRange(MethodsToCacheEntries(null, type, type.GetAllMethods(true)));
             }
 
             private void LoadStackEntry(InspectorStackEntryBase stackEntry)
@@ -189,7 +178,7 @@ namespace RuntimeUnityEditor.Core.Inspector
 
             public void PopUntil(InspectorStackEntryBase item)
             {
-                if(CurrentStackItem == item) return;
+                if (CurrentStackItem == item) return;
                 while (CurrentStackItem != null && CurrentStackItem != item) InspectorStack.Pop();
                 LoadStackEntry(CurrentStackItem);
             }

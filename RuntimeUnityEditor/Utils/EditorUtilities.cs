@@ -94,7 +94,8 @@ namespace RuntimeUnityEditor.Core.Utils
                 object obj = null;
                 try
                 {
-                    obj = type.GetProperty("Instance", BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)?.GetValue(null, null);
+                    obj = type.GetProperty("Instance", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)?.GetValue(null, null) ??
+                          type.GetField("_instance", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)?.GetValue(null);
                 }
                 catch (Exception ex)
                 {
