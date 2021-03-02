@@ -166,6 +166,18 @@ namespace RuntimeUnityEditor.Core.REPL
             RuntimeUnityEditorCore.Instance.Inspector.Push(new StaticStackEntry(type, "REPL > " + type.Name), true);
         }
 
+        [Documentation("getTree() - get the transform currently selected in tree view.")]
+        public static Transform getTree()
+        {
+            return RuntimeUnityEditorCore.Instance.TreeViewer.SelectedTransform;
+        }
+
+        [Documentation("findTree(Transform) - find and select the transform in the tree view.")]
+        public static void findTree(Transform tr)
+        {
+            RuntimeUnityEditorCore.Instance.TreeViewer.SelectAndShowObject(tr);
+        }
+
         [Documentation("dnspy(type) - open the type in dnSpy if dnSpy path is configured.")]
         public static void dnspy(Type type)
         {
