@@ -80,6 +80,8 @@
     <Compile Include="REPL\REPLWindow.cs" />
     <Compile Include="RuntimeUnityEditorCore.cs" />
     <Compile Include="Utils\BoundsUtils.cs" />
+    <Compile Include="Utils\TextureUtils.cs" />
+    <Compile Include="Utils\OpenFileDialog.cs" />
     <Compile Include="Utils\IMGUIUtils.cs" />
     <Compile Include="Utils\DataUtility.cs" />
     <Compile Include="Utils\MouseInspect.cs" />
