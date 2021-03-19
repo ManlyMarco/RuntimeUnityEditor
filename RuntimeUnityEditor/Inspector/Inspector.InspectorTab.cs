@@ -76,11 +76,21 @@ namespace RuntimeUnityEditor.Core.Inspector
 
                 try
                 {
+                    CallbackCacheEntry GetExportTexEntry(Texture texture)
+                    {
+                        return new CallbackCacheEntry("Export mainTexture to file",
+                            "Encode the texture to a PNG and save it to a new file",
+                            texture.SaveTextureToFileWithDialog);
+                    }
+
                     if (objectToOpen is Component cmp)
                     {
                         _fieldCache.Add(new CallbackCacheEntry("Open in Scene Object Browser",
                             "Navigate to GameObject this Component is attached to",
                             () => Inspector._treeListShowCallback(cmp.transform)));
+
+                        if (objectToOpen is UnityEngine.UI.Image img)
+                            _fieldCache.Add(GetExportTexEntry(img.mainTexture));
                     }
                     else if (objectToOpen is GameObject castedObj)
                     {
@@ -90,6 +100,10 @@ namespace RuntimeUnityEditor.Core.Inspector
                         _fieldCache.Add(new ReadonlyCacheEntry("Child objects",
                             castedObj.transform.Cast<Transform>().ToArray()));
                         _fieldCache.Add(new ReadonlyCacheEntry("Components", castedObj.GetComponents<Component>()));
+                    }
+                    else if (objectToOpen is Texture tex)
+                    {
+                        _fieldCache.Add(GetExportTexEntry(tex));
                     }
 
                     // If we somehow enter a string, this allows user to see what the string actually says

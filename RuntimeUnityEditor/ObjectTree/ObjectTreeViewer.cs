@@ -529,6 +529,22 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                         Object.FindObjectOfType<CheatTools>().StartCoroutine(RecreateCo());
                     }*/
 
+                    if (component is Image img)
+                    {
+                        if (GUILayout.Button("S"))
+                            img.mainTexture.SaveTextureToFileWithDialog();
+                    }
+                    else if (component is Button btn)
+                    {
+                        if (GUILayout.Button("?"))
+                            ReflectionUtils.OutputEventDetails(btn.onClick);
+                    }
+                    else if (component is Toggle t)
+                    {
+                        if (GUILayout.Button("?"))
+                            ReflectionUtils.OutputEventDetails(t.onValueChanged);
+                    }
+
                     if (GUILayout.Button("X"))
                     {
                         Object.Destroy(component);
