@@ -424,55 +424,87 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 {
                     case Image img:
                         var imgSprite = img.sprite;
-                        if (imgSprite != null && imgSprite.texture != null)
+                        if (imgSprite != null)
                         {
                             GUILayout.Label(imgSprite.name);
-
-                            if (!_imagePreviewCache.TryGetValue(img, out var tex))
+                            var texture = imgSprite.texture;
+                            if (texture != null)
                             {
-                                try
+                                if (!_imagePreviewCache.TryGetValue(img, out var tex))
                                 {
-                                    var newImg = imgSprite.texture.GetPixels(
-                                        (int)imgSprite.textureRect.x, (int)imgSprite.textureRect.y,
-                                        (int)imgSprite.textureRect.width,
-                                        (int)imgSprite.textureRect.height);
-                                    tex = new Texture2D((int)imgSprite.textureRect.width,
-                                        (int)imgSprite.textureRect.height);
-                                    tex.SetPixels(newImg);
-                                    //todo tex.Resize(0, 0); get proper width
-                                    tex.Apply();
-                                }
-                                catch (Exception)
-                                {
-                                    tex = null;
+                                    try
+                                    {
+                                        var texCopy = texture.ToTexture2D();
+                                        var spriteRect = imgSprite.textureRect;
+                                        if (spriteRect.width < texCopy.width || spriteRect.height < texCopy.height)
+                                        {
+                                            var newImg = texCopy.GetPixels((int)spriteRect.x, (int)spriteRect.y, (int)spriteRect.width, (int)spriteRect.height);
+                                            tex = new Texture2D((int)spriteRect.width, (int)spriteRect.height);
+                                            tex.SetPixels(newImg);
+                                            tex.Apply();
+                                            GameObject.Destroy(texCopy);
+                                        }
+                                        else
+                                        {
+                                            tex = texCopy;
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Console.WriteLine(ex);
+                                        tex = null;
+                                    }
+
+                                    _imagePreviewCache.Add(img, tex);
                                 }
 
-                                _imagePreviewCache.Add(img, tex);
+                                if (tex != null)
+                                {
+                                    GUILayout.Label(tex);
+                                    GUILayout.FlexibleSpace();
+                                    if (GUILayout.Button("S")) tex.SaveTextureToFileWithDialog();
+                                }
+                                else
+                                {
+                                    GUILayout.Label("Can't display texture");
+                                    GUILayout.FlexibleSpace();
+                                }
                             }
-
-                            if (tex != null)
-                                GUILayout.Label(tex);
-                            else
-                                GUILayout.Label("Can't display texture");
                         }
-                        //todo img.sprite.texture.EncodeToPNG() button
                         break;
                     case Slider b:
                         {
                             for (var i = 0; i < b.onValueChanged.GetPersistentEventCount(); ++i)
                                 GUILayout.Label(ToStringConverter.EventEntryToString(b.onValueChanged, i));
+
+                            GUILayout.FlexibleSpace();
+                            if (GUILayout.Button("?"))
+                                ReflectionUtils.OutputEventDetails(b.onValueChanged);
                             break;
                         }
                     case Text text:
                         GUILayout.Label(
                             $"{text.text} {text.font} {text.fontStyle} {text.fontSize} {text.alignment} {text.resizeTextForBestFit} {text.color}");
+                        GUILayout.FlexibleSpace();
                         break;
                     case RawImage r:
-                        GUILayout.Label(r.mainTexture);
+                        var rMainTexture = r.mainTexture;
+                        if (!ReferenceEquals(rMainTexture, null))
+                        {
+                            GUILayout.Label(rMainTexture);
+                            GUILayout.FlexibleSpace();
+                            if (GUILayout.Button("S")) rMainTexture.SaveTextureToFileWithDialog();
+                        }
+                        else
+                        {
+                            GUILayout.Label("Can't display texture");
+                            GUILayout.FlexibleSpace();
+                        }
                         break;
                     case Renderer re:
                         var reMaterial = re.material;
                         GUILayout.Label(reMaterial != null ? reMaterial.shader.name : "[No material]");
+                        GUILayout.FlexibleSpace();
                         break;
                     case Button b:
                         {
@@ -483,6 +515,10 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                             var calls = (IList)eventObj.GetPrivateExplicit<UnityEventBase>("m_Calls").GetPrivate("m_RuntimeCalls");
                             foreach (var call in calls)
                                 GUILayout.Label(ToStringConverter.ObjectToString(call.GetPrivate("Delegate")));
+
+                            GUILayout.FlexibleSpace();
+                            if (GUILayout.Button("?"))
+                                ReflectionUtils.OutputEventDetails(b.onClick);
                             break;
                         }
                     case Toggle b:
@@ -494,6 +530,10 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                             var calls = (IList)b.onValueChanged.GetPrivateExplicit<UnityEventBase>("m_Calls").GetPrivate("m_RuntimeCalls");
                             foreach (var call in calls)
                                 GUILayout.Label(ToStringConverter.ObjectToString(call.GetPrivate("Delegate")));
+                           
+                            GUILayout.FlexibleSpace();
+                            if (GUILayout.Button("?"))
+                                ReflectionUtils.OutputEventDetails(b.onValueChanged);
                             break;
                         }
                     case RectTransform rt:
@@ -509,8 +549,6 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                         GUILayout.EndVertical();
                         break;
                 }
-
-                GUILayout.FlexibleSpace();
 
                 if (!(component is Transform))
                 {
@@ -528,22 +566,6 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
                         Object.FindObjectOfType<CheatTools>().StartCoroutine(RecreateCo());
                     }*/
-
-                    if (component is Image img)
-                    {
-                        if (GUILayout.Button("S"))
-                            img.mainTexture.SaveTextureToFileWithDialog();
-                    }
-                    else if (component is Button btn)
-                    {
-                        if (GUILayout.Button("?"))
-                            ReflectionUtils.OutputEventDetails(btn.onClick);
-                    }
-                    else if (component is Toggle t)
-                    {
-                        if (GUILayout.Button("?"))
-                            ReflectionUtils.OutputEventDetails(t.onValueChanged);
-                    }
 
                     if (GUILayout.Button("X"))
                     {
