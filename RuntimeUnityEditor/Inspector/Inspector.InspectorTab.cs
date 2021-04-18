@@ -78,7 +78,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                 {
                     CallbackCacheEntry GetExportTexEntry(Texture texture)
                     {
-                        return new CallbackCacheEntry("Export mainTexture to file",
+                        return new CallbackCacheEntry("Export Texture to file",
                             "Encode the texture to a PNG and save it to a new file",
                             texture.SaveTextureToFileWithDialog);
                     }
