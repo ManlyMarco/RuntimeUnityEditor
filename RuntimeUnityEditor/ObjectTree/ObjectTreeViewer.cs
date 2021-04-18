@@ -505,6 +505,13 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                         var reMaterial = re.material;
                         GUILayout.Label(reMaterial != null ? reMaterial.shader.name : "[No material]");
                         GUILayout.FlexibleSpace();
+                        if (reMaterial != null && reMaterial.mainTexture != null)
+                        {
+                            var rendTex = reMaterial.mainTexture;
+                            GUILayout.Label(rendTex);
+                            GUILayout.FlexibleSpace();
+                            if (GUILayout.Button("S")) rendTex.SaveTextureToFileWithDialog();
+                        }
                         break;
                     case Button b:
                         {
@@ -530,7 +537,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                             var calls = (IList)b.onValueChanged.GetPrivateExplicit<UnityEventBase>("m_Calls").GetPrivate("m_RuntimeCalls");
                             foreach (var call in calls)
                                 GUILayout.Label(ToStringConverter.ObjectToString(call.GetPrivate("Delegate")));
-                           
+
                             GUILayout.FlexibleSpace();
                             if (GUILayout.Button("?"))
                                 ReflectionUtils.OutputEventDetails(b.onValueChanged);
@@ -550,116 +557,116 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                         break;
                 }
 
-                if (!(component is Transform))
+            if (!(component is Transform))
+            {
+                /*if (GUILayout.Button("R"))
                 {
-                    /*if (GUILayout.Button("R"))
-                    {
-                        var t = component.GetType();
-                        var g = component.gameObject;
+                    var t = component.GetType();
+                    var g = component.gameObject;
 
-                        IEnumerator RecreateCo()
-                        {
-                            Object.Destroy(component);
-                            yield return null;
-                            g.AddComponent(t);
-                        }
-
-                        Object.FindObjectOfType<CheatTools>().StartCoroutine(RecreateCo());
-                    }*/
-
-                    if (GUILayout.Button("X"))
+                    IEnumerator RecreateCo()
                     {
                         Object.Destroy(component);
+                        yield return null;
+                        g.AddComponent(t);
                     }
+
+                    Object.FindObjectOfType<CheatTools>().StartCoroutine(RecreateCo());
+                }*/
+
+                if (GUILayout.Button("X"))
+                {
+                    Object.Destroy(component);
                 }
             }
-            GUILayout.EndHorizontal();
+        }
+        GUILayout.EndHorizontal();
         }
 
-        private string _searchText = string.Empty;
-        private string _searchTextComponents = string.Empty;
-        private void DisplayObjectTree()
+    private string _searchText = string.Empty;
+    private string _searchTextComponents = string.Empty;
+    private void DisplayObjectTree()
+    {
+        GUILayout.BeginVertical(GUI.skin.box);
         {
-            GUILayout.BeginVertical(GUI.skin.box);
-            {
-                DisplayTreeSearchBox();
+            DisplayTreeSearchBox();
 
-                _treeScrollPosition = GUILayout.BeginScrollView(_treeScrollPosition,
-                    GUILayout.Height(_objectTreeHeight), GUILayout.ExpandWidth(true));
-                {
-                    var currentCount = 0;
-                    foreach (var rootGameObject in _gameObjectSearcher.GetSearchedOrAllObjects())
-                        DisplayObjectTreeHelper(rootGameObject, 0, ref currentCount);
-                }
-                GUILayout.EndScrollView();
+            _treeScrollPosition = GUILayout.BeginScrollView(_treeScrollPosition,
+                GUILayout.Height(_objectTreeHeight), GUILayout.ExpandWidth(true));
+            {
+                var currentCount = 0;
+                foreach (var rootGameObject in _gameObjectSearcher.GetSearchedOrAllObjects())
+                    DisplayObjectTreeHelper(rootGameObject, 0, ref currentCount);
             }
-            GUILayout.EndVertical();
+            GUILayout.EndScrollView();
         }
+        GUILayout.EndVertical();
+    }
 
-        private void DisplayTreeSearchBox()
+    private void DisplayTreeSearchBox()
+    {
+        GUILayout.BeginHorizontal();
         {
-            GUILayout.BeginHorizontal();
-            {
-                GUI.SetNextControlName("searchbox");
-                _searchText = GUILayout.TextField(_searchText, GUILayout.ExpandWidth(true));
+            GUI.SetNextControlName("searchbox");
+            _searchText = GUILayout.TextField(_searchText, GUILayout.ExpandWidth(true));
 
-                if (GUILayout.Button("Clear", GUILayout.ExpandWidth(false)))
-                {
-                    _searchText = string.Empty;
-                    _gameObjectSearcher.Search(_searchText, false);
-                    SelectAndShowObject(SelectedTransform);
-                }
+            if (GUILayout.Button("Clear", GUILayout.ExpandWidth(false)))
+            {
+                _searchText = string.Empty;
+                _gameObjectSearcher.Search(_searchText, false);
+                SelectAndShowObject(SelectedTransform);
             }
-            GUILayout.EndHorizontal();
+        }
+        GUILayout.EndHorizontal();
 
-            GUILayout.BeginHorizontal();
+        GUILayout.BeginHorizontal();
+        {
+            if (GUILayout.Button("Search scene"))
+                _gameObjectSearcher.Search(_searchText, false);
+
+            if (Event.current.isKey && (Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter) && GUI.GetNameOfFocusedControl() == "searchbox")
             {
-                if (GUILayout.Button("Search scene"))
-                    _gameObjectSearcher.Search(_searchText, false);
+                _gameObjectSearcher.Search(_searchText, false);
+                Event.current.Use();
+            }
 
-                if (Event.current.isKey && (Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter) && GUI.GetNameOfFocusedControl() == "searchbox")
+            if (GUILayout.Button("Deep scene"))
+                _gameObjectSearcher.Search(_searchText, true);
+
+            if (GUILayout.Button("Search static"))
+            {
+                if (string.IsNullOrEmpty(_searchText))
                 {
-                    _gameObjectSearcher.Search(_searchText, false);
-                    Event.current.Use();
+                    RuntimeUnityEditorCore.Logger.Log(LogLevel.Message | LogLevel.Warning, "Can't search for empty string");
                 }
-
-                if (GUILayout.Button("Deep scene"))
-                    _gameObjectSearcher.Search(_searchText, true);
-
-                if (GUILayout.Button("Search static"))
+                else
                 {
-                    if (string.IsNullOrEmpty(_searchText))
-                    {
-                        RuntimeUnityEditorCore.Logger.Log(LogLevel.Message | LogLevel.Warning, "Can't search for empty string");
-                    }
+                    var matchedTypes = AppDomain.CurrentDomain.GetAssemblies()
+                        .SelectMany(Extensions.GetTypesSafe)
+                        .Where(x => x.GetSourceCodeRepresentation().Contains(_searchText, StringComparison.OrdinalIgnoreCase));
+
+                    var stackEntries = matchedTypes.Select(t => new StaticStackEntry(t, t.FullName)).ToList();
+
+                    if (stackEntries.Count == 0)
+                        RuntimeUnityEditorCore.Logger.Log(LogLevel.Message | LogLevel.Warning, "No static type names contained the search string");
+                    else if (stackEntries.Count == 1)
+                        RuntimeUnityEditorCore.Instance.Inspector.Push(stackEntries.Single(), true);
                     else
-                    {
-                        var matchedTypes = AppDomain.CurrentDomain.GetAssemblies()
-                            .SelectMany(Extensions.GetTypesSafe)
-                            .Where(x => x.GetSourceCodeRepresentation().Contains(_searchText, StringComparison.OrdinalIgnoreCase));
-
-                        var stackEntries = matchedTypes.Select(t => new StaticStackEntry(t, t.FullName)).ToList();
-
-                        if (stackEntries.Count == 0)
-                            RuntimeUnityEditorCore.Logger.Log(LogLevel.Message | LogLevel.Warning, "No static type names contained the search string");
-                        else if (stackEntries.Count == 1)
-                            RuntimeUnityEditorCore.Instance.Inspector.Push(stackEntries.Single(), true);
-                        else
-                            RuntimeUnityEditorCore.Instance.Inspector.Push(new InstanceStackEntry(stackEntries, "Static type search"), true);
-                    }
+                        RuntimeUnityEditorCore.Instance.Inspector.Push(new InstanceStackEntry(stackEntries, "Static type search"), true);
                 }
             }
-            GUILayout.EndHorizontal();
         }
+        GUILayout.EndHorizontal();
+    }
 
-        public void Update()
+    public void Update()
+    {
+        if (_scrollTreeToSelected && _scrollTarget > 0)
         {
-            if (_scrollTreeToSelected && _scrollTarget > 0)
-            {
-                _scrollTreeToSelected = false;
-                _treeScrollPosition.y = _scrollTarget;
-                _scrollTarget = 0;
-            }
+            _scrollTreeToSelected = false;
+            _treeScrollPosition.y = _scrollTarget;
+            _scrollTarget = 0;
         }
     }
+}
 }
