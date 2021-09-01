@@ -21,6 +21,15 @@ namespace RuntimeUnityEditor.Core.REPL
             MB = go.AddComponent<ReplHelper>();
         }
 
+        public static string clear
+        {
+            get
+            {
+                ReplWindow.Instance.Clear();
+                return "Log cleared";
+            }
+        }
+
         public static new string help
         {
             get
@@ -28,6 +37,8 @@ namespace RuntimeUnityEditor.Core.REPL
                 string original = InteractiveBase.help;
 
                 var sb = new StringBuilder();
+                sb.AppendLine("  clear;                   - Clear this log\n");
+                sb.AppendLine();
                 sb.AppendLine("In addition, the following helper methods are provided:");
                 foreach (var methodInfo in typeof(REPL).GetMethods(BindingFlags.Public | BindingFlags.Static))
                 {
@@ -38,7 +49,7 @@ namespace RuntimeUnityEditor.Core.REPL
                     sb.AppendLine(((DocumentationAttribute)attr[0]).Docs);
                 }
 
-                return $"{original}\n{sb}";
+                return $"{original}{sb}";
             }
         }
 

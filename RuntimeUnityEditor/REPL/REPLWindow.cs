@@ -14,6 +14,8 @@ namespace RuntimeUnityEditor.Core.REPL
 {
     public sealed class ReplWindow
     {
+        internal static ReplWindow Instance { get; private set; }
+
         private readonly string _autostartFilename;
         private static readonly char[] _inputSplitChars = { ',', ';', '<', '>', '(', ')', '[', ']', '=', '|', '&' };
 
@@ -37,7 +39,7 @@ namespace RuntimeUnityEditor.Core.REPL
 
         private MemberInfo _cursorIndex;
         private MemberInfo _selectIndex;
-        
+
         public bool Show { get; set; } = true;
 
         private HashSet<string> _namespaces;
@@ -60,14 +62,22 @@ namespace RuntimeUnityEditor.Core.REPL
 
         private readonly List<Suggestion> _suggestions = new List<Suggestion>();
 
-        public ReplWindow(string autostartFilename)
+        private const string SnippletSeparator = "/****************************************/";
+        private readonly string _snippletFilename;
+        private readonly List<string> _savedSnipplets = new List<string>();
+        private bool _snippletsShown;
+
+        public ReplWindow(string configPath)
         {
-            _autostartFilename = autostartFilename;
+            _autostartFilename = Path.Combine(configPath, "RuntimeUnityEditor.Autostart.cs");
+            _snippletFilename = Path.Combine(configPath, "RuntimeUnityEditor.Snipplets.cs");
             _windowId = GetHashCode();
 
             _sb.AppendLine("Welcome to C# REPL (read-evaluate-print loop)! Enter \"help\" to get a list of common methods.");
 
             _evaluator = new ScriptEvaluator(new StringWriter(_sb)) { InteractiveBaseClass = typeof(REPL) };
+
+            Instance = this;
         }
 
         public void RunEnvSetup()
@@ -133,7 +143,42 @@ namespace RuntimeUnityEditor.Core.REPL
                 {
                     GUILayout.FlexibleSpace();
 
-                    if (_suggestions.Count > 0)
+                    if (_snippletsShown)
+                    {
+                        if (_savedSnipplets.Count == 0)
+                        {
+                            GUILayout.Label("This is a list of saved snipplets of code that you can load later into the input field.\n\n" +
+                                            "To save a snipplet, type someting in the input field and click the Save button.\n" +
+                                            "To load a snipplet, make sure the input field is empty, click the Load button, then choose a snipplet.\n" +
+                                            "To remove a snipplet you can edit the snipplet file by choosing the bottom option on the snipplet list.\n\n" +
+                                            "Close this menu without loading anything by clicking the Cancel button below.", GUI.skin.box);
+                        }
+                        else
+                        {
+                            _completionsListingStyle.normal.textColor = Color.white;
+                            foreach (var snipplet in _savedSnipplets)
+                            {
+                                if (GUILayout.Button(snipplet, GUI.skin.box, GUILayout.ExpandWidth(true)))
+                                {
+                                    _inputField = snipplet;
+                                    _snippletsShown = false;
+                                    break;
+                                }
+                            }
+
+                            if (GUILayout.Button(">> Edit snipplet list in external editor <<", GUI.skin.box, GUILayout.ExpandWidth(true)))
+                            {
+                                AppendLogLine("Opening snipplet file at " + _snippletFilename);
+
+                                if (!File.Exists(_snippletFilename))
+                                    File.WriteAllText(_snippletFilename, "");
+
+                                try { Process.Start(_snippletFilename); }
+                                catch (Exception e) { AppendLogLine(e.Message); }
+                            }
+                        }
+                    }
+                    else if (_suggestions.Count > 0)
                     {
                         foreach (var suggestion in _suggestions)
                         {
@@ -168,21 +213,41 @@ namespace RuntimeUnityEditor.Core.REPL
                     {
                         ReflectionUtils.SetValue(_cursorIndex, _textEditor, _refocusCursorIndex);
                         ReflectionUtils.SetValue(_selectIndex, _textEditor, _refocusSelectIndex);
-                        
+
                         _refocusCursorIndex = -1;
                     }
 
                     if (GUILayout.Button("Run", GUILayout.ExpandWidth(false)))
                         AcceptInput();
 
-                    if (GUILayout.Button("History", GUILayout.ExpandWidth(false)))
+                    if (GUILayout.Button(_snippletsShown ? "Cancel" : (_inputField.Length == 0 ? "Load" : "Save"), GUILayout.ExpandWidth(false)))
                     {
-                        AppendLogLine("");
-                        AppendLogLine("# History of executed commands:");
-                        foreach (var h in _history)
-                            AppendLogLine(h);
+                        if (_snippletsShown)
+                        {
+                            // Cancel/close
+                            _snippletsShown = false;
+                        }
+                        else if (_inputField.Length == 0)
+                        {
+                            // Load
+                            _snippletsShown = true;
 
-                        ScrollToBottom();
+                            var items = File.Exists(_snippletFilename)
+                                ? File.ReadAllText(_snippletFilename)
+                                    .Split(new[] { SnippletSeparator }, StringSplitOptions.RemoveEmptyEntries)
+                                    .Select(x => x.Replace("\t", "    ").Trim(' ', '\r', '\n'))
+                                    .Where(x => x.Length > 0)
+                                : new string[0];
+                            _savedSnipplets.Clear();
+                            _savedSnipplets.AddRange(items);
+                        }
+                        else
+                        {
+                            // Save
+                            var contents = File.Exists(_snippletFilename) ? $"{_inputField}{Environment.NewLine}{SnippletSeparator}{Environment.NewLine}{File.ReadAllText(_snippletFilename)}" : _inputField;
+                            File.WriteAllText(_snippletFilename, contents);
+                            AppendLogLine("Saved current command to snipplets. Clear the input box and click Load to load it.");
+                        }
                     }
 
                     if (GUILayout.Button("Autostart", GUILayout.ExpandWidth(false)))
@@ -198,8 +263,15 @@ namespace RuntimeUnityEditor.Core.REPL
                         ScrollToBottom();
                     }
 
-                    if (GUILayout.Button("Clear log", GUILayout.ExpandWidth(false)))
-                        _sb.Length = 0;
+                    if (GUILayout.Button("History", GUILayout.ExpandWidth(false)))
+                    {
+                        AppendLogLine("");
+                        AppendLogLine("# History of executed commands:");
+                        foreach (var h in _history)
+                            AppendLogLine(h);
+
+                        ScrollToBottom();
+                    }
                 }
                 GUILayout.EndHorizontal();
             }
@@ -298,10 +370,10 @@ namespace RuntimeUnityEditor.Core.REPL
                 return;
 
             _textEditor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
-            
+
             // Reflection for compatibility with Unity 4.x
             var tEditor = typeof(TextEditor);
-            
+
             _cursorIndex = tEditor.GetProperty("cursorIndex", BindingFlags.Instance | BindingFlags.Public);
             _selectIndex = tEditor.GetProperty("selectIndex", BindingFlags.Instance | BindingFlags.Public);
 
@@ -310,7 +382,7 @@ namespace RuntimeUnityEditor.Core.REPL
                 _cursorIndex = tEditor.GetField("pos", BindingFlags.Instance | BindingFlags.Public);
                 _selectIndex = tEditor.GetField("selectPos", BindingFlags.Instance | BindingFlags.Public);
             }
-            
+
             if (_newCursorLocation >= 0)
             {
                 ReflectionUtils.SetValue(_cursorIndex, _textEditor, _newCursorLocation);
@@ -330,7 +402,7 @@ namespace RuntimeUnityEditor.Core.REPL
                     {
                         // Fix pressing enter adding a newline in textarea
                         var index = (int)ReflectionUtils.GetValue(_cursorIndex, _textEditor);
-                        
+
                         if (index - 1 >= 0)
                             _inputField = _inputField.Remove(index - 1, 1);
 
@@ -443,6 +515,11 @@ namespace RuntimeUnityEditor.Core.REPL
         internal void AppendLogLine(string message)
         {
             _sb.AppendLine(message);
+        }
+
+        public void Clear()
+        {
+            _sb.Length = 0;
         }
     }
 }

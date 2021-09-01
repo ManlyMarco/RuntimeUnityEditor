@@ -136,7 +136,7 @@ namespace RuntimeUnityEditor.Core
             {
                 try
                 {
-                    Repl = new ReplWindow(Path.Combine(configPath, "RuntimeUnityEditor.Autostart.cs"));
+                    Repl = new ReplWindow(configPath);
                     PluginObject.StartCoroutine(DelayedReplSetup());
                 }
                 catch (Exception ex)
