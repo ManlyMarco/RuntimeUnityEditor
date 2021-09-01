@@ -175,7 +175,15 @@ namespace RuntimeUnityEditor.Core.REPL
         [Documentation("findTree(Transform) - find and select the transform in the tree view.")]
         public static void findTree(Transform tr)
         {
+            if (tr == null) throw new ArgumentNullException(nameof(tr));
             RuntimeUnityEditorCore.Instance.TreeViewer.SelectAndShowObject(tr);
+        }
+
+        [Documentation("findTree(GameObject) - find and select the object in the tree view.")]
+        public static void findTree(GameObject go)
+        {
+            if (go == null) throw new ArgumentNullException(nameof(go));
+            RuntimeUnityEditorCore.Instance.TreeViewer.SelectAndShowObject(go.transform);
         }
 
         [Documentation("dnspy(type) - open the type in dnSpy if dnSpy path is configured.")]
