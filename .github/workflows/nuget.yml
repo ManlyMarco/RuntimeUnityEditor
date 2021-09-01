@@ -1,0 +1,37 @@
+name: Push to nuget feed on release
+
+on:
+  release:
+    types: [published]
+    
+  workflow_dispatch:
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+      with:
+        submodules: true
+      
+    - name: Setup Nuget
+      uses: nuget/setup-nuget@v1
+      
+    - name: Nuget pack
+      working-directory: .
+      run: |
+        nuget restore
+        nuget restore modules\mcs\mcs.sln
+        gci -Recurse -Filter *.nuspec | foreach { nuget pack "$($_.DirectoryName)\$($_.BaseName).csproj" -build -properties Configuration=Release }
+      
+    - name: Nuget push
+      working-directory: .
+      env:
+        NUGET_URL: https://pkgs.dev.azure.com/IllusionMods/Nuget/_packaging/IllusionMods/nuget/v3/index.json
+        NUGET_TOKEN: ${{ secrets.NUGET_TOKEN }}
+      run: |
+        nuget sources update -name "IllusionMods" -username "token" -password ${env:NUGET_TOKEN}
+        nuget push *.nupkg -apikey key -noninteractive -skipduplicate -src ${env:NUGET_URL}
