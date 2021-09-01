@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -78,12 +79,12 @@ namespace RuntimeUnityEditor.Core.Utils
 
             return (GameObject[])objects;
         }
-
+        
         public static void OpenLog()
         {
             bool TryOpen(string path)
             {
-                if (!File.Exists(path)) return false;
+                if (path == null) return false;
                 try
                 {
                     Process.Start(path);
@@ -95,39 +96,41 @@ namespace RuntimeUnityEditor.Core.Utils
                 }
             }
 
+            var candidates = new List<string>();
+
             // Redirected by preloader to game root
-            if (TryOpen(Path.Combine(Path.Combine(Application.dataPath, ".."), "output_log.txt"))) return;
+            var rootDir = Path.Combine(Application.dataPath, "..");
+            candidates.Add(Path.Combine(rootDir, "output_log.txt"));
 
             // Generated in most versions unless disabled
-            if (TryOpen(Path.Combine(Application.dataPath, "output_log.txt"))) return;
+            candidates.Add(Path.Combine(Application.dataPath, "output_log.txt"));
 
             // Available since 2018.3
             var prop = typeof(Application).GetProperty("consoleLogPath", BindingFlags.Static | BindingFlags.Public);
             if (prop != null)
             {
                 var path = prop.GetValue(null, null) as string;
-                if (TryOpen(path)) return;
+                candidates.Add(path);
             }
 
             if (Directory.Exists(Application.persistentDataPath))
             {
                 var file = Directory.GetFiles(Application.persistentDataPath, "output_log.txt", SearchOption.AllDirectories).FirstOrDefault();
-                if (TryOpen(file)) return;
+                candidates.Add(file);
             }
 
+            var latestLog = candidates.Where(File.Exists).OrderByDescending(File.GetLastWriteTimeUtc).FirstOrDefault();
+            if (TryOpen(latestLog)) return;
+
+            candidates.Clear();
             // Fall back to more aggresive brute search
-            var rootDir = Directory.GetParent(Application.dataPath);
-            if (rootDir.Exists)
-            {
-                // BepInEx 5.x log file
-                var result = rootDir.GetFiles("LogOutput.log", SearchOption.AllDirectories).FirstOrDefault();
-                if (result == null)
-                    result = rootDir.GetFiles("output_log.txt", SearchOption.AllDirectories).FirstOrDefault();
+            // BepInEx 5.x log file, can be "LogOutput.log.1" or higher if multiple game instances run
+            candidates.AddRange(Directory.GetFiles(rootDir,"LogOutput.log*", SearchOption.AllDirectories));
+            candidates.AddRange(Directory.GetFiles(rootDir,"output_log.txt", SearchOption.AllDirectories));
+            latestLog = candidates.Where(File.Exists).OrderByDescending(File.GetLastWriteTimeUtc).FirstOrDefault();
+            if (TryOpen(latestLog)) return;
 
-                if (result != null && TryOpen(result.FullName)) return;
-            }
-
-            RuntimeUnityEditorCore.Logger.Log(LogLevel.Message | LogLevel.Error, "No log files were found");
+            throw new FileNotFoundException("No log files were found");
         }
 
         public static Texture2D LoadTexture(byte[] texData)
