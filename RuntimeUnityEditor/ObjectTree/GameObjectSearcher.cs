@@ -15,6 +15,8 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         private List<GameObject> _cachedRootGameObjects;
         private List<GameObject> _searchResults;
 
+        public bool IsSearching() => _searchResults != null;
+
         public static IEnumerable<GameObject> FindAllRootGameObjects()
         {
             return Resources.FindObjectsOfTypeAll<Transform>()

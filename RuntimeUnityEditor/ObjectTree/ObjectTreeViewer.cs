@@ -111,7 +111,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 if (_selectedTransform != value)
                 {
                     _selectedTransform = value;
-                    _searchTextComponents = "";
+                    _searchTextComponents = _gameObjectSearcher.IsSearching() ? _searchText : "";
                     TreeSelectionChangedCallback?.Invoke(_selectedTransform);
                 }
             }
@@ -557,116 +557,123 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                         break;
                 }
 
-            if (!(component is Transform))
-            {
-                /*if (GUILayout.Button("R"))
+                if (!(component is Transform))
                 {
-                    var t = component.GetType();
-                    var g = component.gameObject;
+                    /*if (GUILayout.Button("R"))
+                    {
+                        var t = component.GetType();
+                        var g = component.gameObject;
 
-                    IEnumerator RecreateCo()
+                        IEnumerator RecreateCo()
+                        {
+                            Object.Destroy(component);
+                            yield return null;
+                            g.AddComponent(t);
+                        }
+
+                        Object.FindObjectOfType<CheatTools>().StartCoroutine(RecreateCo());
+                    }*/
+
+                    if (GUILayout.Button("X"))
                     {
                         Object.Destroy(component);
-                        yield return null;
-                        g.AddComponent(t);
                     }
-
-                    Object.FindObjectOfType<CheatTools>().StartCoroutine(RecreateCo());
-                }*/
-
-                if (GUILayout.Button("X"))
-                {
-                    Object.Destroy(component);
                 }
             }
-        }
-        GUILayout.EndHorizontal();
+            GUILayout.EndHorizontal();
         }
 
-    private string _searchText = string.Empty;
-    private string _searchTextComponents = string.Empty;
-    private void DisplayObjectTree()
-    {
-        GUILayout.BeginVertical(GUI.skin.box);
+        private string _searchText = string.Empty;
+        private string _searchTextComponents = string.Empty;
+        private void DisplayObjectTree()
         {
-            DisplayTreeSearchBox();
-
-            _treeScrollPosition = GUILayout.BeginScrollView(_treeScrollPosition,
-                GUILayout.Height(_objectTreeHeight), GUILayout.ExpandWidth(true));
+            GUILayout.BeginVertical(GUI.skin.box);
             {
-                var currentCount = 0;
-                foreach (var rootGameObject in _gameObjectSearcher.GetSearchedOrAllObjects())
-                    DisplayObjectTreeHelper(rootGameObject, 0, ref currentCount);
-            }
-            GUILayout.EndScrollView();
-        }
-        GUILayout.EndVertical();
-    }
+                DisplayTreeSearchBox();
 
-    private void DisplayTreeSearchBox()
-    {
-        GUILayout.BeginHorizontal();
-        {
-            GUI.SetNextControlName("searchbox");
-            _searchText = GUILayout.TextField(_searchText, GUILayout.ExpandWidth(true));
-
-            if (GUILayout.Button("Clear", GUILayout.ExpandWidth(false)))
-            {
-                _searchText = string.Empty;
-                _gameObjectSearcher.Search(_searchText, false);
-                SelectAndShowObject(SelectedTransform);
-            }
-        }
-        GUILayout.EndHorizontal();
-
-        GUILayout.BeginHorizontal();
-        {
-            if (GUILayout.Button("Search scene"))
-                _gameObjectSearcher.Search(_searchText, false);
-
-            if (Event.current.isKey && (Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter) && GUI.GetNameOfFocusedControl() == "searchbox")
-            {
-                _gameObjectSearcher.Search(_searchText, false);
-                Event.current.Use();
-            }
-
-            if (GUILayout.Button("Deep scene"))
-                _gameObjectSearcher.Search(_searchText, true);
-
-            if (GUILayout.Button("Search static"))
-            {
-                if (string.IsNullOrEmpty(_searchText))
+                _treeScrollPosition = GUILayout.BeginScrollView(_treeScrollPosition,
+                    GUILayout.Height(_objectTreeHeight), GUILayout.ExpandWidth(true));
                 {
-                    RuntimeUnityEditorCore.Logger.Log(LogLevel.Message | LogLevel.Warning, "Can't search for empty string");
+                    var currentCount = 0;
+                    foreach (var rootGameObject in _gameObjectSearcher.GetSearchedOrAllObjects())
+                        DisplayObjectTreeHelper(rootGameObject, 0, ref currentCount);
                 }
-                else
+                GUILayout.EndScrollView();
+            }
+            GUILayout.EndVertical();
+        }
+
+        private void DisplayTreeSearchBox()
+        {
+            GUILayout.BeginHorizontal();
+            {
+                GUI.SetNextControlName("searchbox");
+                _searchText = GUILayout.TextField(_searchText, GUILayout.ExpandWidth(true));
+
+                if (GUILayout.Button("Clear", GUILayout.ExpandWidth(false)))
                 {
-                    var matchedTypes = AppDomain.CurrentDomain.GetAssemblies()
-                        .SelectMany(Extensions.GetTypesSafe)
-                        .Where(x => x.GetSourceCodeRepresentation().Contains(_searchText, StringComparison.OrdinalIgnoreCase));
+                    _searchText = string.Empty;
+                    _gameObjectSearcher.Search(_searchText, false);
+                    SelectAndShowObject(SelectedTransform);
+                }
+            }
+            GUILayout.EndHorizontal();
 
-                    var stackEntries = matchedTypes.Select(t => new StaticStackEntry(t, t.FullName)).ToList();
+            GUILayout.BeginHorizontal();
+            {
+                if (GUILayout.Button("Search scene"))
+                {
+                    _gameObjectSearcher.Search(_searchText, false);
+                    _searchTextComponents = _searchText;
+                }
 
-                    if (stackEntries.Count == 0)
-                        RuntimeUnityEditorCore.Logger.Log(LogLevel.Message | LogLevel.Warning, "No static type names contained the search string");
-                    else if (stackEntries.Count == 1)
-                        RuntimeUnityEditorCore.Instance.Inspector.Push(stackEntries.Single(), true);
+                if (Event.current.isKey && (Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter) && GUI.GetNameOfFocusedControl() == "searchbox")
+                {
+                    _gameObjectSearcher.Search(_searchText, false);
+                    _searchTextComponents = _searchText;
+                    Event.current.Use();
+                }
+
+                if (GUILayout.Button("Deep scene"))
+                {
+                    _gameObjectSearcher.Search(_searchText, true);
+                    _searchTextComponents = _searchText;
+                }
+
+                if (GUILayout.Button("Search static"))
+                {
+                    if (string.IsNullOrEmpty(_searchText))
+                    {
+                        RuntimeUnityEditorCore.Logger.Log(LogLevel.Message | LogLevel.Warning, "Can't search for empty string");
+                    }
                     else
-                        RuntimeUnityEditorCore.Instance.Inspector.Push(new InstanceStackEntry(stackEntries, "Static type search"), true);
+                    {
+                        var matchedTypes = AppDomain.CurrentDomain.GetAssemblies()
+                            .SelectMany(Extensions.GetTypesSafe)
+                            .Where(x => x.GetSourceCodeRepresentation().Contains(_searchText, StringComparison.OrdinalIgnoreCase));
+
+                        var stackEntries = matchedTypes.Select(t => new StaticStackEntry(t, t.FullName)).ToList();
+
+                        if (stackEntries.Count == 0)
+                            RuntimeUnityEditorCore.Logger.Log(LogLevel.Message | LogLevel.Warning, "No static type names contained the search string");
+                        else if (stackEntries.Count == 1)
+                            RuntimeUnityEditorCore.Instance.Inspector.Push(stackEntries.Single(), true);
+                        else
+                            RuntimeUnityEditorCore.Instance.Inspector.Push(new InstanceStackEntry(stackEntries, "Static type search"), true);
+                    }
                 }
             }
+            GUILayout.EndHorizontal();
         }
-        GUILayout.EndHorizontal();
-    }
 
-    public void Update()
-    {
-        if (_scrollTreeToSelected && _scrollTarget > 0)
+        public void Update()
         {
-            _scrollTreeToSelected = false;
-            _treeScrollPosition.y = _scrollTarget;
-            _scrollTarget = 0;
+            if (_scrollTreeToSelected && _scrollTarget > 0)
+            {
+                _scrollTreeToSelected = false;
+                _treeScrollPosition.y = _scrollTarget;
+                _scrollTarget = 0;
+            }
         }
     }
-}
 }
