@@ -147,5 +147,87 @@ namespace RuntimeUnityEditor.Core.Utils
         {
             return DrawButtonWithShadow(GUILayoutUtility.GetRect(content, style, options), content, style, shadowAlpha, direction);
         }
+
+        #region Resizing
+
+        private static bool _handleClicked;
+        private static Vector3 _clickedPosition;
+        private static Rect _originalWindow;
+        private static int _currentWindowId;
+        
+        /// <summary>
+        /// Handle dragging and resizing of ongui windows, and preventing inptus from going through. Use instead of GUI.DragWindow()
+        /// How to use: _winRect = Utils.DragResizeEat(id, _winRect);
+        /// </summary>
+        public static Rect DragResizeEat(int id, Rect rect)
+        {
+            var result = DragOrResize(id, rect);
+            EatInputInRect(result);
+            return result;
+        }
+
+        /// <summary>
+        /// Handle both dragging and resizing of ongui windows. Use instead of GUI.DragWindow()
+        /// How to use: _winRect = Utils.DragOrResize(id, _winRect);
+        /// </summary>
+        public static Rect DragOrResize(int id, Rect rect)
+        {
+            const int visibleAreaSize = 10;
+            GUI.Box(new Rect(rect.width - visibleAreaSize - 2, rect.height - visibleAreaSize - 2, visibleAreaSize, visibleAreaSize), GUIContent.none);
+
+            if (_currentWindowId != 0 && _currentWindowId != id) return rect;
+
+            var mousePos = Input.mousePosition;
+            mousePos.y = Screen.height - mousePos.y; // Convert to GUI coords
+
+            var winRect = rect;
+            const int functionalAreaSize = 25;
+            var windowHandle = new Rect(
+                winRect.x + winRect.width - functionalAreaSize,
+                winRect.y + winRect.height - functionalAreaSize,
+                functionalAreaSize,
+                functionalAreaSize);
+
+            // Can't use Input class because we eat inputs
+            var mouseButtonDown = Event.current.isMouse &&
+                                  Event.current.type == EventType.MouseDown &&
+                                  Event.current.button == 0;
+            if (mouseButtonDown && windowHandle.Contains(mousePos))
+            {
+                _handleClicked = true;
+                _clickedPosition = mousePos;
+                _originalWindow = winRect;
+                _currentWindowId = id;
+            }
+
+            if (_handleClicked)
+            {
+                // Resize window by dragging
+                //if (Input.GetMouseButton(0))
+                {
+                    var listWinRect = winRect;
+                    listWinRect.width = Mathf.Clamp(_originalWindow.width + (mousePos.x - _clickedPosition.x), 100, Screen.width);
+                    listWinRect.height =
+                        Mathf.Clamp(_originalWindow.height + (mousePos.y - _clickedPosition.y), 100, Screen.height);
+                    rect = listWinRect;
+                }
+
+                var mouseButtonUp = Event.current.isMouse &&
+                                    Event.current.type == EventType.MouseUp &&
+                                    Event.current.button == 0;
+                if (mouseButtonUp)
+                {
+                    _handleClicked = false;
+                    _currentWindowId = 0;
+                }
+            }
+            else
+            {
+                GUI.DragWindow();
+            }
+            return rect;
+        }
+
+        #endregion
     }
 }

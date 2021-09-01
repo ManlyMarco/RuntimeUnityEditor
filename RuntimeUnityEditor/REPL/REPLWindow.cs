@@ -207,7 +207,7 @@ namespace RuntimeUnityEditor.Core.REPL
 
             CheckReplInput();
 
-            GUI.DragWindow();
+            _windowRect = IMGUIUtils.DragOrResize(id, _windowRect);
         }
 
         private void AcceptSuggestion(string suggestion)

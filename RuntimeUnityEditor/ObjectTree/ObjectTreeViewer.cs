@@ -233,7 +233,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             }
             GUILayout.EndHorizontal();
 
-            GUI.DragWindow();
+            _windowRect = IMGUIUtils.DragOrResize(id, _windowRect);
         }
 
         private void DisplayControls()

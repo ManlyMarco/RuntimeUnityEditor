@@ -289,7 +289,7 @@ namespace RuntimeUnityEditor.Core.Inspector
 
             VariableFieldDrawer.DrawCurrentDropdown();
 
-            GUI.DragWindow();
+            _inspectorWindowRect = IMGUIUtils.DragOrResize(id, _inspectorWindowRect);
         }
 
         private static string LimitStringLengthForPreview(string name, int maxLetters)
