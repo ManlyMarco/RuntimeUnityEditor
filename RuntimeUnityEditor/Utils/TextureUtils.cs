@@ -97,5 +97,28 @@ namespace RuntimeUnityEditor.Core.Utils
                 RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, e.StackTrace);
             }
         }
+
+        /// <summary>
+        /// Gets texture as it is shown by this sprite. If it's not packed then returns the original texture.
+        /// If it's packed then this tries to crop out the part that the sprite is supposed to show and return only that.
+        /// </summary>
+        public static Texture2D GetVisibleTexture(this Sprite spr)
+        {
+            if (spr.packed && spr.packingMode != SpritePackingMode.Tight)
+            {
+                // Make a copy we can read from
+                var tempTex = spr.texture.ToTexture2D();
+                var width = (int)spr.textureRect.width;
+                var height = (int)spr.textureRect.height;
+                var pixels = tempTex.GetPixels((int)spr.textureRect.x, (int)spr.textureRect.y, width, height);
+                GameObject.Destroy(tempTex);
+                var outTex = new Texture2D(width, height);
+                outTex.SetPixels(pixels);
+                outTex.Apply();
+                return outTex;
+            }
+
+            return spr.texture;
+        }
     }
 }

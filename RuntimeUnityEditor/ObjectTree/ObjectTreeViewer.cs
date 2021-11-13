@@ -434,20 +434,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                                 {
                                     try
                                     {
-                                        var texCopy = texture.ToTexture2D();
-                                        var spriteRect = imgSprite.textureRect;
-                                        if (spriteRect.width < texCopy.width || spriteRect.height < texCopy.height)
-                                        {
-                                            var newImg = texCopy.GetPixels((int)spriteRect.x, (int)spriteRect.y, (int)spriteRect.width, (int)spriteRect.height);
-                                            tex = new Texture2D((int)spriteRect.width, (int)spriteRect.height);
-                                            tex.SetPixels(newImg);
-                                            tex.Apply();
-                                            GameObject.Destroy(texCopy);
-                                        }
-                                        else
-                                        {
-                                            tex = texCopy;
-                                        }
+                                        tex = imgSprite.GetVisibleTexture();
                                     }
                                     catch (Exception ex)
                                     {
@@ -460,9 +447,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
                                 if (tex != null)
                                 {
-                                    GUILayout.Label(tex);
-                                    GUILayout.FlexibleSpace();
-                                    if (GUILayout.Button("S")) tex.SaveTextureToFileWithDialog();
+                                    if (GUILayout.Button(tex, GUI.skin.box)) RuntimeUnityEditorCore.Instance.PreviewWindow.SetShownObject(tex, imgSprite.name);
                                 }
                                 else
                                 {

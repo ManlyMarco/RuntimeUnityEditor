@@ -31,6 +31,8 @@ namespace RuntimeUnityEditor.Core.Inspector
                 {typeof(Vector3), DrawVector3 },
                 {typeof(Vector4), DrawVector4 },
                 {typeof(Quaternion), DrawQuaternion },
+                {typeof(Sprite), DrawSprite },
+                {typeof(UnityEngine.UI.Image), DrawImage },
             };
         }
 
@@ -53,14 +55,28 @@ namespace RuntimeUnityEditor.Core.Inspector
                     else
                         DrawComboboxField(setting, Enum.GetValues(t), value);
                 }
-                else if (setting.CanEnterValue() && SettingDrawHandlers.TryGetValue(setting.Type(), out var drawMethod))
-                    drawMethod(setting, value);
                 else
                 {
+                    if (setting.CanEnterValue())
+                    {
+                        if (value is Texture)
+                        {
+                            DrawAnyTexture(value);
+                            goto wasDrawn;
+                        }
+                        else if (SettingDrawHandlers.TryGetValue(setting.Type(), out var drawMethod))
+                        {
+                            drawMethod(setting, value);
+                            goto wasDrawn;
+                        }
+                    }
+
                     if (canSetValue && ToStringConverter.CanEditValue(setting, value))
                         DrawGenericEditableValue(setting, value, GUILayout.ExpandWidth(true));
                     else
                         DrawUnknownField(value);
+
+                    wasDrawn:;
                 }
 
                 GUI.color = Color.white;
@@ -273,7 +289,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                 {
                     _currentlyEditingTag = null;
                     _userHasHitReturn = false;
-                    
+
                     try { obj.SetValue(TomlTypeConverter.ConvertToValue<Color>(text)); }
                     catch { }
                 }
@@ -298,6 +314,53 @@ namespace RuntimeUnityEditor.Core.Inspector
         {
             public Color Last;
             public Texture2D Tex;
+        }
+
+        private static void DrawAnyTexture(object obj)
+        {
+            var tex = (Texture)obj;
+
+            var extraData = "";
+            if (tex is Texture2D t2d) extraData = $"\nFormat={t2d.format} Mips={t2d.mipmapCount}";
+            else if (tex is RenderTexture rt) extraData = $"\nFormat={rt.format} Mips={rt.useMipMap} AA={rt.antiAliasing} Depth={rt.depth} Cube={rt.isCubemap} Volume={rt.isVolume}";
+
+            GUILayout.Label($"Name={tex.name} Size={tex.width}x{tex.height} Filter={tex.filterMode} Wrap={tex.wrapMode} {extraData}");
+
+            GUILayout.FlexibleSpace();
+
+            if (GUILayout.Button("View", GUILayout.ExpandWidth(false)))
+                RuntimeUnityEditorCore.Instance.PreviewWindow.SetShownObject(tex, tex.name);
+        }
+
+        private static void DrawSprite(ICacheEntry obj, object value)
+        {
+            var spr = (Sprite)value;
+
+            DrawSprite(spr, spr.name);
+        }
+
+        private static void DrawSprite(Sprite spr, string objectName)
+        {
+            var extraData = "";
+            if (spr.packed)
+            {
+                extraData += $"PackingMode={spr.packingMode}";
+                if (spr.packingMode != SpritePackingMode.Tight)
+                    extraData += $"TextureRect={spr.textureRect}";
+            }
+
+            GUILayout.Label($"Name={spr.name} Rect={spr.rect} Pivot={spr.pivot} Packed={spr.packed} {extraData}");
+
+            GUILayout.FlexibleSpace();
+
+            if (GUILayout.Button("View", GUILayout.ExpandWidth(false)))
+                RuntimeUnityEditorCore.Instance.PreviewWindow.SetShownObject(spr.GetVisibleTexture(), objectName);
+        }
+
+        private static void DrawImage(ICacheEntry obj, object value)
+        {
+            var img = (UnityEngine.UI.Image)value;
+            DrawSprite(img.sprite, $"{img.transform.GetFullTransfromPath()} [Image ({img.name})]");
         }
     }
 }

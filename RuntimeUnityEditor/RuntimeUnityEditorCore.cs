@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections;
-using System.IO;
 using System.Reflection;
 using RuntimeUnityEditor.Core.Gizmos;
 using RuntimeUnityEditor.Core.ObjectTree;
+using RuntimeUnityEditor.Core.Preview;
 using RuntimeUnityEditor.Core.REPL;
 using RuntimeUnityEditor.Core.UI;
 using RuntimeUnityEditor.Core.Utils;
@@ -18,6 +18,7 @@ namespace RuntimeUnityEditor.Core
 
         public Inspector.Inspector Inspector { get; }
         public ObjectTreeViewer TreeViewer { get; }
+        public PreviewWindow PreviewWindow { get; }
         public ReplWindow Repl { get; private set; }
 
         public event EventHandler SettingsChanged;
@@ -82,13 +83,13 @@ namespace RuntimeUnityEditor.Core
         private readonly GameObjectSearcher _gameObjectSearcher = new GameObjectSearcher();
 
         private bool _obsoleteCursor;
-        
+
         private PropertyInfo _curLockState;
         private PropertyInfo _curVisible;
-        
+
         private int _previousCursorLockState;
         private bool _previousCursorVisible;
-        
+
         private KeyCode _showHotkey = KeyCode.F12;
 
         internal RuntimeUnityEditorCore(MonoBehaviour pluginObject, ILoggerWrapper logger, string configPath)
@@ -102,18 +103,18 @@ namespace RuntimeUnityEditor.Core
 
             // Reflection for compatibility with Unity 4.x
             var tCursor = typeof(Cursor);
-            
+
             _curLockState = tCursor.GetProperty("lockState", BindingFlags.Static | BindingFlags.Public);
             _curVisible = tCursor.GetProperty("visible", BindingFlags.Static | BindingFlags.Public);
 
             if (_curLockState == null && _curVisible == null)
             {
                 _obsoleteCursor = true;
-                
+
                 _curLockState = typeof(Screen).GetProperty("lockCursor", BindingFlags.Static | BindingFlags.Public);
                 _curVisible = typeof(Screen).GetProperty("showCursor", BindingFlags.Static | BindingFlags.Public);
             }
-            
+
             Inspector = new Inspector.Inspector(targetTransform => TreeViewer.SelectAndShowObject(targetTransform));
 
             TreeViewer = new ObjectTreeViewer(pluginObject, _gameObjectSearcher);
@@ -125,6 +126,8 @@ namespace RuntimeUnityEditor.Core
                     Inspector.Push(stackEntry, i == 0);
                 }
             };
+
+            PreviewWindow = new PreviewWindow();
 
             if (UnityFeatureHelper.SupportsVectrosity)
             {
@@ -172,13 +175,14 @@ namespace RuntimeUnityEditor.Core
                     _curLockState.SetValue(null, false, null);
                 else
                     _curLockState.SetValue(null, 0, null);
-                
+
                 _curVisible.SetValue(null, true, null);
-                
+
                 Inspector.DisplayInspector();
                 TreeViewer.DisplayViewer();
                 Repl?.DisplayWindow();
-                
+                PreviewWindow.DisplayWindow();
+
                 MouseInspect.OnGUI();
 
                 // Restore old skin for maximum compatibility
@@ -202,11 +206,11 @@ namespace RuntimeUnityEditor.Core
                     {
                         if (!_previousCursorVisible || _previousCursorLockState != 0)
                         {
-                            if(_obsoleteCursor)
+                            if (_obsoleteCursor)
                                 _curLockState.SetValue(null, Convert.ToBoolean(_previousCursorLockState), null);
                             else
                                 _curLockState.SetValue(null, _previousCursorLockState, null);
-                
+
                             _curVisible.SetValue(null, _previousCursorVisible, null);
                         }
                     }
@@ -242,7 +246,7 @@ namespace RuntimeUnityEditor.Core
                     _curLockState.SetValue(null, false, null);
                 else
                     _curLockState.SetValue(null, 0, null);
-                
+
                 _curVisible.SetValue(null, true, null);
 
                 TreeViewer.Update();
@@ -259,7 +263,7 @@ namespace RuntimeUnityEditor.Core
                     _curLockState.SetValue(null, false, null);
                 else
                     _curLockState.SetValue(null, 0, null);
-                
+
                 _curVisible.SetValue(null, true, null);
             }
         }
@@ -291,12 +295,19 @@ namespace RuntimeUnityEditor.Core
                 centerWidth,
                 inspectorHeight));
 
-            var rightWidth = 350;
+            var sideWidth = 350;
+
+            PreviewWindow.UpdateWindowSize(new Rect(
+                screenRect.xMin,
+                screenRect.yMin,
+                sideWidth,
+                sideWidth));
+
             var treeViewHeight = screenRect.height;
             TreeViewer.UpdateWindowSize(new Rect(
-                screenRect.xMax - rightWidth,
+                screenRect.xMax - sideWidth,
                 screenRect.yMin,
-                rightWidth,
+                sideWidth,
                 treeViewHeight));
 
             var replPadding = 8;
