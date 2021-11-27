@@ -77,7 +77,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                     _cachedRootGameObjects.Sort((o1, o2) => string.Compare(o1.name, o2.name, StringComparison.InvariantCultureIgnoreCase));
                 }
             }
-            
+
             _lastObjectFilter = objectFilter;
             if (objectFilter != null)
                 _cachedRootGameObjects.RemoveAll(objectFilter);
@@ -110,47 +110,74 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         {
             if (c == null) return false;
 
-            if (c.ToString().Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
-                return true;
+            RuntimeUnityEditorCore.Logger.Log(LogLevel.Info, "Searching for " + searchString);
+            var sw = System.Diagnostics.Stopwatch.StartNew();
 
-            var type = c.GetType();
-            if (type.Name.Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
-                return true;
+            try
+            {
+                if (c.ToString().Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
+                    return true;
 
-            if (!searchProperties)
+                var type = c.GetType();
+                if (type.Name.Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
+                    return true;
+
+                if (!searchProperties)
+                    return false;
+
+                var nameBlacklist = new HashSet<string>
+                {
+                    "parent", "parentInternal", "root", "transform", "gameObject",
+                    // Animator properties inaccessible outside of OnAnimatorIK
+                    "bodyPosition", "bodyRotation",
+                    // AudioSource obsolete properties
+                    "minVolume", "maxVolume", "rolloffFactor",
+                    // NavMeshAgent properties often spewing errors
+                    "destination", "remainingDistance"
+                };
+                var typeBlacklist = new[] { typeof(bool) };
+
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Info, "Starting deep search, this can take a while...");
+
+                foreach (var prop in type
+                    .GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                    .Where(x => x.CanRead && !nameBlacklist.Contains(x.Name) &&
+                                !typeBlacklist.Contains(x.PropertyType)))
+                {
+                    try
+                    {
+                        if (prop.GetValue(c, null).ToString()
+                            .Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
+                            return true;
+                    }
+                    catch
+                    {
+                        // Skip invalid values
+                    }
+                }
+
+                foreach (var field in type
+                    .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                    .Where(x => !nameBlacklist.Contains(x.Name) && !typeBlacklist.Contains(x.FieldType)))
+                {
+                    try
+                    {
+                        if (field.GetValue(c).ToString()
+                            .Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
+                            return true;
+                    }
+                    catch
+                    {
+                        // Skip invalid values
+                    }
+                }
+
                 return false;
-
-            var nameBlacklist = new[] { "parent", "parentInternal", "root", "transform", "gameObject" };
-            var typeBlacklist = new[] { typeof(bool) };
-
-            foreach (var prop in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                .Where(x => x.CanRead && !nameBlacklist.Contains(x.Name) && !typeBlacklist.Contains(x.PropertyType)))
-            {
-                try
-                {
-                    if (prop.GetValue(c, null).ToString().Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
-                        return true;
-                }
-                catch
-                {
-                    // Skip invalid values
-                }
             }
-            foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                .Where(x => !nameBlacklist.Contains(x.Name) && !typeBlacklist.Contains(x.FieldType)))
+            finally
             {
-                try
-                {
-                    if (field.GetValue(c).ToString().Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
-                        return true;
-                }
-                catch
-                {
-                    // Skip invalid values
-                }
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Info, $"Search finished in {sw.ElapsedMilliseconds}ms");
             }
-
-            return false;
         }
     }
 }
