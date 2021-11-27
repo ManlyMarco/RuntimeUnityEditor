@@ -15,6 +15,10 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         private List<GameObject> _cachedRootGameObjects;
         private List<GameObject> _searchResults;
 
+        private Predicate<GameObject> _lastObjectFilter;
+        private string _lastSearchString;
+        private bool _lastSearchProperties;
+
         public bool IsSearching() => _searchResults != null;
 
         public static IEnumerable<GameObject> FindAllRootGameObjects()
@@ -46,9 +50,6 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
         public void Refresh(bool full, Predicate<GameObject> objectFilter)
         {
-            if (_searchResults != null)
-                return;
-
             if (_cachedRootGameObjects == null || full)
             {
                 _cachedRootGameObjects = FindAllRootGameObjects().OrderBy(x => x.name, StringComparer.InvariantCultureIgnoreCase).ToList();
@@ -76,20 +77,29 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                     _cachedRootGameObjects.Sort((o1, o2) => string.Compare(o1.name, o2.name, StringComparison.InvariantCultureIgnoreCase));
                 }
             }
-
+            
+            _lastObjectFilter = objectFilter;
             if (objectFilter != null)
                 _cachedRootGameObjects.RemoveAll(objectFilter);
+
+            if (_searchResults != null)
+                Search(_lastSearchString, _lastSearchProperties, false);
         }
 
-        public void Search(string searchString, bool searchProperties)
+        public void Search(string searchString, bool searchProperties, bool refreshObjects = true)
         {
-            if (string.IsNullOrEmpty(searchString))
-                _searchResults = null;
-            else
+            _lastSearchProperties = searchProperties;
+            _lastSearchString = searchString;
+            _searchResults = null;
+            if (!string.IsNullOrEmpty(searchString))
             {
+                if (refreshObjects) Refresh(true, _lastObjectFilter);
+
                 _searchResults = GetRootObjects()
                     .SelectMany(x => x.GetComponentsInChildren<Transform>(true))
-                    .Where(x => x.name.Contains(searchString, StringComparison.InvariantCultureIgnoreCase) || x.GetComponents<Component>().Any(c => SearchInComponent(searchString, c, searchProperties)))
+                    .Where(x => x.name.Contains(searchString, StringComparison.InvariantCultureIgnoreCase) ||
+                                x.GetComponents<Component>()
+                                    .Any(c => SearchInComponent(searchString, c, searchProperties)))
                     .OrderBy(x => x.name, StringComparer.InvariantCultureIgnoreCase)
                     .Select(x => x.gameObject)
                     .ToList();
@@ -110,8 +120,8 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             if (!searchProperties)
                 return false;
 
-            var nameBlacklist = new[] {"parent", "parentInternal", "root", "transform", "gameObject"};
-            var typeBlacklist = new[] {typeof(bool)};
+            var nameBlacklist = new[] { "parent", "parentInternal", "root", "transform", "gameObject" };
+            var typeBlacklist = new[] { typeof(bool) };
 
             foreach (var prop in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
                 .Where(x => x.CanRead && !nameBlacklist.Contains(x.Name) && !typeBlacklist.Contains(x.PropertyType)))
