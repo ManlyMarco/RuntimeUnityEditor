@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using RuntimeUnityEditor.Core.Utils;
@@ -50,6 +51,9 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
         public void Refresh(bool full, Predicate<GameObject> objectFilter)
         {
+            Stopwatch sw = null;
+            if (full) sw = Stopwatch.StartNew();
+
             if (_cachedRootGameObjects == null || full)
             {
                 _cachedRootGameObjects = FindAllRootGameObjects().OrderBy(x => x.name, StringComparer.InvariantCultureIgnoreCase).ToList();
@@ -82,18 +86,29 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             if (objectFilter != null)
                 _cachedRootGameObjects.RemoveAll(objectFilter);
 
-            if (_searchResults != null)
-                Search(_lastSearchString, _lastSearchProperties, false);
+            if (full)
+            {
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, $"Full GameObject list refresh finished in {sw.ElapsedMilliseconds}ms");
+
+                // _lastSearchProperties=true takes too long to open the editor
+                if (_searchResults != null && !_lastSearchProperties && _lastSearchString != null)
+                    Search(_lastSearchString, _lastSearchProperties, false);
+            }
         }
 
         public void Search(string searchString, bool searchProperties, bool refreshObjects = true)
         {
             _lastSearchProperties = searchProperties;
-            _lastSearchString = searchString;
+            _lastSearchString = null;
             _searchResults = null;
             if (!string.IsNullOrEmpty(searchString))
             {
                 if (refreshObjects) Refresh(true, _lastObjectFilter);
+
+                _lastSearchString = searchString;
+
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Info, searchProperties ? $"Deep searching for [{searchString}], this can take a while..." : $"Searching for [{searchString}]");
+                var sw = Stopwatch.StartNew();
 
                 _searchResults = GetRootObjects()
                     .SelectMany(x => x.GetComponentsInChildren<Transform>(true))
@@ -103,6 +118,8 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                     .OrderBy(x => x.name, StringComparer.InvariantCultureIgnoreCase)
                     .Select(x => x.gameObject)
                     .ToList();
+
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Info, $"Search finished in {sw.ElapsedMilliseconds}ms");
             }
         }
 
@@ -110,22 +127,17 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         {
             if (c == null) return false;
 
-            RuntimeUnityEditorCore.Logger.Log(LogLevel.Info, "Searching for " + searchString);
-            var sw = System.Diagnostics.Stopwatch.StartNew();
+            if (c.ToString().Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
+                return true;
 
-            try
-            {
-                if (c.ToString().Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
-                    return true;
+            var type = c.GetType();
+            if (type.Name.Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
+                return true;
 
-                var type = c.GetType();
-                if (type.Name.Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
-                    return true;
+            if (!searchProperties)
+                return false;
 
-                if (!searchProperties)
-                    return false;
-
-                var nameBlacklist = new HashSet<string>
+            var nameBlacklist = new HashSet<string>
                 {
                     "parent", "parentInternal", "root", "transform", "gameObject",
                     // Animator properties inaccessible outside of OnAnimatorIK
@@ -135,49 +147,42 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                     // NavMeshAgent properties often spewing errors
                     "destination", "remainingDistance"
                 };
-                var typeBlacklist = new[] { typeof(bool) };
+            var typeBlacklist = new[] { typeof(bool) };
 
-                RuntimeUnityEditorCore.Logger.Log(LogLevel.Info, "Starting deep search, this can take a while...");
-
-                foreach (var prop in type
-                    .GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                    .Where(x => x.CanRead && !nameBlacklist.Contains(x.Name) &&
-                                !typeBlacklist.Contains(x.PropertyType)))
-                {
-                    try
-                    {
-                        if (prop.GetValue(c, null).ToString()
-                            .Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
-                            return true;
-                    }
-                    catch
-                    {
-                        // Skip invalid values
-                    }
-                }
-
-                foreach (var field in type
-                    .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                    .Where(x => !nameBlacklist.Contains(x.Name) && !typeBlacklist.Contains(x.FieldType)))
-                {
-                    try
-                    {
-                        if (field.GetValue(c).ToString()
-                            .Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
-                            return true;
-                    }
-                    catch
-                    {
-                        // Skip invalid values
-                    }
-                }
-
-                return false;
-            }
-            finally
+            foreach (var prop in type
+                .GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                .Where(x => x.CanRead && !nameBlacklist.Contains(x.Name) &&
+                            !typeBlacklist.Contains(x.PropertyType)))
             {
-                RuntimeUnityEditorCore.Logger.Log(LogLevel.Info, $"Search finished in {sw.ElapsedMilliseconds}ms");
+                try
+                {
+                    if (prop.GetValue(c, null).ToString()
+                        .Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
+                        return true;
+                }
+                catch
+                {
+                    // Skip invalid values
+                }
             }
+
+            foreach (var field in type
+                .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                .Where(x => !nameBlacklist.Contains(x.Name) && !typeBlacklist.Contains(x.FieldType)))
+            {
+                try
+                {
+                    if (field.GetValue(c).ToString()
+                        .Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
+                        return true;
+                }
+                catch
+                {
+                    // Skip invalid values
+                }
+            }
+
+            return false;
         }
     }
 }
