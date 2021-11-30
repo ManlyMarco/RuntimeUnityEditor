@@ -35,6 +35,8 @@ namespace RuntimeUnityEditor.Core.Utils
 
             foreach (var c in obj.GetComponents<Component>())
             {
+                if(c == null) continue; // Sometimes they can be null for some reason
+
                 sw.WriteLine(pad2 + "::" + c.GetType().Name);
 
                 var ct = c.GetType();
