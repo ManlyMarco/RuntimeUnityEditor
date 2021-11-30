@@ -54,7 +54,7 @@ namespace RuntimeUnityEditor.Core.Utils
                     var t = Type.GetType("UnityEngine.ImageConversion, UnityEngine.ImageConversionModule", false);
                     var m2 = t?.GetMethod("EncodeToPNG", BindingFlags.Static | BindingFlags.Public);
                     if (m2 != null)
-                        return (byte[])m2.Invoke(t2d, new object[0]);
+                        return (byte[])m2.Invoke(null, new object[] { t2d });
 
                     throw new Exception("Could not find method EncodeToPNG, can't save to file.");
                 }
