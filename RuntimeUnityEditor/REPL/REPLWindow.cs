@@ -327,23 +327,27 @@ namespace RuntimeUnityEditor.Core.REPL
             {
                 _suggestions.Clear();
 
-                // Discard errors when searching for completions
-                var logLen = _sb.Length;
-                var completions = _evaluator.GetCompletions(input, out string prefix);
-                _sb.Length = logLen;
-                if (completions != null)
+                // A fix for ? characters causing an infinite loop in GetCompletions
+                if (!input.Contains('?'))
                 {
-                    if (prefix == null)
-                        prefix = input;
+                    // Discard errors when searching for completions
+                    var logLen = _sb.Length;
+                    var completions = _evaluator.GetCompletions(input, out string prefix);
+                    _sb.Length = logLen;
+                    if (completions != null)
+                    {
+                        if (prefix == null)
+                            prefix = input;
 
-                    _suggestions.AddRange(completions
-                        .Where(x => !string.IsNullOrEmpty(x))
-                        .Select(x => new Suggestion(x, prefix, SuggestionKind.Unknown))
-                        //.Where(x => !_namespaces.Contains(x.Full))
+                        _suggestions.AddRange(completions
+                                .Where(x => !string.IsNullOrEmpty(x))
+                                .Select(x => new Suggestion(x, prefix, SuggestionKind.Unknown))
+                            //.Where(x => !_namespaces.Contains(x.Full))
                         );
-                }
+                    }
 
-                _suggestions.AddRange(GetNamespaceSuggestions(input).OrderBy(x => x.Full));
+                    _suggestions.AddRange(GetNamespaceSuggestions(input).OrderBy(x => x.Full));
+                }
 
                 _refocus = true;
             }
