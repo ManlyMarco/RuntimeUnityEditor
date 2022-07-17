@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Reflection;
+using BepInEx;
 using RuntimeUnityEditor.Core.Gizmos;
 using RuntimeUnityEditor.Core.ObjectTree;
 using RuntimeUnityEditor.Core.Preview;
@@ -235,7 +236,7 @@ namespace RuntimeUnityEditor.Core
 
         internal void Update()
         {
-            if (Input.GetKeyDown(ShowHotkey))
+            if (UnityInput.Current.GetKeyDown(ShowHotkey))
                 Show = !Show;
 
             if (Show)

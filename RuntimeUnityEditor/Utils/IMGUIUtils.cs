@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using BepInEx;
+using UnityEngine;
 
 namespace RuntimeUnityEditor.Core.Utils
 {
@@ -46,8 +47,9 @@ namespace RuntimeUnityEditor.Core.Utils
         /// <param name="eatRect"></param>
         public static void EatInputInRect(Rect eatRect)
         {
-            if (eatRect.Contains(new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y)))
-                Input.ResetInputAxes();
+            var mousePos = UnityInput.Current.mousePosition;
+            if (eatRect.Contains(new Vector2(mousePos.x, Screen.height - mousePos.y)))
+                UnityInput.Current.ResetInputAxes();
         }
 
         /// <summary>
@@ -177,7 +179,7 @@ namespace RuntimeUnityEditor.Core.Utils
 
             if (_currentWindowId != 0 && _currentWindowId != id) return rect;
 
-            var mousePos = Input.mousePosition;
+            var mousePos = UnityInput.Current.mousePosition;
             mousePos.y = Screen.height - mousePos.y; // Convert to GUI coords
 
             var winRect = rect;
@@ -203,7 +205,7 @@ namespace RuntimeUnityEditor.Core.Utils
             if (_handleClicked)
             {
                 // Resize window by dragging
-                //if (Input.GetMouseButton(0))
+                //if (UnityInput.Current.GetMouseButton(0))
                 {
                     var listWinRect = winRect;
                     listWinRect.width = Mathf.Clamp(_originalWindow.width + (mousePos.x - _clickedPosition.x), 100, Screen.width);

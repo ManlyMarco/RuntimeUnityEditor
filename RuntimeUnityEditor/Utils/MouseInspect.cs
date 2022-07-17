@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using BepInEx;
+using UnityEngine;
 
 namespace RuntimeUnityEditor.Core.Utils
 {
@@ -24,7 +25,7 @@ namespace RuntimeUnityEditor.Core.Utils
             var camera = Camera.main;
             if (camera == null) return;
 
-            var ray = camera.ScreenPointToRay(Input.mousePosition);
+            var ray = camera.ScreenPointToRay(UnityInput.Current.mousePosition);
 
             if (Physics.Raycast(ray, out RaycastHit hit, 1000f))
             {
@@ -38,7 +39,7 @@ namespace RuntimeUnityEditor.Core.Utils
                     if (!_clickedOnce) _hoverText += "\nClick to select";
                 }
 
-                if (Input.GetMouseButtonDown(0))
+                if (UnityInput.Current.GetMouseButtonDown(0))
                 {
                     _clickedOnce = true;
                     RuntimeUnityEditorCore.Instance.TreeViewer.SelectAndShowObject(obj);
@@ -54,7 +55,7 @@ namespace RuntimeUnityEditor.Core.Utils
         {
             if (Enable && _objUnderMouse != null)
             {
-                var pos = Input.mousePosition;
+                var pos = UnityInput.Current.mousePosition;
                 var rect = new Rect(pos.x - (int)(Screen.width / 2), Screen.height - pos.y - 50, Screen.width, 50);
 
                 var origAlign = GUI.skin.label.alignment;

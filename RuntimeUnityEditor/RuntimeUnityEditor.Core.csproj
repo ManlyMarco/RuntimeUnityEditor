@@ -39,6 +39,10 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="Unity.InputSystem, Version=1.5.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Unity.InputSystem.1.5.0\lib\net35\Unity.InputSystem.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\IllusionLibs.HoneySelect.UnityEngine.5.3.5\lib\net35\UnityEngine.dll</HintPath>
       <Private>True</Private>
@@ -53,6 +57,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="UnityInput.cs" />
     <Compile Include="DnSpyHelper.cs" />
     <Compile Include="Inspector\VariableFieldDrawer.cs" />
     <Compile Include="Inspector\Inspector.InspectorTab.cs" />
@@ -126,6 +131,7 @@
     <ProjectReference Include="..\modules\mcs\mcs\mcs.csproj">
       <Project>{e4989e4c-0875-4528-9031-08e2c0e70103}</Project>
       <Name>mcs</Name>
+      <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />

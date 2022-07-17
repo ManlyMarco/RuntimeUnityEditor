@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using BepInEx;
 using RuntimeUnityEditor.Core.Utils;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -15,8 +16,9 @@ namespace RuntimeUnityEditor.Core.UI
 
         public static void EatInputInRect(Rect eatRect)
         {
-            if (eatRect.Contains(new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y)))
-                Input.ResetInputAxes();
+            var mousePos = UnityInput.Current.mousePosition;
+            if (eatRect.Contains(new Vector2(mousePos.x, Screen.height - mousePos.y)))
+                UnityInput.Current.ResetInputAxes();
         }
 
         public static GUISkin CustomSkin
