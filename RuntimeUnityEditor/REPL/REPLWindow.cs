@@ -12,10 +12,8 @@ using UnityEngine;
 
 namespace RuntimeUnityEditor.Core.REPL
 {
-    public sealed class ReplWindow
+    public sealed class ReplWindow : WindowBase<ReplWindow>
     {
-        internal static ReplWindow Instance { get; private set; }
-
         private readonly string _autostartFilename;
         private static readonly char[] _inputSplitChars = { ',', ';', '<', '>', '(', ')', '[', ']', '=', '|', '&' };
 
@@ -32,15 +30,11 @@ namespace RuntimeUnityEditor.Core.REPL
         private string _prevInput = "";
         private Vector2 _scrollPosition = Vector2.zero;
 
-        private readonly int _windowId;
-        private Rect _windowRect;
         private TextEditor _textEditor;
         private int _newCursorLocation = -1;
 
         private MemberInfo _cursorIndex;
         private MemberInfo _selectIndex;
-
-        public bool Show { get; set; } = true;
 
         private HashSet<string> _namespaces;
         private HashSet<string> Namespaces
@@ -71,13 +65,11 @@ namespace RuntimeUnityEditor.Core.REPL
         {
             _autostartFilename = Path.Combine(configPath, "RuntimeUnityEditor.Autostart.cs");
             _snippletFilename = Path.Combine(configPath, "RuntimeUnityEditor.Snipplets.cs");
-            _windowId = GetHashCode();
+            Title = "C# REPL Console";
 
             _sb.AppendLine("Welcome to C# REPL (read-evaluate-print loop)! Enter \"help\" to get a list of common methods.");
 
             _evaluator = new ScriptEvaluator(new StringWriter(_sb)) { InteractiveBaseClass = typeof(REPL) };
-
-            Instance = this;
         }
 
         public void RunEnvSetup()
@@ -108,10 +100,13 @@ namespace RuntimeUnityEditor.Core.REPL
             }
         }
 
-        public void DisplayWindow()
-        {
-            if (!Show) return;
+        private GUIStyle _completionsListingStyle;
+        private bool _refocus;
+        private int _refocusCursorIndex = -1;
+        private int _refocusSelectIndex;
 
+        protected override void DrawContents()
+        {
             if (_completionsListingStyle == null)
             {
                 _completionsListingStyle = new GUIStyle(GUI.skin.button)
@@ -126,17 +121,6 @@ namespace RuntimeUnityEditor.Core.REPL
                 };
             }
 
-            _windowRect = GUILayout.Window(_windowId, _windowRect, WindowFunc, "C# REPL Console");
-            InterfaceMaker.EatInputInRect(_windowRect);
-        }
-
-        private GUIStyle _completionsListingStyle;
-        private bool _refocus;
-        private int _refocusCursorIndex = -1;
-        private int _refocusSelectIndex;
-
-        private void WindowFunc(int id)
-        {
             GUILayout.BeginVertical();
             {
                 _scrollPosition = GUILayout.BeginScrollView(_scrollPosition, false, true, GUIStyle.none, GUI.skin.verticalScrollbar, GUI.skin.textArea);
@@ -278,8 +262,6 @@ namespace RuntimeUnityEditor.Core.REPL
             GUILayout.EndVertical();
 
             CheckReplInput();
-
-            _windowRect = IMGUIUtils.DragOrResize(id, _windowRect);
         }
 
         private void AcceptSuggestion(string suggestion)
@@ -342,7 +324,7 @@ namespace RuntimeUnityEditor.Core.REPL
                         _suggestions.AddRange(completions
                                 .Where(x => !string.IsNullOrEmpty(x))
                                 .Select(x => new Suggestion(x, prefix, SuggestionKind.Unknown))
-                            //.Where(x => !_namespaces.Contains(x.Full))
+                        //.Where(x => !_namespaces.Contains(x.Full))
                         );
                     }
 
@@ -509,11 +491,6 @@ namespace RuntimeUnityEditor.Core.REPL
         {
             public static readonly VoidType Value = new VoidType();
             private VoidType() { }
-        }
-
-        public void UpdateWindowSize(Rect windowRect)
-        {
-            _windowRect = windowRect;
         }
 
         internal void AppendLogLine(string message)
