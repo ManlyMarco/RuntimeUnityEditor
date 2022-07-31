@@ -5,6 +5,7 @@ using BepInEx;
 using RuntimeUnityEditor.Core.Gizmos;
 using RuntimeUnityEditor.Core.ObjectTree;
 using RuntimeUnityEditor.Core.Preview;
+using RuntimeUnityEditor.Core.Profiler;
 using RuntimeUnityEditor.Core.REPL;
 using RuntimeUnityEditor.Core.UI;
 using RuntimeUnityEditor.Core.Utils;
@@ -20,9 +21,15 @@ namespace RuntimeUnityEditor.Core
         public Inspector.Inspector Inspector { get; }
         public ObjectTreeViewer TreeViewer { get; }
         public PreviewWindow PreviewWindow { get; }
+        public ProfilerWindow ProfilerWindow { get; }
         public ReplWindow Repl { get; private set; }
 
         public event EventHandler SettingsChanged;
+
+        internal void OnSettingsChanged()
+        {
+            SettingsChanged?.Invoke(this, EventArgs.Empty);
+        }
 
         public KeyCode ShowHotkey
         {
@@ -32,7 +39,7 @@ namespace RuntimeUnityEditor.Core
                 if (_showHotkey != value)
                 {
                     _showHotkey = value;
-                    SettingsChanged?.Invoke(this, EventArgs.Empty);
+                    OnSettingsChanged();
                 }
             }
         }
@@ -40,14 +47,7 @@ namespace RuntimeUnityEditor.Core
         public bool ShowRepl
         {
             get => Repl != null && Repl.Enabled;
-            set
-            {
-                if (Repl != null && Repl.Enabled != value)
-                {
-                    Repl.Enabled = value;
-                    SettingsChanged?.Invoke(this, EventArgs.Empty);
-                }
-            }
+            set { if (Repl != null) Repl.Enabled = value; }
         }
 
         public bool EnableMouseInspect
@@ -58,22 +58,15 @@ namespace RuntimeUnityEditor.Core
                 if (MouseInspect.Enable != value)
                 {
                     MouseInspect.Enable = value;
-                    SettingsChanged?.Invoke(this, EventArgs.Empty);
+                    OnSettingsChanged();
                 }
             }
         }
 
         public bool ShowInspector
         {
-            get => Inspector != null && Inspector.Enabled;
-            set
-            {
-                if (Inspector != null && Inspector.Enabled != value)
-                {
-                    Inspector.Enabled = value;
-                    SettingsChanged?.Invoke(this, EventArgs.Empty);
-                }
-            }
+            get => Inspector.Enabled;
+            set => Inspector.Enabled = value;
         }
 
         public static RuntimeUnityEditorCore Instance { get; private set; }
@@ -129,6 +122,7 @@ namespace RuntimeUnityEditor.Core
             };
 
             PreviewWindow = new PreviewWindow();
+            ProfilerWindow = new ProfilerWindow();
 
             if (UnityFeatureHelper.SupportsVectrosity)
             {
@@ -183,6 +177,7 @@ namespace RuntimeUnityEditor.Core
                 TreeViewer.DrawWindow();
                 Repl?.DrawWindow();
                 PreviewWindow.DrawWindow();
+                ProfilerWindow.DrawWindow();
 
                 MouseInspect.OnGUI();
 
@@ -296,11 +291,13 @@ namespace RuntimeUnityEditor.Core
 
             PreviewWindow.WindowRect = new Rect(screenRect.xMin, screenRect.yMin, sideWidth, sideWidth);
 
+            ProfilerWindow.WindowRect = new Rect(Inspector.WindowRect);
+
             var treeViewHeight = screenRect.height;
             TreeViewer.WindowRect = new Rect(screenRect.xMax - sideWidth, screenRect.yMin, sideWidth, treeViewHeight);
 
             const int replPadding = 8;
-            if (Repl != null) 
+            if (Repl != null)
                 Repl.WindowRect = new Rect(centerX, screenRect.yMin + inspectorHeight + replPadding, centerWidth, screenRect.height - inspectorHeight - replPadding);
         }
     }

@@ -254,25 +254,29 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                     GUILayout.FlexibleSpace();
 
                     if (RuntimeUnityEditorCore.Instance.Repl != null)
-                        RuntimeUnityEditorCore.Instance.ShowRepl = GUILayout.Toggle(RuntimeUnityEditorCore.Instance.ShowRepl, "REPL");
-
-                    _wireframe = GUILayout.Toggle(_wireframe, "Wireframe");
+                        if (GUILayout.Button("REPL"))
+                            RuntimeUnityEditorCore.Instance.ShowRepl = !RuntimeUnityEditorCore.Instance.ShowRepl;
+                    
+                    if (GUILayout.Button("Profiler"))
+                        RuntimeUnityEditorCore.Instance.ProfilerWindow.Enabled = !RuntimeUnityEditorCore.Instance.ProfilerWindow.Enabled;
                 }
                 GUILayout.EndHorizontal();
             }
             GUILayout.EndHorizontal();
 
-            GUILayout.BeginHorizontal();
+            GUILayout.BeginHorizontal(GUI.skin.box);
             {
                 GUI.changed = false;
                 var n = GUILayout.Toggle(Application.runInBackground, "Run in bg");
                 if (GUI.changed) Application.runInBackground = n;
 
                 RuntimeUnityEditorCore.Instance.EnableMouseInspect = GUILayout.Toggle(RuntimeUnityEditorCore.Instance.EnableMouseInspect, "Mouse inspect");
-
-                AssetBundleManagerHelper.DrawButtonIfAvailable();
+                
+                _wireframe = GUILayout.Toggle(_wireframe, "Wireframe");
             }
             GUILayout.EndHorizontal();
+
+            AssetBundleManagerHelper.DrawButtonIfAvailable();
 
             GizmoDrawer.DisplayControls();
         }

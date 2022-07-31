@@ -502,5 +502,18 @@ namespace RuntimeUnityEditor.Core.REPL
         {
             _sb.Length = 0;
         }
+
+        public override bool Enabled
+        {
+            get => base.Enabled;
+            set
+            {
+                if (base.Enabled != value)
+                {
+                    base.Enabled = value;
+                    RuntimeUnityEditorCore.Instance.OnSettingsChanged();
+                }
+            }
+        }
     }
 }

@@ -21,5 +21,7 @@
 
     <Delete Files="@(InputAssemblies)" />
     <Delete Files="$(OutputPath)\UnityEngine.dll" />
+    <Delete Files="$(OutputPath)\0Harmony.dll" />
+    <Delete Files="$(OutputPath)\0Harmony.xml" />
   </Target>
 </Project>
