@@ -1,11 +1,18 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using RuntimeUnityEditor.Core.Utils;
 using UnityEngine;
 
 namespace RuntimeUnityEditor.Core
 {
+    [SuppressMessage("ReSharper", "StaticMemberInGenericType")]
     public abstract class WindowBase<T> where T : WindowBase<T>
     {
+        private const int TooltipWidth = 400;
+        private static GUIStyle _tooltipStyle;
+        private static GUIContent _tooltipContent;
+        private static Texture2D _tooltipBackground;
+
         public static T Instance { get; private set; }
 
         public WindowBase()
@@ -46,13 +53,52 @@ namespace RuntimeUnityEditor.Core
             try
             {
                 DrawContents();
+                DrawTooltip(WindowRect);
             }
             catch (Exception ex)
             {
-                RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, $"[{Title}] GUI crash: {ex}");
+                // Ignore mismatch exceptions caused by virtual lists, there will be an unity error shown anyways
+                if (!ex.Message.Contains("GUILayout"))
+                    RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, $"[{Title}] GUI crash: {ex}");
             }
 
             WindowRect = IMGUIUtils.DragResizeEat(id, WindowRect);
+        }
+
+        private static void DrawTooltip(Rect area)
+        {
+            if (!string.IsNullOrEmpty(GUI.tooltip))
+            {
+                if (_tooltipBackground == null)
+                {
+                    _tooltipBackground = new Texture2D(1, 1, TextureFormat.ARGB32, false);
+                    _tooltipBackground.SetPixel(0, 0, Color.black);
+                    _tooltipBackground.Apply();
+
+                    _tooltipStyle = new GUIStyle
+                    {
+                        normal = new GUIStyleState { textColor = Color.white, background = _tooltipBackground },
+                        wordWrap = true,
+                        alignment = TextAnchor.MiddleCenter
+                    };
+                    _tooltipContent = new GUIContent();
+                }
+
+                _tooltipContent.text = GUI.tooltip;
+                var height = _tooltipStyle.CalcHeight(_tooltipContent, 400) + 10;
+
+                var currentEvent = Event.current;
+
+                var x = currentEvent.mousePosition.x + TooltipWidth > area.width
+                    ? area.width - TooltipWidth
+                    : currentEvent.mousePosition.x;
+
+                var y = currentEvent.mousePosition.y + 25 + height > area.height
+                    ? currentEvent.mousePosition.y - height
+                    : currentEvent.mousePosition.y + 25;
+
+                GUI.Box(new Rect(x, y, TooltipWidth, height), GUI.tooltip, _tooltipStyle);
+            }
         }
 
         protected abstract void DrawContents();
