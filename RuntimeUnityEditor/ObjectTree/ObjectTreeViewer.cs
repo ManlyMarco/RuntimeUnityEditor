@@ -456,10 +456,10 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                                 else
                                 {
                                     GUILayout.Label("Can't display texture");
-                                    GUILayout.FlexibleSpace();
                                 }
                             }
                         }
+                        GUILayout.FlexibleSpace();
                         break;
                     case Slider b:
                         {
@@ -543,6 +543,9 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                             GUILayout.Label("rect " + rt.rect);
                         }
                         GUILayout.EndVertical();
+                        break;
+                    default:
+                        GUILayout.FlexibleSpace();
                         break;
                 }
 
