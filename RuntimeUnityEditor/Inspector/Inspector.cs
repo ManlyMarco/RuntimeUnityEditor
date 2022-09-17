@@ -233,14 +233,14 @@ namespace RuntimeUnityEditor.Core.Inspector
                         var stackEntries = currentTab.InspectorStack.Reverse().ToArray();
                         for (var i = 0; i < stackEntries.Length; i++)
                         {
-                            var item = stackEntries[i];
+                            var stackEntry = stackEntries[i];
 
-                            if (i + 1 == stackEntries.Length)
+                            if (stackEntry == currentTab.CurrentStackItem)
                                 GUI.backgroundColor = Color.cyan;
 
-                            if (GUILayout.Button(LimitStringLengthForPreview(item.Name, 90), GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button(LimitStringLengthForPreview(stackEntry.Name, 90), GUILayout.ExpandWidth(false)))
                             {
-                                currentTab.PopUntil(item);
+                                currentTab.CurrentStackItem = stackEntry;
                                 GUI.backgroundColor = defaultGuiColor;
                                 return;
                             }

@@ -17,7 +17,17 @@ namespace RuntimeUnityEditor.Core.Inspector
         private class InspectorTab
         {
             private readonly List<ICacheEntry> _fieldCache = new List<ICacheEntry>();
-            public InspectorStackEntryBase CurrentStackItem => InspectorStack.Count > 0 ? InspectorStack.Peek() : null;
+            private InspectorStackEntryBase _currentStackItem;
+            public InspectorStackEntryBase CurrentStackItem
+            {
+                get => _currentStackItem ?? (InspectorStack.Count > 0 ? _currentStackItem = InspectorStack.Peek() : null);
+                set
+                {
+                    _currentStackItem = value;
+                    LoadStackEntry(_currentStackItem);
+                }
+            }
+
             public IList<ICacheEntry> FieldCache => _fieldCache;
             public Stack<InspectorStackEntryBase> InspectorStack { get; } = new Stack<InspectorStackEntryBase>();
             public Vector2 InspectorStackScrollPos { get; set; }
@@ -30,18 +40,32 @@ namespace RuntimeUnityEditor.Core.Inspector
 
             public void Pop()
             {
-                InspectorStack.Pop();
-                LoadStackEntry(InspectorStack.Peek());
+                var popdItem = InspectorStack.Pop();
+
+                if (_currentStackItem == null || _currentStackItem == popdItem)
+                    _currentStackItem = InspectorStack.Peek();
+
+                LoadStackEntry(_currentStackItem);
             }
 
             public void Push(InspectorStackEntryBase stackEntry)
             {
+                if (CurrentStackItem != null)
+                {
+                    // Pop everything above the selected item
+                    while (InspectorStack.Count > 0 && InspectorStack.Peek() != CurrentStackItem)
+                    {
+                        InspectorStack.Pop();
+                    }
+                }
+
                 InspectorStack.Push(stackEntry);
+                _currentStackItem = stackEntry;
                 LoadStackEntry(stackEntry);
             }
 
             private static IEnumerable<ICacheEntry> MethodsToCacheEntries(object instance, Type instanceType,
-                IEnumerable<MethodInfo> methodsToCheck)
+                                                                          IEnumerable<MethodInfo> methodsToCheck)
             {
                 var cacheItems = methodsToCheck
                     .Where(x => !x.IsConstructor && !x.IsSpecialName && x.GetParameters().Length == 0)
@@ -184,6 +208,9 @@ namespace RuntimeUnityEditor.Core.Inspector
                     case StaticStackEntry staticStackEntry:
                         CacheStaticMembers(staticStackEntry);
                         break;
+                    case null:
+                        _fieldCache.Clear();
+                        return;
                     default:
                         throw new InvalidEnumArgumentException(
                             "Invalid stack entry type: " + stackEntry.GetType().FullName);
