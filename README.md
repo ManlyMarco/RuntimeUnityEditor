@@ -6,9 +6,10 @@ In-game inspector, editor and interactive console for applications made with Uni
 - GameObject and component browser
 - Object inspector that allows modifying values of objects in real time
 - REPL C# console
+- Simple Profiler
 - All parts are integrated together (e.g. REPL console can access inspected object, inspector can focus objects on GameObject list, etc.)
 
-![preview](https://user-images.githubusercontent.com/39247311/64476158-ce1a4c00-d18b-11e9-97d6-084452cdbf0a.PNG)
+![Preview](https://user-images.githubusercontent.com/39247311/190878696-b1d26b1e-d205-4ae1-88f8-294057595a5a.png)
 
 ### How to use
 1. Install BepInEx v4.x or v5.x if you don't have it already. You can download it [here](https://github.com/BepInEx/BepInEx
