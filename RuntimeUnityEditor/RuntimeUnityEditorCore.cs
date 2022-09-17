@@ -5,6 +5,7 @@ using BepInEx;
 using RuntimeUnityEditor.Core.Gizmos;
 using RuntimeUnityEditor.Core.ObjectTree;
 using RuntimeUnityEditor.Core.Preview;
+using RuntimeUnityEditor.Core.Profiler;
 using RuntimeUnityEditor.Core.REPL;
 using RuntimeUnityEditor.Core.UI;
 using RuntimeUnityEditor.Core.Utils;
@@ -20,9 +21,15 @@ namespace RuntimeUnityEditor.Core
         public Inspector.Inspector Inspector { get; }
         public ObjectTreeViewer TreeViewer { get; }
         public PreviewWindow PreviewWindow { get; }
+        public ProfilerWindow ProfilerWindow { get; }
         public ReplWindow Repl { get; private set; }
 
         public event EventHandler SettingsChanged;
+
+        internal void OnSettingsChanged()
+        {
+            SettingsChanged?.Invoke(this, EventArgs.Empty);
+        }
 
         public KeyCode ShowHotkey
         {
@@ -32,22 +39,15 @@ namespace RuntimeUnityEditor.Core
                 if (_showHotkey != value)
                 {
                     _showHotkey = value;
-                    SettingsChanged?.Invoke(this, EventArgs.Empty);
+                    OnSettingsChanged();
                 }
             }
         }
 
         public bool ShowRepl
         {
-            get => Repl != null && Repl.Show;
-            set
-            {
-                if (Repl != null && Repl.Show != value)
-                {
-                    Repl.Show = value;
-                    SettingsChanged?.Invoke(this, EventArgs.Empty);
-                }
-            }
+            get => Repl != null && Repl.Enabled;
+            set { if (Repl != null) Repl.Enabled = value; }
         }
 
         public bool EnableMouseInspect
@@ -58,22 +58,15 @@ namespace RuntimeUnityEditor.Core
                 if (MouseInspect.Enable != value)
                 {
                     MouseInspect.Enable = value;
-                    SettingsChanged?.Invoke(this, EventArgs.Empty);
+                    OnSettingsChanged();
                 }
             }
         }
 
         public bool ShowInspector
         {
-            get => Inspector != null && Inspector.Show;
-            set
-            {
-                if (Inspector != null && Inspector.Show != value)
-                {
-                    Inspector.Show = value;
-                    SettingsChanged?.Invoke(this, EventArgs.Empty);
-                }
-            }
+            get => Inspector.Enabled;
+            set => Inspector.Enabled = value;
         }
 
         public static RuntimeUnityEditorCore Instance { get; private set; }
@@ -116,7 +109,7 @@ namespace RuntimeUnityEditor.Core
                 _curVisible = typeof(Screen).GetProperty("showCursor", BindingFlags.Static | BindingFlags.Public);
             }
 
-            Inspector = new Inspector.Inspector(targetTransform => TreeViewer.SelectAndShowObject(targetTransform));
+            Inspector = new Inspector.Inspector(targetTransform => TreeViewer?.SelectAndShowObject(targetTransform));
 
             TreeViewer = new ObjectTreeViewer(pluginObject, _gameObjectSearcher);
             TreeViewer.InspectorOpenCallback = items =>
@@ -129,6 +122,7 @@ namespace RuntimeUnityEditor.Core
             };
 
             PreviewWindow = new PreviewWindow();
+            ProfilerWindow = new ProfilerWindow();
 
             if (UnityFeatureHelper.SupportsVectrosity)
             {
@@ -179,10 +173,11 @@ namespace RuntimeUnityEditor.Core
 
                 _curVisible.SetValue(null, true, null);
 
-                Inspector.DisplayInspector();
-                TreeViewer.DisplayViewer();
-                Repl?.DisplayWindow();
-                PreviewWindow.DisplayWindow();
+                Inspector.DrawWindow();
+                TreeViewer.DrawWindow();
+                Repl?.DrawWindow();
+                PreviewWindow.DrawWindow();
+                ProfilerWindow.DrawWindow();
 
                 MouseInspect.OnGUI();
 
@@ -290,33 +285,20 @@ namespace RuntimeUnityEditor.Core
             var centerX = (int)(screenRect.xMin + screenRect.width / 2 - Mathf.RoundToInt((float)centerWidth / 2));
 
             var inspectorHeight = (int)(screenRect.height / 4) * 3;
-            Inspector.UpdateWindowSize(new Rect(
-                centerX,
-                screenRect.yMin,
-                centerWidth,
-                inspectorHeight));
+            Inspector.WindowRect = new Rect(centerX, screenRect.yMin, centerWidth, inspectorHeight);
 
-            var sideWidth = 350;
+            const int sideWidth = 350;
 
-            PreviewWindow.UpdateWindowSize(new Rect(
-                screenRect.xMin,
-                screenRect.yMin,
-                sideWidth,
-                sideWidth));
+            PreviewWindow.WindowRect = new Rect(screenRect.xMin, screenRect.yMin, sideWidth, sideWidth);
+
+            ProfilerWindow.WindowRect = new Rect(Inspector.WindowRect);
 
             var treeViewHeight = screenRect.height;
-            TreeViewer.UpdateWindowSize(new Rect(
-                screenRect.xMax - sideWidth,
-                screenRect.yMin,
-                sideWidth,
-                treeViewHeight));
+            TreeViewer.WindowRect = new Rect(screenRect.xMax - sideWidth, screenRect.yMin, sideWidth, treeViewHeight);
 
-            var replPadding = 8;
-            Repl?.UpdateWindowSize(new Rect(
-                centerX,
-                screenRect.yMin + inspectorHeight + replPadding,
-                centerWidth,
-                screenRect.height - inspectorHeight - replPadding));
+            const int replPadding = 8;
+            if (Repl != null)
+                Repl.WindowRect = new Rect(centerX, screenRect.yMin + inspectorHeight + replPadding, centerWidth, screenRect.height - inspectorHeight - replPadding);
         }
     }
 }

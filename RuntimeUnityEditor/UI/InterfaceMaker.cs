@@ -72,6 +72,9 @@ namespace RuntimeUnityEditor.Core.UI
 
             newSkin.label.normal.textColor = Color.white;
 
+            newSkin.toggle.stretchWidth = false;
+            newSkin.label.stretchWidth = false;
+
             return newSkin;
         }
     }

@@ -170,7 +170,7 @@ namespace RuntimeUnityEditor.Core.Inspector
 
             if (!_comboBoxCache.TryGetValue(setting, out var box))
             {
-                box = new ComboBox(dispRect, buttonText, list.Cast<object>().Select(x => new GUIContent(x.ToString())).ToArray(), InterfaceMaker.CustomSkin.button, Inspector.MaxWindowY);
+                box = new ComboBox(dispRect, buttonText, list.Cast<object>().Select(x => new GUIContent(x.ToString())).ToArray(), InterfaceMaker.CustomSkin.button, Inspector.MaxWindowY); //todo don't rely on Inspector.MaxWindowY
                 _comboBoxCache[setting] = box;
             }
             else
