@@ -16,14 +16,15 @@ namespace RuntimeUnityEditor.Core.Profiler
     {
         private const string OnGuiMethodName = "OnGUI";
         private static readonly string[] _orderingStrings = { "#", "Time", "Memory", "Name" };
-        private static readonly GUILayoutOption[] _cGcW = { GUILayout.MinWidth(50) };
-        private static readonly GUILayoutOption[] _cOrderW = { GUILayout.MinWidth(30) };
-        private static readonly GUILayoutOption[] _cRanHeaderW = { GUILayout.Width(43) };
-        private static readonly GUILayoutOption[] _cRanW2 = { GUILayout.Width(25) };
-        private static readonly GUILayoutOption[] _cTicksW = { GUILayout.MinWidth(50) };
+        private static readonly GUILayoutOption[] _cGcW = { GUILayout.MinWidth(50),GUILayout.MaxWidth(50) };
+        private static readonly GUILayoutOption[] _cOrderW = { GUILayout.MinWidth(30),GUILayout.MaxWidth(30) };
+        private static readonly GUILayoutOption[] _cRanHeaderW = { GUILayout.MinWidth(43),GUILayout.MaxWidth(43) };
+        private static readonly GUILayoutOption[] _cRanW2 = { GUILayout.MinWidth(25),GUILayout.MaxWidth(25) };
+        private static readonly GUILayoutOption[] _cTicksW = { GUILayout.MinWidth(50),GUILayout.MaxWidth(50) };
         private static readonly GUILayoutOption[] _expandW = { GUILayout.ExpandWidth(true) };
+        private static readonly GUILayoutOption[] _expandWno = { GUILayout.ExpandWidth(false) };
         private static readonly GUIContent _cColOrder = new GUIContent("#", "Relative order of execution in a frame. Methods are called one by one on the main unity thread in this order.\n\nMethods that did not run during this frame are also included, so this number does not equal how many methods were called on this frame.");
-        private static readonly GUIContent _cColRan = new GUIContent("Ran", "Left toggle indicates if this method was executed in this frame (all Harmony patches were called, and the original method was called if not disabled by a Harmony patch).\n\nRight toggle indicates if the original method was executed (original method being skipped is usually caused a false postfix in a Harmony patch)");
+        private static readonly GUIContent _cColRan = new GUIContent("Ran", "Left toggle indicates if this method was executed in this frame (all Harmony patches were called, and the original method was called if not disabled by a Harmony patch).\n\nRight toggle indicates if the original method was executed (original method being skipped is usually caused by a false postfix in a Harmony patch)");
         private static readonly GUIContent _cColTime = new GUIContent("Time", "Time spent executing this method (all Harmony patches included).\n\nBy default it's shown in ticks (smallest measurable unit of time). Resolution of ticks depends on Stopwatch.Frequency, but usually 10000 = 1ms.\n\nHigh values will drop FPS. If the value is much higher on some frames it can be felt as the game stuttering.\n\nIn methods running on every frame this should be as low as possible.");
         private static readonly GUIContent _cColMem = new GUIContent("Mem", "Bytes of memory allocated in the managed heap during this method's execution (all Harmony patches included). The value is approximate and might be inaccurate, especially if there is code running on background threads.\n\nHigh values (usually caused by constantly allocating and discarding objects, e.g. using linq queries) will trigger garbage collections, causing the game to randomly stutter. Magnitude of the stutters can be lowered by very fast CPUs and the incremental GC being enabled (only Unity 2019+).\n\nIn methods running on every frame this should be 0 (or as close to 0 as possible).");
         private static readonly GUIContent _cColName = new GUIContent("Full method name", "Name format:\nName of GameObject that the component running this method is attached to > Full name of the component and name of the method (OnGUI event type)");
@@ -84,21 +85,21 @@ namespace RuntimeUnityEditor.Core.Profiler
 
             GUILayout.BeginHorizontal();
             {
-                GUILayout.BeginHorizontal(GUI.skin.box);
+                GUILayout.BeginHorizontal(GUI.skin.box, _expandW);
                 {
-                    GUILayout.Label("Search: ");
+                    GUILayout.Label("Search: ", _expandWno);
                     _searchText = GUILayout.TextField(_searchText, _expandW);
-                    if (GUILayout.Button("Clear")) _searchText = "";
+                    if (GUILayout.Button("Clear", _expandWno)) _searchText = "";
                     _searchHighlightMode = GUILayout.Toggle(_searchHighlightMode, "Highlight mode");
                     _searchCaseSensitive = GUILayout.Toggle(_searchCaseSensitive, "Case sensitive");
                 }
                 GUILayout.EndHorizontal();
 
-                GUILayout.BeginHorizontal(GUI.skin.box);
+                GUILayout.BeginHorizontal(GUI.skin.box, _expandWno);
                 {
                     GUILayout.Label("Order: ");
                     GUI.changed = false;
-                    _ordering = GUILayout.SelectionGrid(_ordering, _orderingStrings, 4);
+                    _ordering = GUILayout.SelectionGrid(_ordering, _orderingStrings, 4, _expandWno);
                     if (GUI.changed) _needResort = true;
                 }
                 GUILayout.EndHorizontal();

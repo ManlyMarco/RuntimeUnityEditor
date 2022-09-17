@@ -58,7 +58,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         {
             if (pluginObject == null) throw new ArgumentNullException(nameof(pluginObject));
             if (gameObjectSearcher == null) throw new ArgumentNullException(nameof(gameObjectSearcher));
-            
+
             Title = "Scene Browser - RuntimeUnityEditor v" + RuntimeUnityEditorCore.Version;
             _gameObjectSearcher = gameObjectSearcher;
             pluginObject.StartCoroutine(SetWireframeCo());
@@ -206,7 +206,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                     DisplayObjectTreeHelper(go.transform.GetChild(i).gameObject, indent + 1, ref currentCount);
             }
         }
-        
+
         protected override void DrawContents()
         {
             if (_wireframe && _actuallyInsideOnGui && Event.current.type == EventType.layout)
@@ -243,22 +243,35 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
                 GUILayout.BeginHorizontal(GUI.skin.box);
                 {
-                    if (SelectedTransform == null) GUI.enabled = false;
-                    if (GUILayout.Button("Dump", GUILayout.ExpandWidth(false)))
-                        SceneDumper.DumpObjects(SelectedTransform?.gameObject);
-                    GUI.enabled = true;
-
                     if (GUILayout.Button("Log", GUILayout.ExpandWidth(false)))
                         UnityFeatureHelper.OpenLog();
 
                     GUILayout.FlexibleSpace();
 
+                    var origColor = GUI.backgroundColor;
+
+                    if (RuntimeUnityEditorCore.Instance.Inspector.Enabled) 
+                        GUI.backgroundColor = Color.cyan;
+                    if (GUILayout.Button("Insp"))
+                        RuntimeUnityEditorCore.Instance.Inspector.Enabled = !RuntimeUnityEditorCore.Instance.Inspector.Enabled;
+                    GUI.backgroundColor = origColor;
+
+
                     if (RuntimeUnityEditorCore.Instance.Repl != null)
+                    {
+                        if (RuntimeUnityEditorCore.Instance.ShowRepl) 
+                            GUI.backgroundColor = Color.cyan;
                         if (GUILayout.Button("REPL"))
                             RuntimeUnityEditorCore.Instance.ShowRepl = !RuntimeUnityEditorCore.Instance.ShowRepl;
-                    
+
+                        GUI.backgroundColor = origColor;
+                    }
+
+                    if (RuntimeUnityEditorCore.Instance.ProfilerWindow.Enabled)
+                        GUI.backgroundColor = Color.cyan;
                     if (GUILayout.Button("Profiler"))
                         RuntimeUnityEditorCore.Instance.ProfilerWindow.Enabled = !RuntimeUnityEditorCore.Instance.ProfilerWindow.Enabled;
+                    GUI.backgroundColor = origColor;
                 }
                 GUILayout.EndHorizontal();
             }
@@ -271,7 +284,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 if (GUI.changed) Application.runInBackground = n;
 
                 RuntimeUnityEditorCore.Instance.EnableMouseInspect = GUILayout.Toggle(RuntimeUnityEditorCore.Instance.EnableMouseInspect, "Mouse inspect");
-                
+
                 _wireframe = GUILayout.Toggle(_wireframe, "Wireframe");
             }
             GUILayout.EndHorizontal();
@@ -592,6 +605,13 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                     _gameObjectSearcher.Search(_searchText, false);
                     SelectAndShowObject(SelectedTransform);
                 }
+
+                GUILayout.Space(3);
+
+                if (SelectedTransform == null) GUI.enabled = false;
+                if (GUILayout.Button("Dump obj", GUILayout.ExpandWidth(false)))
+                    SceneDumper.DumpObjects(SelectedTransform?.gameObject);
+                GUI.enabled = true;
             }
             GUILayout.EndHorizontal();
 

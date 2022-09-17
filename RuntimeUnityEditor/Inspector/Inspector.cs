@@ -171,10 +171,16 @@ namespace RuntimeUnityEditor.Core.Inspector
                     }
                     GUILayout.EndHorizontal();
 
-                    GUILayout.Space(6);
-
-                    GUILayout.BeginHorizontal(GUI.skin.box, GUILayout.Width(160));
+                    GUILayout.BeginHorizontal(GUI.skin.box, GUILayout.Width(80));
                     {
+                        if (_tabs.Count == 0) GUI.enabled = false;
+                        if (GUILayout.Button("Close all"))
+                        {
+                            _tabs.Clear();
+                            _currentTab = null;
+                        }
+                        GUI.enabled = true;
+
                         if (GUILayout.Button("Help"))
                             Push(InspectorHelpObject.Create(), true);
                     }
@@ -183,7 +189,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                 GUILayout.EndHorizontal();
 
                 var currentTab = GetCurrentTab();
-                var defaultGuiColor = GUI.color;
+                var defaultGuiColor = GUI.backgroundColor;
                 if (_tabs.Count >= 2)
                 {
                     _tabScrollPos = GUILayout.BeginScrollView(_tabScrollPos, false, false,
@@ -195,7 +201,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                             var tab = _tabs[index];
 
                             if (currentTab == tab)
-                                GUI.color = Color.cyan;
+                                GUI.backgroundColor = Color.cyan;
 
                             if (GUILayout.Button($"Tab {index + 1}: {LimitStringLengthForPreview(tab?.CurrentStackItem?.Name, 18)}", GUILayout.ExpandWidth(false)))
                             {
@@ -204,21 +210,14 @@ namespace RuntimeUnityEditor.Core.Inspector
                                 else
                                     _currentTab = tab;
 
-                                GUI.color = defaultGuiColor;
+                                GUI.backgroundColor = defaultGuiColor;
                                 break;
                             }
 
-                            GUI.color = defaultGuiColor;
+                            GUI.backgroundColor = defaultGuiColor;
                         }
 
-                        GUILayout.FlexibleSpace();
-                        GUI.color = new Color(1, 1, 1, 0.6f);
-                        if (GUILayout.Button("Close all"))
-                        {
-                            _tabs.Clear();
-                            _currentTab = null;
-                        }
-                        GUI.color = defaultGuiColor;
+                        GUI.backgroundColor = defaultGuiColor;
 
                         GUILayout.EndHorizontal();
                     }
@@ -237,19 +236,19 @@ namespace RuntimeUnityEditor.Core.Inspector
                             var item = stackEntries[i];
 
                             if (i + 1 == stackEntries.Length)
-                                GUI.color = Color.cyan;
+                                GUI.backgroundColor = Color.cyan;
 
                             if (GUILayout.Button(LimitStringLengthForPreview(item.Name, 90), GUILayout.ExpandWidth(false)))
                             {
                                 currentTab.PopUntil(item);
-                                GUI.color = defaultGuiColor;
+                                GUI.backgroundColor = defaultGuiColor;
                                 return;
                             }
 
                             if (i + 1 < stackEntries.Length)
                                 GUILayout.Label(">", GUILayout.ExpandWidth(false));
 
-                            GUI.color = defaultGuiColor;
+                            GUI.backgroundColor = defaultGuiColor;
                         }
                         GUILayout.EndHorizontal();
                     }
@@ -274,8 +273,21 @@ namespace RuntimeUnityEditor.Core.Inspector
                 }
                 else
                 {
-                    GUILayout.Label("Nothing to show. Click on objects in the scene browser to open them in a new tab.");
-                    GUILayout.Label("Tip: You can right click on a member inside inspector to open in a new tab, and on a tab to close it.");
+                    // Nothing to show
+                    GUILayout.BeginHorizontal(GUI.skin.box);
+                    {
+                        GUILayout.Space(8);
+                        GUILayout.BeginVertical();
+                        {
+                            GUILayout.Space(8);
+                            GUILayout.Label("Nothing to show. You can inspect objects by clicking the \"Inspect\" buttons in other windows. Each object will be opened in a new tab. You can also send instances or types to be inspected from repl by using the \"seti(instance)\" and \"setis(type)\" commands.");
+                            GUILayout.Label("Tip: You can right click on a member inside inspector to open it in a new tab instead of opening it in the current tab. You can also right click on tabs to close them.");
+                            GUILayout.Space(8);
+                        }
+                        GUILayout.EndVertical();
+                        GUILayout.Space(8);
+                    }
+                    GUILayout.EndHorizontal();
                     GUILayout.FlexibleSpace();
                 }
             }
