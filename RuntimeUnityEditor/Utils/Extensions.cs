@@ -177,5 +177,12 @@ namespace RuntimeUnityEditor.Core.Utils
             var flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly | (getStatic ? BindingFlags.Static : BindingFlags.Instance);
             return t.BaseType == null ? t.GetMethods(flags) : t.GetMethods(flags).Concat(GetAllMethods(t.BaseType, getStatic));
         }
+
+        public static void SetLossyScale(this Transform targetTransform, Vector3 lossyScale)
+        {
+            targetTransform.localScale = new Vector3(targetTransform.localScale.x * (lossyScale.x / targetTransform.lossyScale.x),
+                                                     targetTransform.localScale.y * (lossyScale.y / targetTransform.lossyScale.y),
+                                                     targetTransform.localScale.z * (lossyScale.z / targetTransform.lossyScale.z));
+        }
     }
 }

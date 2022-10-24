@@ -250,7 +250,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
                     var origColor = GUI.backgroundColor;
 
-                    if (RuntimeUnityEditorCore.Instance.Inspector.Enabled) 
+                    if (RuntimeUnityEditorCore.Instance.Inspector.Enabled)
                         GUI.backgroundColor = Color.cyan;
                     if (GUILayout.Button("Insp"))
                         RuntimeUnityEditorCore.Instance.Inspector.Enabled = !RuntimeUnityEditorCore.Instance.Inspector.Enabled;
@@ -259,7 +259,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
                     if (RuntimeUnityEditorCore.Instance.Repl != null)
                     {
-                        if (RuntimeUnityEditorCore.Instance.ShowRepl) 
+                        if (RuntimeUnityEditorCore.Instance.ShowRepl)
                             GUI.backgroundColor = Color.cyan;
                         if (GUILayout.Button("REPL"))
                             RuntimeUnityEditorCore.Instance.ShowRepl = !RuntimeUnityEditorCore.Instance.ShowRepl;
@@ -363,9 +363,10 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
                 DrawVector3(nameof(Transform.position), vector3 => SelectedTransform.position = vector3, () => SelectedTransform.position, -5, 5);
                 DrawVector3(nameof(Transform.localPosition), vector3 => SelectedTransform.localPosition = vector3, () => SelectedTransform.localPosition, -5, 5);
+                DrawVector3(nameof(Transform.lossyScale), vector3 => SelectedTransform.SetLossyScale(vector3), () => SelectedTransform.lossyScale, 0.00001f, 5);
                 DrawVector3(nameof(Transform.localScale), vector3 => SelectedTransform.localScale = vector3, () => SelectedTransform.localScale, 0.00001f, 5);
                 DrawVector3(nameof(Transform.eulerAngles), vector3 => SelectedTransform.eulerAngles = vector3, () => SelectedTransform.eulerAngles, 0, 360);
-                DrawVector3("localEuler", vector3 => SelectedTransform.localEulerAngles = vector3, () => SelectedTransform.localEulerAngles, 0, 360);
+                DrawVector3(nameof(Transform.localEulerAngles), vector3 => SelectedTransform.localEulerAngles = vector3, () => SelectedTransform.localEulerAngles, 0, 360);
             }
             GUILayout.EndVertical();
         }
