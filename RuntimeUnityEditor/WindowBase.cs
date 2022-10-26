@@ -1,28 +1,37 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using RuntimeUnityEditor.Core.Utils;
 using UnityEngine;
 
 namespace RuntimeUnityEditor.Core
 {
-    [SuppressMessage("ReSharper", "StaticMemberInGenericType")]
-    public abstract class WindowBase<T> where T : WindowBase<T>
+    //internal interface IWindow : IFeature
+    //{
+    //    Rect GetDefaultWindowRect();
+    //    string Title { get; set; }
+    //    int WindowId { get; set; }
+    //    Rect WindowRect { get; set; }
+    //}
+
+    public abstract class Window<T> : FeatureBase<T> where T : Window<T>
     {
+        protected const int ScreenOffset = 10;
+        protected const int SideWidth = 350;
+
         private const int TooltipWidth = 400;
+        // ReSharper disable StaticMemberInGenericType
         private static GUIStyle _tooltipStyle;
         private static GUIContent _tooltipContent;
         private static Texture2D _tooltipBackground;
+        // ReSharper restore StaticMemberInGenericType
 
-        public static T Instance { get; private set; }
-
-        public WindowBase()
+        protected Window()
         {
             WindowId = base.GetHashCode();
-            WindowBase<T>.Instance = (T)this;
         }
 
-        internal void DrawWindow()
+        protected override void OnGUI()
         {
+            //todo unnecessary, move to outer
             if (!Enabled) return;
 
             WindowRect = GUILayout.Window(WindowId, WindowRect, DrawContentsInt, Title);
@@ -101,9 +110,33 @@ namespace RuntimeUnityEditor.Core
             }
         }
 
+        protected override void VisibleChanged(bool visible)
+        {
+            if (visible)
+            {
+                // todo generate once for all
+                var screenRect = new Rect(
+                    ScreenOffset,
+                    ScreenOffset,
+                    Screen.width - ScreenOffset * 2,
+                    Screen.height - ScreenOffset * 2);
+                WindowRect = GetDefaultWindowRect(screenRect);
+            }
+        }
+
+        protected abstract Rect GetDefaultWindowRect(Rect screenRect);
+
+        public static Rect GetCenterWindowDefaultRect(Rect screenRect)
+        {
+            var centerWidth = (int)Mathf.Min(850, screenRect.width);
+            var centerX = (int)(screenRect.xMin + screenRect.width / 2 - Mathf.RoundToInt((float)centerWidth / 2));
+
+            var inspectorHeight = (int)(screenRect.height / 4) * 3;
+            return new Rect(centerX, screenRect.yMin, centerWidth, inspectorHeight);
+        }
+
         protected abstract void DrawContents();
 
-        public virtual bool Enabled { get; set; }
         public virtual string Title { get; set; }
         public int WindowId { get; set; }
         public virtual Rect WindowRect { get; set; }

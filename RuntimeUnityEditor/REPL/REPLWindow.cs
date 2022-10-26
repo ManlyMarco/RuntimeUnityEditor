@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -6,20 +7,19 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using RuntimeUnityEditor.Core.REPL.MCS;
-using RuntimeUnityEditor.Core.UI;
 using RuntimeUnityEditor.Core.Utils;
 using UnityEngine;
 
 namespace RuntimeUnityEditor.Core.REPL
 {
-    public sealed class ReplWindow : WindowBase<ReplWindow>
+    public sealed class ReplWindow : Window<ReplWindow>
     {
-        private readonly string _autostartFilename;
+        private string _autostartFilename;
         private static readonly char[] _inputSplitChars = { ',', ';', '<', '>', '(', ')', '[', ']', '=', '|', '&' };
 
         private const int HistoryLimit = 50;
 
-        private readonly ScriptEvaluator _evaluator;
+        private ScriptEvaluator _evaluator;
 
         private readonly List<string> _history = new List<string>();
         private int _historyPosition;
@@ -57,12 +57,16 @@ namespace RuntimeUnityEditor.Core.REPL
         private readonly List<Suggestion> _suggestions = new List<Suggestion>();
 
         private const string SnippletSeparator = "/****************************************/";
-        private readonly string _snippletFilename;
+        private string _snippletFilename;
         private readonly List<string> _savedSnipplets = new List<string>();
         private bool _snippletsShown;
 
-        public ReplWindow(string configPath)
+
+        protected override void Initialize(RuntimeUnityEditorCore.InitSettings initSettings)
         {
+            if (!UnityFeatureHelper.SupportsRepl) throw new InvalidOperationException("mcs is not supported on this Unity version");
+
+            var configPath = initSettings.ConfigPath;
             _autostartFilename = Path.Combine(configPath, "RuntimeUnityEditor.Autostart.cs");
             _snippletFilename = Path.Combine(configPath, "RuntimeUnityEditor.Snipplets.cs");
             Title = "C# REPL Console";
@@ -70,6 +74,24 @@ namespace RuntimeUnityEditor.Core.REPL
             _sb.AppendLine("Welcome to C# REPL (read-evaluate-print loop)! Enter \"help\" to get a list of common methods.");
 
             _evaluator = new ScriptEvaluator(new StringWriter(_sb)) { InteractiveBaseClass = typeof(REPL) };
+
+            // todo save whole ui state in a generic way
+            _onEnabledChanged = initSettings.RegisterSetting("General", "Show REPL console", true, "", x => Enabled = x);
+
+            initSettings.PluginMonoBehaviour.StartCoroutine(DelayedReplSetup());
+        }
+
+        private IEnumerator DelayedReplSetup()
+        {
+            yield return null;
+            try
+            {
+                RunEnvSetup();
+            }
+            catch (Exception ex)
+            {
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "Failed to initialize REPL environment - " + ex.Message);
+            }
         }
 
         public void RunEnvSetup()
@@ -104,6 +126,18 @@ namespace RuntimeUnityEditor.Core.REPL
         private bool _refocus;
         private int _refocusCursorIndex = -1;
         private int _refocusSelectIndex;
+
+        protected override Rect GetDefaultWindowRect(Rect screenRect)
+        {
+            // todo make a central window size manager thing with zones
+            var centerWidth = (int)Mathf.Min(850, screenRect.width);
+            var centerX = (int)(screenRect.xMin + screenRect.width / 2 - Mathf.RoundToInt((float)centerWidth / 2));
+            var inspectorHeight = (int)(screenRect.height / 4) * 3;
+
+            const int replPadding = 8;
+
+            return new Rect(centerX, screenRect.yMin + inspectorHeight + replPadding, centerWidth, screenRect.height - inspectorHeight - replPadding);
+        }
 
         protected override void DrawContents()
         {
@@ -511,9 +545,10 @@ namespace RuntimeUnityEditor.Core.REPL
                 if (base.Enabled != value)
                 {
                     base.Enabled = value;
-                    RuntimeUnityEditorCore.Instance.OnSettingsChanged();
+                    _onEnabledChanged?.Invoke(value);
                 }
             }
         }
+        private Action<bool> _onEnabledChanged;
     }
 }

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using RuntimeUnityEditor.Core.Inspector.Entries;
+using RuntimeUnityEditor.Core.ObjectTree;
 using RuntimeUnityEditor.Core.Utils;
 using UnityEngine;
 using Component = UnityEngine.Component;
@@ -109,20 +110,27 @@ namespace RuntimeUnityEditor.Core.Inspector
 
                     if (objectToOpen is Component cmp)
                     {
-                        _fieldCache.Add(new CallbackCacheEntry("Open in Scene Object Browser",
-                            "Navigate to GameObject this Component is attached to",
-                            () => Inspector._treeListShowCallback(cmp.transform)));
+                        if (ObjectTreeViewer.Initialized)
+                        {
+                            _fieldCache.Add(new CallbackCacheEntry("Open in Scene Object Browser",
+                                                                   "Navigate to GameObject this Component is attached to",
+                                                                   () => ObjectTreeViewer.Instance.SelectAndShowObject(cmp.transform)));
+                        }
 
                         if (objectToOpen is UnityEngine.UI.Image img)
                             _fieldCache.Add(GetExportTexEntry(img.mainTexture));
                     }
                     else if (objectToOpen is GameObject castedObj)
                     {
-                        _fieldCache.Add(new CallbackCacheEntry("Open in Scene Object Browser",
-                            "Navigate to this object in the Scene Object Browser",
-                            () => Inspector._treeListShowCallback(castedObj.transform)));
+                        if (ObjectTreeViewer.Initialized)
+                        {
+                            _fieldCache.Add(new CallbackCacheEntry("Open in Scene Object Browser",
+                                                                   "Navigate to this object in the Scene Object Browser",
+                                                                   () => ObjectTreeViewer.Instance.SelectAndShowObject(castedObj.transform)));
+                        }
+
                         _fieldCache.Add(new ReadonlyCacheEntry("Child objects",
-                            castedObj.transform.Cast<Transform>().ToArray()));
+                                                               castedObj.transform.Cast<Transform>().ToArray()));
                         _fieldCache.Add(new ReadonlyCacheEntry("Components", castedObj.GetComponents<Component>()));
                     }
                     else if (objectToOpen is Texture tex)

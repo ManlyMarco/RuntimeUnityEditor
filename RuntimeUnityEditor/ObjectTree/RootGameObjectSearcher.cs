@@ -11,7 +11,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
     /// <summary>
     /// Keeps track of root gameobjects and allows searching objects in the scene
     /// </summary>
-    public class GameObjectSearcher
+    public class RootGameObjectSearcher
     {
         private List<GameObject> _cachedRootGameObjects;
         private List<GameObject> _searchResults;

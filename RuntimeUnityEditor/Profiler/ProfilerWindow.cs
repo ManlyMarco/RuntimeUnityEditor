@@ -12,15 +12,15 @@ using UnityEngine;
 
 namespace RuntimeUnityEditor.Core.Profiler
 {
-    public sealed class ProfilerWindow : WindowBase<ProfilerWindow>
+    public sealed class ProfilerWindow : Window<ProfilerWindow>
     {
         private const string OnGuiMethodName = "OnGUI";
         private static readonly string[] _orderingStrings = { "#", "Time", "Memory", "Name" };
-        private static readonly GUILayoutOption[] _cGcW = { GUILayout.MinWidth(50),GUILayout.MaxWidth(50) };
-        private static readonly GUILayoutOption[] _cOrderW = { GUILayout.MinWidth(30),GUILayout.MaxWidth(30) };
-        private static readonly GUILayoutOption[] _cRanHeaderW = { GUILayout.MinWidth(43),GUILayout.MaxWidth(43) };
-        private static readonly GUILayoutOption[] _cRanW2 = { GUILayout.MinWidth(25),GUILayout.MaxWidth(25) };
-        private static readonly GUILayoutOption[] _cTicksW = { GUILayout.MinWidth(50),GUILayout.MaxWidth(50) };
+        private static readonly GUILayoutOption[] _cGcW = { GUILayout.MinWidth(50), GUILayout.MaxWidth(50) };
+        private static readonly GUILayoutOption[] _cOrderW = { GUILayout.MinWidth(30), GUILayout.MaxWidth(30) };
+        private static readonly GUILayoutOption[] _cRanHeaderW = { GUILayout.MinWidth(43), GUILayout.MaxWidth(43) };
+        private static readonly GUILayoutOption[] _cRanW2 = { GUILayout.MinWidth(25), GUILayout.MaxWidth(25) };
+        private static readonly GUILayoutOption[] _cTicksW = { GUILayout.MinWidth(50), GUILayout.MaxWidth(50) };
         private static readonly GUILayoutOption[] _expandW = { GUILayout.ExpandWidth(true) };
         private static readonly GUILayoutOption[] _expandWno = { GUILayout.ExpandWidth(false) };
         private static readonly GUIContent _cColOrder = new GUIContent("#", "Relative order of execution in a frame. Methods are called one by one on the main unity thread in this order.\n\nMethods that did not run during this frame are also included, so this number does not equal how many methods were called on this frame.");
@@ -47,11 +47,16 @@ namespace RuntimeUnityEditor.Core.Profiler
         private static Vector2 _scrollPos;
         private static int _singleObjectTreeItemHeight;
 
-        public ProfilerWindow()
+        protected override void Initialize(RuntimeUnityEditorCore.InitSettings initSettings)
         {
             Title = "Profiler";
 
             RuntimeUnityEditorCore.PluginObject.StartCoroutine(FrameEndCo());
+        }
+
+        protected override Rect GetDefaultWindowRect(Rect screenRect)
+        {
+            return GetCenterWindowDefaultRect(screenRect);
         }
 
         protected override void DrawContents()

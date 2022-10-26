@@ -1,4 +1,5 @@
-﻿using BepInEx;
+﻿using System;
+using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using RuntimeUnityEditor.Core;
@@ -10,53 +11,17 @@ namespace RuntimeUnityEditor.Bepin5
     [BepInPlugin(RuntimeUnityEditorCore.GUID, "Runtime Unity Editor", RuntimeUnityEditorCore.Version)]
     public class RuntimeUnityEditor5 : BaseUnityPlugin
     {
-        public ConfigEntry<string> DnSpyPath { get; private set; }
-        public ConfigEntry<string> DnSpyArgs { get; private set; }
-        public ConfigEntry<bool> ShowRepl { get; private set; }
-        public ConfigEntry<bool> EnableMouseInspector { get; private set; }
-        public ConfigEntry<KeyboardShortcut> Hotkey { get; private set; }
+        [Obsolete("No longer used", true)] public ConfigEntry<string> DnSpyPath { get; private set; }
+        [Obsolete("No longer used", true)] public ConfigEntry<string> DnSpyArgs { get; private set; }
+        [Obsolete("No longer used", true)] public ConfigEntry<bool> ShowRepl { get; private set; }
+        [Obsolete("No longer used", true)] public ConfigEntry<bool> EnableMouseInspector { get; private set; }
+        [Obsolete("No longer used", true)] public ConfigEntry<KeyboardShortcut> Hotkey { get; private set; }
 
         public static RuntimeUnityEditorCore Instance { get; private set; }
 
-        private void OnGUI()
-        {
-            Instance.OnGUI();
-        }
-
         private void Start()
         {
-            Instance = new RuntimeUnityEditorCore(this, new Logger5(Logger), Paths.ConfigPath);
-
-            DnSpyPath = Config.Bind("Inspector", "Path to dnSpy.exe", string.Empty, "Full path to dnSpy that will enable integration with Inspector. When correctly configured, you will see a new ^ buttons that will open the members in dnSpy.");
-            DnSpyPath.SettingChanged += (sender, args) => DnSpyHelper.DnSpyPath = DnSpyPath.Value;
-            DnSpyHelper.DnSpyPath = DnSpyPath.Value;
-
-            DnSpyArgs = Config.Bind("Inspector", "Optional dnSpy arguments", string.Empty, "Additional parameters that are added to the end of each call to dnSpy.");
-            DnSpyArgs.SettingChanged += (sender, args) => DnSpyHelper.DnSpyArgs = DnSpyArgs.Value;
-            DnSpyHelper.DnSpyArgs = DnSpyArgs.Value;
-
-            if (Instance.Repl != null)
-            {
-                ShowRepl = Config.Bind("General", "Show REPL console", true);
-                ShowRepl.SettingChanged += (sender, args) => Instance.ShowRepl = ShowRepl.Value;
-                Instance.ShowRepl = ShowRepl.Value;
-            }
-
-            EnableMouseInspector = Config.Bind("General", "Enable Mouse Inspector", true);
-            EnableMouseInspector.SettingChanged += (sender, args) => Instance.EnableMouseInspect = EnableMouseInspector.Value;
-            Instance.EnableMouseInspect = EnableMouseInspector.Value;
-
-            Hotkey = Config.Bind("General", "Open/close runtime editor", new KeyboardShortcut(KeyCode.F12));
-            Hotkey.SettingChanged += (sender, args) => Instance.ShowHotkey = Hotkey.Value.MainKey;
-            Instance.ShowHotkey = Hotkey.Value.MainKey;
-
-            Instance.SettingsChanged += (sender, args) =>
-            {
-                Hotkey.Value = new KeyboardShortcut(Instance.ShowHotkey);
-                if (ShowRepl != null) ShowRepl.Value = Instance.ShowRepl;
-                DnSpyArgs.Value = DnSpyHelper.DnSpyArgs;
-                EnableMouseInspector.Value = Instance.EnableMouseInspect;
-            };
+            Instance = new RuntimeUnityEditorCore(new Bep5InitSettings(this));
         }
 
         private void Update()
@@ -67,6 +32,34 @@ namespace RuntimeUnityEditor.Bepin5
         private void LateUpdate()
         {
             Instance.LateUpdate();
+        }
+
+        private void OnGUI()
+        {
+            Instance.OnGUI();
+        }
+
+        private sealed class Bep5InitSettings : RuntimeUnityEditorCore.InitSettings
+        {
+            private readonly RuntimeUnityEditor5 _instance;
+
+            public Bep5InitSettings(RuntimeUnityEditor5 instance)
+            {
+                _instance = instance;
+                LoggerWrapper = new Logger5(_instance.Logger);
+            }
+
+            public override Action<T> RegisterSetting<T>(string category, string name, T defaultValue, string description, Action<T> onValueUpdated)
+            {
+                var s = _instance.Config.Bind(category, name, defaultValue, description);
+                s.SettingChanged += (sender, args) => onValueUpdated(s.Value);
+                onValueUpdated(s.Value);
+                return x => s.Value = x;
+            }
+
+            public override MonoBehaviour PluginMonoBehaviour => _instance;
+            public override ILoggerWrapper LoggerWrapper { get; }
+            public override string ConfigPath => Paths.ConfigPath;
         }
 
         private sealed class Logger5 : ILoggerWrapper

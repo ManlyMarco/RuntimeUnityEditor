@@ -8,8 +8,15 @@ using RuntimeUnityEditor.Core.Utils;
 
 namespace RuntimeUnityEditor.Core
 {
-    public static class DnSpyHelper
+    public class DnSpyHelper : FeatureBase<DnSpyHelper>
     {
+        protected override void Initialize(RuntimeUnityEditorCore.InitSettings initSettings)
+        {
+            initSettings.RegisterSetting("Inspector", "Path to dnSpy.exe", string.Empty, "Full path to dnSpy that will enable integration with Inspector. When correctly configured, you will see a new ^ buttons that will open the members in dnSpy.", x => DnSpyPath = x);
+
+            initSettings.RegisterSetting("Inspector", "Optional dnSpy arguments", string.Empty, "Additional parameters that are added to the end of each call to dnSpy.", x => DnSpyArgs = x);
+        }
+
         private static string _dnSpyPath;
         public static string DnSpyPath
         {

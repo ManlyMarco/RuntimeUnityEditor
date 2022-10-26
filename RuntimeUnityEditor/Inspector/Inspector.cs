@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using RuntimeUnityEditor.Core.Inspector.Entries;
+using RuntimeUnityEditor.Core.ObjectTree;
 using RuntimeUnityEditor.Core.Utils;
 using UnityEngine;
 
 namespace RuntimeUnityEditor.Core.Inspector
 {
-    public sealed partial class Inspector : WindowBase<Inspector>
+    public sealed partial class Inspector : Window<Inspector>
     {
         private const int InspectorRecordHeight = 25;
         private readonly GUILayoutOption[] _inspectorTypeWidth = { GUILayout.Width(170), GUILayout.MaxWidth(170) };
@@ -35,6 +36,11 @@ namespace RuntimeUnityEditor.Core.Inspector
             }
         }
 
+        protected override void Initialize(RuntimeUnityEditorCore.InitSettings initSettings)
+        {
+            Title = "Inspector";
+        }
+
         private bool _focusSearchBox;
         private const string SearchBoxName = "InspectorFilterBox";
 
@@ -50,14 +56,6 @@ namespace RuntimeUnityEditor.Core.Inspector
                 var inspectorStackEntryBase = GetCurrentTab()?.CurrentStackItem;
                 if (inspectorStackEntryBase != null) inspectorStackEntryBase.SearchString = value;
             }
-        }
-
-        private static Action<Transform> _treeListShowCallback;
-
-        public Inspector(Action<Transform> treeListShowCallback)
-        {
-            _treeListShowCallback = treeListShowCallback ?? throw new ArgumentNullException(nameof(treeListShowCallback));
-            Title = "Inspector";
         }
 
         private void DrawVariableNameEnterButton(ICacheEntry field)
@@ -120,6 +118,11 @@ namespace RuntimeUnityEditor.Core.Inspector
             if (GetCurrentTab()?.CurrentStackItem is InstanceStackEntry se)
                 return se.Instance;
             return null;
+        }
+
+        protected override Rect GetDefaultWindowRect(Rect screenRect)
+        {
+            return GetCenterWindowDefaultRect(screenRect);
         }
 
         protected override void DrawContents()

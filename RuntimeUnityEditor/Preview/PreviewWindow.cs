@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace RuntimeUnityEditor.Core.Preview
 {
-    public sealed class PreviewWindow : WindowBase<PreviewWindow>
+    public sealed class PreviewWindow : Window<PreviewWindow>
     {
         private object _objToDisplay;
         private Vector2 _scrollPos;
@@ -19,6 +19,11 @@ namespace RuntimeUnityEditor.Core.Preview
             Title = "Object preview window - " + (objName ?? "NULL");
             
             Enabled = true;
+        }
+
+        protected override Rect GetDefaultWindowRect(Rect screenRect)
+        {       
+            return new Rect(screenRect.xMin, screenRect.yMin, SideWidth, SideWidth);
         }
 
         protected override void DrawContents()
@@ -53,6 +58,11 @@ namespace RuntimeUnityEditor.Core.Preview
             }
             GUILayout.EndVertical();
 
+        }
+
+        protected override void Initialize(RuntimeUnityEditorCore.InitSettings initSettings)
+        {
+            Title = "Object preview window - Empty";
         }
     }
 }

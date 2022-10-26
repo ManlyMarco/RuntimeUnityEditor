@@ -14,11 +14,8 @@ using Object = UnityEngine.Object;
 
 namespace RuntimeUnityEditor.Core.ObjectTree
 {
-    public sealed class ObjectTreeViewer : WindowBase<ObjectTreeViewer>
+    public sealed class ObjectTreeViewer : Window<ObjectTreeViewer>
     {
-        internal Action<InspectorStackEntryBase[]> InspectorOpenCallback;
-        internal Action<Transform> TreeSelectionChangedCallback;
-
         private readonly HashSet<GameObject> _openedObjects = new HashSet<GameObject>();
         private Transform _selectedTransform;
 
@@ -30,12 +27,14 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         private bool _scrollTreeToSelected;
         private int _scrollTarget;
 
-        private readonly GameObjectSearcher _gameObjectSearcher;
+        private RootGameObjectSearcher _gameObjectSearcher;
         private readonly Dictionary<Image, Texture2D> _imagePreviewCache = new Dictionary<Image, Texture2D>();
         private readonly GUILayoutOption _drawVector3FieldWidth = GUILayout.Width(38);
         private readonly GUILayoutOption _drawVector3FieldHeight = GUILayout.Height(19);
         private readonly GUILayoutOption _drawVector3SliderHeight = GUILayout.Height(10);
         private readonly GUILayoutOption _drawVector3SliderWidth = GUILayout.Width(33);
+        
+        public event Action<Transform> TreeSelectionChanged;
 
         public void SelectAndShowObject(Transform target)
         {
@@ -54,14 +53,11 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             Enabled = true;
         }
 
-        public ObjectTreeViewer(MonoBehaviour pluginObject, GameObjectSearcher gameObjectSearcher)
+        protected override void Initialize(RuntimeUnityEditorCore.InitSettings initSettings)
         {
-            if (pluginObject == null) throw new ArgumentNullException(nameof(pluginObject));
-            if (gameObjectSearcher == null) throw new ArgumentNullException(nameof(gameObjectSearcher));
-
             Title = "Scene Browser - RuntimeUnityEditor v" + RuntimeUnityEditorCore.Version;
-            _gameObjectSearcher = gameObjectSearcher;
-            pluginObject.StartCoroutine(SetWireframeCo());
+            _gameObjectSearcher = new RootGameObjectSearcher();
+            RuntimeUnityEditorCore.PluginObject.StartCoroutine(SetWireframeCo());
         }
 
         private bool _wireframe;
@@ -106,7 +102,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 {
                     _selectedTransform = value;
                     _searchTextComponents = _gameObjectSearcher.IsSearching() ? _searchText : "";
-                    TreeSelectionChangedCallback?.Invoke(_selectedTransform);
+                    TreeSelectionChanged?.Invoke(_selectedTransform);
                 }
             }
         }
@@ -116,9 +112,13 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             _imagePreviewCache.Clear();
         }
 
-        private void OnInspectorOpen(params InspectorStackEntryBase[] items)
+        private static void OnInspectorOpen(params InspectorStackEntryBase[] items)
         {
-            InspectorOpenCallback.Invoke(items);
+            for (var i = 0; i < items.Length; i++)
+            {
+                var stackEntry = items[i]; 
+                Inspector.Inspector.Instance.Push(stackEntry, i == 0);
+            }
         }
 
         public override Rect WindowRect
@@ -322,7 +322,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                         if (component == null)
                             continue;
 
-                        if (!string.IsNullOrEmpty(_searchTextComponents) && !GameObjectSearcher.SearchInComponent(_searchTextComponents, component, false))
+                        if (!string.IsNullOrEmpty(_searchTextComponents) && !RootGameObjectSearcher.SearchInComponent(_searchTextComponents, component, false))
                             continue;
 
                         DrawSingleComponent(component);
@@ -422,7 +422,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 {
                     var transform = component.transform;
                     OnInspectorOpen(new InstanceStackEntry(transform, transform.name),
-                        new InstanceStackEntry(component, component.GetType().FullName));
+                                    new InstanceStackEntry(component, component.GetType().FullName));
                 }
 
                 switch (component)
@@ -666,7 +666,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             GUILayout.EndHorizontal();
         }
 
-        public void Update()
+        protected override void Update()
         {
             if (_scrollTreeToSelected && _scrollTarget > 0)
             {
@@ -674,6 +674,22 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 _treeScrollPosition.y = _scrollTarget;
                 _scrollTarget = 0;
             }
+
+            _gameObjectSearcher.Refresh(false, null);
+        }
+        
+        protected override Rect GetDefaultWindowRect(Rect screenRect)
+        {
+            var treeViewHeight = screenRect.height;
+            return new Rect(screenRect.xMax - SideWidth, screenRect.yMin, SideWidth, treeViewHeight);
+        }
+
+        protected override void VisibleChanged(bool visible)
+        {
+            base.VisibleChanged(visible);
+
+            if (visible)
+                _gameObjectSearcher.Refresh(true, null);
         }
     }
 }

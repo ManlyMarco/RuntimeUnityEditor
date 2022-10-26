@@ -4,20 +4,20 @@ using UnityEngine;
 namespace RuntimeUnityEditor.Core.Utils
 {
     // Based on https://github.com/sinai-dev/CppExplorer/blob/master/src/Menu/InspectUnderMouse.cs (MIT License)
-    public class MouseInspect
+    public class MouseInspect : FeatureBase<MouseInspect>
     {
-        public static bool Enable { get; set; }
-
         private static Transform _objUnderMouse;
         private static string _hoverText;
         private static bool _clickedOnce;
 
-        public static void Update()
+        protected override void Initialize(RuntimeUnityEditorCore.InitSettings initSettings)
         {
-            if (Enable)
-            {
-                InspectRaycast();
-            }
+            initSettings.RegisterSetting("General", "Enable Mouse Inspector", true, "", x => Enabled = x);
+        }
+
+        protected override void Update()
+        {
+            InspectRaycast();
         }
 
         private static void InspectRaycast()
@@ -51,9 +51,9 @@ namespace RuntimeUnityEditor.Core.Utils
             }
         }
 
-        public static void OnGUI()
+        protected override void OnGUI()
         {
-            if (Enable && _objUnderMouse != null)
+            if (_objUnderMouse != null)
             {
                 var pos = UnityInput.Current.mousePosition;
                 var rect = new Rect(pos.x - (int)(Screen.width / 2), Screen.height - pos.y - 50, Screen.width, 50);
