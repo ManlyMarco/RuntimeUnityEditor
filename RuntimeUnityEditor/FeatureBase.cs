@@ -78,7 +78,7 @@ namespace RuntimeUnityEditor.Core
         }
         void IFeature.OnVisibleChanged(bool visible)
         {
-            if (_initialized && Enabled)
+            if (_initialized)
             {
                 try
                 {

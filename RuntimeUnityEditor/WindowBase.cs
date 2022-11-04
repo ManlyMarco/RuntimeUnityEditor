@@ -4,14 +4,6 @@ using UnityEngine;
 
 namespace RuntimeUnityEditor.Core
 {
-    //internal interface IWindow : IFeature
-    //{
-    //    Rect GetDefaultWindowRect();
-    //    string Title { get; set; }
-    //    int WindowId { get; set; }
-    //    Rect WindowRect { get; set; }
-    //}
-
     public abstract class Window<T> : FeatureBase<T> where T : Window<T>
     {
         protected const int ScreenOffset = 10;
@@ -94,7 +86,7 @@ namespace RuntimeUnityEditor.Core
                 }
 
                 _tooltipContent.text = GUI.tooltip;
-                var height = _tooltipStyle.CalcHeight(_tooltipContent, 400) + 10;
+                var height = _tooltipStyle.CalcHeight(_tooltipContent, TooltipWidth) + 10;
 
                 var currentEvent = Event.current;
 

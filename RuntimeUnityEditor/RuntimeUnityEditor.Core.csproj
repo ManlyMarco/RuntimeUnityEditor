@@ -83,12 +83,20 @@
       <HintPath>..\packages\IllusionLibs.HoneySelect.UnityEngine.UI.5.3.5\lib\net35\UnityEngine.UI.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Vectrosity, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\IllusionLibs.HoneySelect.Vectrosity.2017.6.30\lib\net35\Vectrosity.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Features\CursorUnlocker.cs" />
+    <Compile Include="FeatureBase.cs" />
+    <Compile Include="Gizmos\lib\Constants.cs" />
+    <Compile Include="Gizmos\lib\Drawer.cs" />
+    <Compile Include="Gizmos\lib\Drawers\CubeDrawer.cs" />
+    <Compile Include="Gizmos\lib\Drawers\LineDrawer.cs" />
+    <Compile Include="Gizmos\lib\Drawers\ArcDrawer.cs" />
+    <Compile Include="Gizmos\lib\Drawers\PolygonDrawer.cs" />
+    <Compile Include="Gizmos\lib\Drawers\SquareDrawer.cs" />
+    <Compile Include="Gizmos\lib\Element.cs" />
+    <Compile Include="Gizmos\lib\Gizmos.cs" />
+    <Compile Include="Gizmos\lib\GizmosInstance.cs" />
     <Compile Include="Utils\MovingAverage.cs" />
     <Compile Include="WindowBase.cs" />
     <Compile Include="Profiler\ProfilerWindow.cs" />
@@ -98,9 +106,7 @@
     <Compile Include="Inspector\Inspector.InspectorTab.cs" />
     <Compile Include="Preview\PreviewWindow.cs" />
     <Compile Include="Utils\AssetBundleManagerHelper.cs" />
-    <Compile Include="ObjectTree\GameObjectSearcher.cs" />
-    <Compile Include="Gizmos\IGizmoEntry.cs" />
-    <Compile Include="Gizmos\RendererGizmo.cs" />
+    <Compile Include="ObjectTree\RootGameObjectSearcher.cs" />
     <Compile Include="ILoggerWrapper.cs" />
     <Compile Include="Inspector\Entries\Contents\CallbackCacheEntey.cs" />
     <Compile Include="Inspector\Entries\Contents\ReadonlyListCacheEntry.cs" />

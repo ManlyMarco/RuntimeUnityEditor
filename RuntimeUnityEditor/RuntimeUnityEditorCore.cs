@@ -70,7 +70,7 @@ namespace RuntimeUnityEditor.Core
 
         //private readonly List<IWindow> _initializedWindows = new List<IWindow>();
 
-        internal RuntimeUnityEditorCore(InitSettings initSettings)
+        public RuntimeUnityEditorCore(InitSettings initSettings)
         {
             if (Instance != null)
                 throw new InvalidOperationException("Can only create one instance of the Core object");
