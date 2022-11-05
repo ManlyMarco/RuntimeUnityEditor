@@ -33,7 +33,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         private readonly GUILayoutOption _drawVector3FieldHeight = GUILayout.Height(19);
         private readonly GUILayoutOption _drawVector3SliderHeight = GUILayout.Height(10);
         private readonly GUILayoutOption _drawVector3SliderWidth = GUILayout.Width(33);
-        
+
         public event Action<Transform> TreeSelectionChanged;
 
         public void SelectAndShowObject(Transform target)
@@ -57,27 +57,53 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         {
             Title = "Scene Browser - RuntimeUnityEditor v" + RuntimeUnityEditorCore.Version;
             _gameObjectSearcher = new RootGameObjectSearcher();
-            RuntimeUnityEditorCore.PluginObject.StartCoroutine(SetWireframeCo());
         }
 
-        private bool _wireframe;
-        private bool _actuallyInsideOnGui;
-
-        private readonly WaitForEndOfFrame _waitForEndOfFrame = new WaitForEndOfFrame();
-        private IEnumerator SetWireframeCo()
+        private static bool _wireframe;
+        private static readonly Dictionary<Camera, CameraClearFlags> _origFlags = new Dictionary<Camera, CameraClearFlags>();
+        private static bool Wireframe
         {
-            while (true)
+            get => _wireframe;
+            set
             {
-                yield return null;
+                if (_wireframe != value)
+                {
+                    _wireframe = value;
+                    if (value)
+                    {
+                        Camera.onPreRender += OnPreRender;
+                        Camera.onPostRender += OnPostRender;
+                    }
+                    else
+                    {
+                        Camera.onPreRender -= OnPreRender;
+                        Camera.onPostRender -= OnPostRender;
+                        GL.wireframe = false;
 
-                _actuallyInsideOnGui = true;
+                        foreach (var origFlag in _origFlags) origFlag.Key.clearFlags = origFlag.Value;
+                        _origFlags.Clear();
+                    }
+                }
+            }
+        }
+        private static void OnPostRender(Camera cam)
+        {
+            if (Wireframe)
+            {
+                cam.clearFlags = _origFlags[cam];
+                GL.wireframe = false;
+            }
+        }
+        private static void OnPreRender(Camera cam)
+        {
+            if (Wireframe)
+            {
+                GL.wireframe = true;
+                
+                if(!_origFlags.ContainsKey(cam))
+                    _origFlags.Add(cam, cam.clearFlags);
 
-                yield return _waitForEndOfFrame;
-
-                if (GL.wireframe != _wireframe)
-                    GL.wireframe = _wireframe;
-
-                _actuallyInsideOnGui = false;
+                cam.clearFlags = CameraClearFlags.Color;
             }
         }
 
@@ -116,7 +142,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         {
             for (var i = 0; i < items.Length; i++)
             {
-                var stackEntry = items[i]; 
+                var stackEntry = items[i];
                 Inspector.Inspector.Instance.Push(stackEntry, i == 0);
             }
         }
@@ -209,9 +235,6 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
         protected override void DrawContents()
         {
-            if (_wireframe && _actuallyInsideOnGui && Event.current.type == EventType.layout)
-                GL.wireframe = false;
-
             GUILayout.BeginVertical();
             {
                 DisplayObjectTree();
@@ -285,7 +308,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
                 RuntimeUnityEditorCore.Instance.EnableMouseInspect = GUILayout.Toggle(RuntimeUnityEditorCore.Instance.EnableMouseInspect, "Mouse inspect");
 
-                _wireframe = GUILayout.Toggle(_wireframe, "Wireframe");
+                Wireframe = GUILayout.Toggle(Wireframe, "Wireframe");
             }
             GUILayout.EndHorizontal();
 
@@ -677,7 +700,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
             _gameObjectSearcher.Refresh(false, null);
         }
-        
+
         protected override Rect GetDefaultWindowRect(Rect screenRect)
         {
             var treeViewHeight = screenRect.height;
