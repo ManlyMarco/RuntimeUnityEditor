@@ -116,7 +116,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 if (_selectedTransform != value)
                 {
                     _selectedTransform = value;
-                    _searchTextComponents = _gameObjectSearcher.IsSearching() ? _searchText : "";
+                    //_searchTextComponents = _gameObjectSearcher.IsSearching() ? _searchText : "";
                     TreeSelectionChanged?.Invoke(_selectedTransform);
                 }
             }
@@ -633,20 +633,20 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 if (GUILayout.Button("Search scene"))
                 {
                     _gameObjectSearcher.Search(_searchText, false);
-                    _searchTextComponents = _searchText;
+                    //_searchTextComponents = _searchText;
                 }
 
                 if (Event.current.isKey && (Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter) && GUI.GetNameOfFocusedControl() == "searchbox")
                 {
                     _gameObjectSearcher.Search(_searchText, false);
-                    _searchTextComponents = _searchText;
+                    //_searchTextComponents = _searchText;
                     Event.current.Use();
                 }
 
                 if (GUILayout.Button("Deep scene"))
                 {
                     _gameObjectSearcher.Search(_searchText, true);
-                    _searchTextComponents = _searchText;
+                    //_searchTextComponents = _searchText;
                 }
 
                 if (GUILayout.Button("Search static"))
