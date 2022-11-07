@@ -116,7 +116,7 @@ namespace RuntimeUnityEditor.Core
                 WindowManager.Enabled = value;
 
                 for (var index = 0; index < _initializedFeatures.Count; index++)
-                    _initializedFeatures[index].OnVisibleChanged(value);
+                    _initializedFeatures[index].OnEditorShownChanged(value);
 
                 // todo safe invoke
                 //ShowChanged?.Invoke(this, EventArgs.Empty);

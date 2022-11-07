@@ -51,6 +51,8 @@ namespace RuntimeUnityEditor.Core.Profiler
         protected override void Initialize(InitSettings initSettings)
         {
             Title = "Profiler";
+            MinimumSize = new Vector2(570, 170);
+            Enabled = false;
 
             RuntimeUnityEditorCore.PluginObject.StartCoroutine(FrameEndCo());
         }

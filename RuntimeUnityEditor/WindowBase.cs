@@ -1,11 +1,21 @@
 ﻿using System;
+using System.Collections;
 using RuntimeUnityEditor.Core.Utils;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
 
 namespace RuntimeUnityEditor.Core
 {
-    public abstract class Window<T> : FeatureBase<T> where T : Window<T>
+    public interface IWindow : IFeature
+    {
+        string Title { get; set; }
+        int WindowId { get; set; }
+        Rect WindowRect { get; set; }
+        Vector2 MinimumSize { get; set; }
+        void ResetWindowRect();
+    }
+
+    public abstract class Window<T> : FeatureBase<T>, IWindow where T : Window<T>
     {
         protected const int ScreenOffset = 10;
         protected const int SideWidth = 350;
@@ -16,6 +26,8 @@ namespace RuntimeUnityEditor.Core
         private static GUIContent _tooltipContent;
         private static Texture2D _tooltipBackground;
         // ReSharper restore StaticMemberInGenericType
+
+        private bool _canShow;
 
         protected Window()
         {
@@ -31,10 +43,13 @@ namespace RuntimeUnityEditor.Core
 
         protected override void OnGUI()
         {
-            //todo unnecessary, move to outer
-            if (!Enabled) return;
+            if (!_canShow) return;
 
-            WindowRect = GUILayout.Window(WindowId, WindowRect, DrawContentsInt, Title);
+            var title = Title;
+#if DEBUG
+            title = $"{title} {WindowRect}";
+#endif
+            WindowRect = GUILayout.Window(WindowId, WindowRect, DrawContentsInt, title);
             if (WindowRect.width < MinimumSize.x)
             {
                 var rect = WindowRect;
@@ -110,18 +125,54 @@ namespace RuntimeUnityEditor.Core
             }
         }
 
+        protected override void OnVisibleChanged(bool visible)
+        {
+            // If the taskbar didn't have a chance to initialize yet, wait for a frame. Necessary to calculate free screen space.
+            if (visible && WindowManager.Instance.Height == 0)
+            {
+                // todo more efficient way?
+                IEnumerator DelayedVisible()
+                {
+                    yield return null;
+                    base.OnVisibleChanged(Visible);
+                }
+                RuntimeUnityEditorCore.PluginObject.StartCoroutine(DelayedVisible());
+            }
+            else
+            {
+                base.OnVisibleChanged(visible);
+            }
+        }
+
         protected override void VisibleChanged(bool visible)
         {
             if (visible)
             {
-                // todo generate once for all
-                var screenRect = new Rect(
-                    ScreenOffset,
-                    ScreenOffset,
-                    Screen.width - ScreenOffset * 2,
-                    Screen.height - ScreenOffset * 2);
-                WindowRect = GetDefaultWindowRect(screenRect);
+                if (!IsWindowRectValid())
+                    ResetWindowRect();
+
+                _canShow = true;
             }
+        }
+
+        public void ResetWindowRect()
+        {
+            var screenRect = new Rect(
+                x: ScreenOffset,
+                y: ScreenOffset,
+                width: Screen.width - ScreenOffset * 2,
+                height: Screen.height - ScreenOffset * 2 - WindowManager.Instance.Height);
+            WindowRect = GetDefaultWindowRect(screenRect);
+        }
+
+        private bool IsWindowRectValid()
+        {
+            return WindowRect.width >= MinimumSize.x &&
+                   WindowRect.height >= MinimumSize.y &&
+                   WindowRect.x < Screen.width - ScreenOffset &&
+                   WindowRect.y < Screen.height - ScreenOffset &&
+                   WindowRect.x >= -WindowRect.width + ScreenOffset &&
+                   WindowRect.y >= -WindowRect.height + ScreenOffset;
         }
 
         protected abstract Rect GetDefaultWindowRect(Rect screenRect);

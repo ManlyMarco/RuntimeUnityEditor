@@ -7,11 +7,12 @@ namespace RuntimeUnityEditor.Core
     public interface IFeature
     {
         bool Enabled { get; set; }
+        //bool Visible { get; }
         void OnInitialize(InitSettings initSettings);
         void OnUpdate();
         void OnLateUpdate();
         void OnOnGUI();
-        void OnVisibleChanged(bool visible);
+        void OnEditorShownChanged(bool visible);
         FeatureDisplayType DisplayType { get; }
         string DisplayName { get; }
     }
@@ -36,15 +37,45 @@ namespace RuntimeUnityEditor.Core
             FeatureBase<T>.Instance = (T)this;
         }
 
-        public virtual bool Enabled { get; set; }
-
         private protected string _displayName;
+        private protected bool _enabled;
+
+        /// <summary>
+        /// Name shown in taskbar
+        /// </summary>
         public virtual string DisplayName
         {
             get => _displayName ?? (_displayName = GetType().Name);
             set => _displayName = value;
         }
 
+        /// <summary>
+        /// If this instance is enabled and can be shown (if RUE is shown as a whole).
+        /// </summary>
+        public virtual bool Enabled
+        {
+            get => _enabled;
+            set
+            {
+                if(_enabled != value)
+                {
+                    var prevVisible = Visible;
+                    _enabled = value;
+                    var nowVisible = Visible;
+                    if (prevVisible != nowVisible)
+                        OnVisibleChanged(nowVisible);
+                }
+            }
+        }
+
+        /// <summary>
+        /// If this instance is actually shown on screen / has its events fired.
+        /// </summary>
+        public bool Visible => Enabled && RuntimeUnityEditorCore.Instance.Show;
+
+        /// <summary>
+        /// How this Feature is shown in taskbar
+        /// </summary>
         public FeatureDisplayType DisplayType { get; protected set; }
 
         void IFeature.OnInitialize(InitSettings initSettings)
@@ -97,21 +128,28 @@ namespace RuntimeUnityEditor.Core
                 }
             }
         }
-        void IFeature.OnVisibleChanged(bool visible)
+        void IFeature.OnEditorShownChanged(bool visible)
         {
             if (_initialized)
             {
-                try
-                {
-                    VisibleChanged(visible);
-                }
-                catch (Exception e)
-                {
-                    RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, e);
-                }
+                if (!Enabled) return;
+
+                OnVisibleChanged(visible);
             }
         }
-        
+
+        protected virtual void OnVisibleChanged(bool visible)
+        {
+            try
+            {
+                VisibleChanged(visible);
+            }
+            catch (Exception e)
+            {
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, e);
+            }
+        }
+
         protected abstract void Initialize(InitSettings initSettings);
         protected virtual void Update() { }
         protected virtual void LateUpdate() { }

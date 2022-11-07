@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Reflection;
-using RuntimeUnityEditor.Core.Utilities.Abstractions;
+using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
 
 namespace RuntimeUnityEditor.Core
@@ -33,6 +33,9 @@ namespace RuntimeUnityEditor.Core
                 if (_curLockState == null || _curVisible == null)
                     throw new InvalidOperationException("Unsupported Cursor class");
             }
+
+            DisplayName = "Unlock cursor";
+            Enabled = true;
         }
 
         protected override void Update()
@@ -71,7 +74,6 @@ namespace RuntimeUnityEditor.Core
             {
                 _previousCursorLockState = _obsoleteCursor ? Convert.ToInt32((bool)_curLockState.GetValue(null, null)) : (int)_curLockState.GetValue(null, null);
                 _previousCursorVisible = (bool)_curVisible.GetValue(null, null);
-
             }
             else
             {

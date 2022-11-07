@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using HarmonyLib;
 using RuntimeUnityEditor.Core.Gizmos.lib;
 using RuntimeUnityEditor.Core.ObjectTree;
-using RuntimeUnityEditor.Core.Utilities.Abstractions;
+using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
-using static RuntimeUnityEditor.Core.RuntimeUnityEditorCore;
 
 namespace RuntimeUnityEditor.Core.Gizmos
 {
@@ -17,46 +16,41 @@ namespace RuntimeUnityEditor.Core.Gizmos
         protected override void Initialize(InitSettings initSettings)
         {
             Enabled = false;
+            DisplayName = "Gizmos";
             ObjectTreeViewer.Instance.TreeSelectionChanged += UpdateState;
         }
 
-        public override bool Enabled
+        protected override void VisibleChanged(bool visible)
         {
-            get => base.Enabled;
-            set
+            base.VisibleChanged(visible);
+
+            if (visible)
             {
-                if (base.Enabled != value)
-                {
-                    base.Enabled = value;
-
-                    if (value)
-                    {
-                        if (_gizmosInstance == null)
-                            _gizmosInstance = PluginObject.gameObject.AddComponent<GizmosInstance>();
-                        _gizmosInstance.enabled = true;
-                    }
-                    else if (_gizmosInstance != null)
-                        _gizmosInstance.enabled = false;
-
-                    lib.Gizmos.Enabled = value;
-                }
+                if (_gizmosInstance == null)
+                    _gizmosInstance = RuntimeUnityEditorCore.PluginObject.gameObject.AddComponent<GizmosInstance>();
+                _gizmosInstance.enabled = true;
             }
+            else if (_gizmosInstance != null)
+                _gizmosInstance.enabled = false;
+
+            lib.Gizmos.Enabled = visible;
         }
 
-        public static void DisplayControls()
-        {
-            if (Initialized)
-            {
-                GUILayout.BeginHorizontal(GUI.skin.box);
-                {
-                    GUILayout.Label("Gizmos");
-                    GUILayout.FlexibleSpace();
-                    Instance.Enabled = GUILayout.Toggle(Instance.Enabled, "Show selection");
-                    //ShowGizmosOutsideEditor = GUILayout.Toggle(ShowGizmosOutsideEditor, "When closed");
-                }
-                GUILayout.EndHorizontal();
-            }
-        }
+        //todo
+        //public static void DisplayControls()
+        //{
+        //    if (Initialized)
+        //    {
+        //        GUILayout.BeginHorizontal(GUI.skin.box);
+        //        {
+        //            GUILayout.Label("Gizmos");
+        //            GUILayout.FlexibleSpace();
+        //            Instance.Enabled = GUILayout.Toggle(Instance.Enabled, "Show selection");
+        //            //ShowGizmosOutsideEditor = GUILayout.Toggle(ShowGizmosOutsideEditor, "When closed");
+        //        }
+        //        GUILayout.EndHorizontal();
+        //    }
+        //}
 
         public void UpdateState(Transform rootTransform)
         {
@@ -137,30 +131,29 @@ namespace RuntimeUnityEditor.Core.Gizmos
                 lib.Gizmos.Bounds(rend.bounds, Color.green);
         }
 
-        //todo
         private static void DrawDynamicBoneColliderGizmo(Component obj)
         {
             if (obj == null) return;
 
             var tv = Traverse.Create(obj);
 
-            var m_Bound = (int)tv.Field("m_Bound").GetValue(); // Bound enum
-            var color = m_Bound == 0 ? Color.yellow : Color.red; // 0 = Bound.Outside
+            var mBound = (int)tv.Field("m_Bound").GetValue(); // Bound enum
+            var color = mBound == 0 ? Color.yellow : Color.red; // 0 = Bound.Outside
 
-            var m_Radius = tv.Field("m_Radius").GetValue<float>();
-            var m_Height = tv.Field("m_Height").GetValue<float>();
-            var m_Center = tv.Field("m_Center").GetValue<Vector3>();
-            var radius = m_Radius * Mathf.Abs(obj.transform.lossyScale.z);
-            var height = (m_Height - m_Radius) * 0.5f;
+            var mRadius = tv.Field("m_Radius").GetValue<float>();
+            var mHeight = tv.Field("m_Height").GetValue<float>();
+            var mCenter = tv.Field("m_Center").GetValue<Vector3>();
+            var radius = mRadius * Mathf.Abs(obj.transform.lossyScale.z);
+            var height = (mHeight - mRadius) * 0.5f;
             if (height <= 0f)
             {
-                lib.Gizmos.Sphere(obj.transform.TransformPoint(m_Center), radius, color);
+                lib.Gizmos.Sphere(obj.transform.TransformPoint(mCenter), radius, color);
                 return;
             }
-            var center = m_Center;
-            var center2 = m_Center;
-            var m_Direction = (int)tv.Field("m_Direction").GetValue(); // Direction enum
-            switch (m_Direction)
+            var center = mCenter;
+            var center2 = mCenter;
+            var mDirection = (int)tv.Field("m_Direction").GetValue(); // Direction enum
+            switch (mDirection)
             {
                 case 0: //Direction.X:
                     center.x -= height;

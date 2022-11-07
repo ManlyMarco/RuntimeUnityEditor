@@ -82,6 +82,8 @@ namespace RuntimeUnityEditor.Core.REPL
             initSettings.PluginMonoBehaviour.StartCoroutine(DelayedReplSetup());
 
             DisplayName = "REPL console";
+            MinimumSize = new Vector2(280, 130);
+            Enabled = false;
         }
 
         private IEnumerator DelayedReplSetup()

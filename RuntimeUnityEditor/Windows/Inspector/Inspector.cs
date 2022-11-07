@@ -25,20 +25,17 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         internal static int MaxWindowY => (int)Instance.WindowRect.height;
 
-        public override bool Enabled
+        protected override void VisibleChanged(bool visible)
         {
-            get => base.Enabled;
-            set
-            {
-                if (base.Enabled == value) return;
-                base.Enabled = value;
-                VariableFieldDrawer.ClearCache();
-            }
+            base.VisibleChanged(visible);
+            VariableFieldDrawer.ClearCache();
         }
 
         protected override void Initialize(InitSettings initSettings)
         {
             Title = "Inspector";
+            MinimumSize = new Vector2(570, 170);
+            Enabled = false;
         }
 
         private bool _focusSearchBox;

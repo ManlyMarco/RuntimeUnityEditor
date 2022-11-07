@@ -1,6 +1,5 @@
-﻿using RuntimeUnityEditor.Core.Utilities;
-using RuntimeUnityEditor.Core.Utilities.Abstractions;
-using RuntimeUnityEditor.Core.Utilities.UI;
+﻿using RuntimeUnityEditor.Core.Utils;
+using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
 
 namespace RuntimeUnityEditor.Core
@@ -15,6 +14,7 @@ namespace RuntimeUnityEditor.Core
         protected override void Initialize(InitSettings initSettings)
         {
             initSettings.RegisterSetting("General", "Enable Mouse Inspector", true, "", x => Enabled = x);
+            DisplayName = "Mouse inspect";
         }
 
         protected override void Update()

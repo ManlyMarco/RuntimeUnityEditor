@@ -6,8 +6,8 @@ using System.Linq;
 using RuntimeUnityEditor.Core.Gizmos;
 using RuntimeUnityEditor.Core.Inspector;
 using RuntimeUnityEditor.Core.Inspector.Entries;
-using RuntimeUnityEditor.Core.Utilities;
-using RuntimeUnityEditor.Core.Utilities.Abstractions;
+using RuntimeUnityEditor.Core.Utils;
+using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -56,7 +56,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
         protected override void Initialize(InitSettings initSettings)
         {
-            Title = "Scene Browser - RuntimeUnityEditor v" + RuntimeUnityEditorCore.Version;
+            Title = "Object Browser";
             _gameObjectSearcher = new RootGameObjectSearcher();
         }
 
@@ -100,23 +100,11 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             if (Wireframe)
             {
                 GL.wireframe = true;
-                
-                if(!_origFlags.ContainsKey(cam))
+
+                if (!_origFlags.ContainsKey(cam))
                     _origFlags.Add(cam, cam.clearFlags);
 
                 cam.clearFlags = CameraClearFlags.Color;
-            }
-        }
-
-        public override bool Enabled
-        {
-            get => base.Enabled;
-            set
-            {
-                if (value && !base.Enabled)
-                    ClearCaches();
-
-                base.Enabled = value;
             }
         }
 
@@ -301,21 +289,18 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             }
             GUILayout.EndHorizontal();
 
+            // todo move out
             GUILayout.BeginHorizontal(GUI.skin.box);
             {
                 GUI.changed = false;
                 var n = GUILayout.Toggle(Application.runInBackground, "Run in bg");
                 if (GUI.changed) Application.runInBackground = n;
-
-                RuntimeUnityEditorCore.Instance.EnableMouseInspect = GUILayout.Toggle(RuntimeUnityEditorCore.Instance.EnableMouseInspect, "Mouse inspect");
-
+                
                 Wireframe = GUILayout.Toggle(Wireframe, "Wireframe");
             }
             GUILayout.EndHorizontal();
 
             AssetBundleManagerHelper.DrawButtonIfAvailable();
-
-            GizmoDrawer.DisplayControls();
         }
 
         private void DisplayObjectProperties()
@@ -712,7 +697,9 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         {
             base.VisibleChanged(visible);
 
-            if (visible)
+            ClearCaches();
+
+            if (visible) 
                 _gameObjectSearcher.Refresh(true, null);
         }
     }
