@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using RuntimeUnityEditor.Core.Utilities.Abstractions;
 using UnityEngine;
 
 namespace RuntimeUnityEditor.Core
@@ -14,7 +15,7 @@ namespace RuntimeUnityEditor.Core
         private int _previousCursorLockState;
         private bool _previousCursorVisible;
 
-        protected override void Initialize(RuntimeUnityEditorCore.InitSettings initSettings)
+        protected override void Initialize(InitSettings initSettings)
         {
             // Reflection for compatibility with Unity 4.x
             var tCursor = typeof(Cursor);

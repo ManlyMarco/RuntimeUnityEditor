@@ -1,15 +1,26 @@
 ﻿using System;
+using RuntimeUnityEditor.Core.Utils;
+using RuntimeUnityEditor.Core.Utils.Abstractions;
 
 namespace RuntimeUnityEditor.Core
 {
-    internal interface IFeature
+    public interface IFeature
     {
         bool Enabled { get; set; }
-        void OnInitialize(RuntimeUnityEditorCore.InitSettings initSettings);
+        void OnInitialize(InitSettings initSettings);
         void OnUpdate();
         void OnLateUpdate();
         void OnOnGUI();
         void OnVisibleChanged(bool visible);
+        FeatureDisplayType DisplayType { get; }
+        string DisplayName { get; }
+    }
+
+    public enum FeatureDisplayType
+    {
+        Hidden,
+        Feature,
+        Window
     }
 
     public abstract class FeatureBase<T> : IFeature where T : FeatureBase<T>
@@ -21,12 +32,22 @@ namespace RuntimeUnityEditor.Core
 
         protected FeatureBase()
         {
+            DisplayType = FeatureDisplayType.Feature;
             FeatureBase<T>.Instance = (T)this;
         }
 
         public virtual bool Enabled { get; set; }
 
-        void IFeature.OnInitialize(RuntimeUnityEditorCore.InitSettings initSettings)
+        private protected string _displayName;
+        public virtual string DisplayName
+        {
+            get => _displayName ?? (_displayName = GetType().Name);
+            set => _displayName = value;
+        }
+
+        public FeatureDisplayType DisplayType { get; protected set; }
+
+        void IFeature.OnInitialize(InitSettings initSettings)
         {
             if (Initialized) throw new InvalidOperationException("The Feature is already initialized");
 
@@ -90,8 +111,8 @@ namespace RuntimeUnityEditor.Core
                 }
             }
         }
-
-        protected abstract void Initialize(RuntimeUnityEditorCore.InitSettings initSettings);
+        
+        protected abstract void Initialize(InitSettings initSettings);
         protected virtual void Update() { }
         protected virtual void LateUpdate() { }
         protected virtual void OnGUI() { }

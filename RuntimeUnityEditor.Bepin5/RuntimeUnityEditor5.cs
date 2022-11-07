@@ -3,8 +3,8 @@ using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using RuntimeUnityEditor.Core;
+using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
-using LogLevel = RuntimeUnityEditor.Core.LogLevel;
 
 namespace RuntimeUnityEditor.Bepin5
 {
@@ -39,7 +39,7 @@ namespace RuntimeUnityEditor.Bepin5
             Instance.OnGUI();
         }
 
-        private sealed class Bep5InitSettings : RuntimeUnityEditorCore.InitSettings
+        private sealed class Bep5InitSettings : InitSettings
         {
             private readonly RuntimeUnityEditor5 _instance;
 
@@ -71,9 +71,9 @@ namespace RuntimeUnityEditor.Bepin5
                 _logger = logger;
             }
 
-            public void Log(LogLevel logLogLevel, object content)
+            public void Log(Core.Utils.Abstractions.LogLevel logLevel, object content)
             {
-                _logger.Log((BepInEx.Logging.LogLevel)logLogLevel, content);
+                _logger.Log((BepInEx.Logging.LogLevel)logLevel, content);
             }
         }
     }

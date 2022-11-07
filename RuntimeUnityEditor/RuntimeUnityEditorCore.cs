@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using BepInEx;
 using RuntimeUnityEditor.Core.ObjectTree;
 using RuntimeUnityEditor.Core.Preview;
 using RuntimeUnityEditor.Core.Profiler;
 using RuntimeUnityEditor.Core.REPL;
 using RuntimeUnityEditor.Core.UI;
-using RuntimeUnityEditor.Core.Utils;
+using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
 
 namespace RuntimeUnityEditor.Core
@@ -22,6 +21,7 @@ namespace RuntimeUnityEditor.Core
         public PreviewWindow PreviewWindow => PreviewWindow.Initialized ? PreviewWindow.Instance : null;
         public ProfilerWindow ProfilerWindow => ProfilerWindow.Initialized ? ProfilerWindow.Instance : null;
         public ReplWindow Repl => ReplWindow.Initialized ? ReplWindow.Instance : null;
+        public WindowManager WindowManager => WindowManager.Instance;
 
         [Obsolete("No longer works", true)]
         public event EventHandler SettingsChanged;
@@ -102,8 +102,28 @@ namespace RuntimeUnityEditor.Core
                 //    _initializedWindows.Add(window);
             }
 
+            WindowManager.SetFeatures(_initializedFeatures);
+
             Logger.Log(LogLevel.Info, $"Successfully initialized {_initializedFeatures.Count}/{allFeatures.Count} features: {string.Join(", ", _initializedFeatures.Select(x => x.GetType().Name).ToArray())}");
         }
+
+        public bool Show
+        {
+            get => WindowManager.Enabled;
+            set
+            {
+                if (WindowManager.Enabled == value) return;
+                WindowManager.Enabled = value;
+
+                for (var index = 0; index < _initializedFeatures.Count; index++)
+                    _initializedFeatures[index].OnVisibleChanged(value);
+
+                // todo safe invoke
+                //ShowChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        //public event EventHandler ShowChanged;
 
         internal void OnGUI()
         {
@@ -119,25 +139,6 @@ namespace RuntimeUnityEditor.Core
                 GUI.skin = originalSkin;
             }
         }
-
-        public bool Show
-        {
-            get => TreeViewer.Enabled;
-            set
-            {
-                // todo decouple
-                if (TreeViewer.Enabled == value) return;
-                TreeViewer.Enabled = value;
-
-                for (var index = 0; index < _initializedFeatures.Count; index++)
-                    _initializedFeatures[index].OnVisibleChanged(value);
-
-                // todo safe invoke
-                //ShowChanged?.Invoke(this, EventArgs.Empty);
-            }
-        }
-
-        //public event EventHandler ShowChanged;
 
         internal void Update()
         {
@@ -158,34 +159,6 @@ namespace RuntimeUnityEditor.Core
                 for (var index = 0; index < _initializedFeatures.Count; index++)
                     _initializedFeatures[index].OnLateUpdate();
             }
-        }
-
-        public abstract class InitSettings
-        {
-            /// <summary>
-            /// Register a new persistent setting.
-            /// </summary>
-            /// <typeparam name="T">Type of the setting</typeparam>
-            /// <param name="category">Used for grouping</param>
-            /// <param name="name">Name/Key</param>
-            /// <param name="defaultValue">Initial value if setting was never changed</param>
-            /// <param name="description">What the setting does</param>
-            /// <param name="onValueUpdated">Called when the setting changes (except if changed by using the returned Func),
-            /// and immediately when registering the setting with either the default value or the previously set value.</param>
-            /// <returns>A Func that can be used to set the setting</returns>
-            public abstract Action<T> RegisterSetting<T>(string category, string name, T defaultValue, string description, Action<T> onValueUpdated);
-            /// <summary>
-            /// Instance MB of the plugin
-            /// </summary>
-            public abstract MonoBehaviour PluginMonoBehaviour { get; }
-            /// <summary>
-            /// Log output
-            /// </summary>
-            public abstract ILoggerWrapper LoggerWrapper { get; }
-            /// <summary>
-            /// Path to write/read extra config files from
-            /// </summary>
-            public abstract string ConfigPath { get; }
         }
     }
 }

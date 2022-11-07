@@ -1,5 +1,6 @@
 ﻿using System;
 using RuntimeUnityEditor.Core.Utils;
+using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
 
 namespace RuntimeUnityEditor.Core
@@ -19,6 +20,13 @@ namespace RuntimeUnityEditor.Core
         protected Window()
         {
             WindowId = base.GetHashCode();
+            DisplayType = FeatureDisplayType.Window;
+        }
+
+        public override string DisplayName
+        {
+            get => _displayName ?? (_displayName = Title ?? base.DisplayName);
+            set => _displayName = value;
         }
 
         protected override void OnGUI()
