@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using RuntimeUnityEditor.Core.Utils;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
@@ -41,6 +42,8 @@ namespace RuntimeUnityEditor.Core
         private void DrawTaskbar(int id)
         {
             GUILayout.BeginHorizontal();
+
+            var firstFeature = true;
             foreach (var feature in _orderedFeatures)
             {
                 if (feature.DisplayType == FeatureDisplayType.Window)
@@ -51,16 +54,45 @@ namespace RuntimeUnityEditor.Core
                 }
                 else if (feature.DisplayType == FeatureDisplayType.Feature)
                 {
-                    GUI.color = Color.white;
+                    if (firstFeature)
+                    {
+                        GUI.color = Color.gray;
+                        if (GUILayout.Button("Reset"))
+                        {
+                            foreach (var window in _orderedFeatures.OfType<IWindow>())
+                                window.ResetWindowRect();
+                        }
+                        firstFeature = false;
+                        GUI.color = Color.white;
+                        GUILayout.Label("|");
+                    }
                     feature.Enabled = GUILayout.Toggle(feature.Enabled, feature.DisplayName);
                 }
             }
-            GUILayout.Space(5);
-            if (GUILayout.Button("Reset"))
-            {
-                foreach (var window in _orderedFeatures.OfType<IWindow>())
-                    window.ResetWindowRect();
-            }
+
+            GUILayout.Label("|");
+
+            GUILayout.Label("Time", GUILayout.ExpandWidth(false));
+
+            if (GUILayout.Button(">", GUILayout.ExpandWidth(false)))
+                Time.timeScale = 1;
+            if (GUILayout.Button("||", GUILayout.ExpandWidth(false)))
+                Time.timeScale = 0;
+
+            if (float.TryParse(GUILayout.TextField(Time.timeScale.ToString("F2", CultureInfo.InvariantCulture), GUILayout.Width(38)), NumberStyles.Any, CultureInfo.InvariantCulture, out var newVal))
+                Time.timeScale = newVal;
+
+            GUI.changed = false;
+            var n = GUILayout.Toggle(Application.runInBackground, "in BG");
+            if (GUI.changed) Application.runInBackground = n;
+
+            GUILayout.Label("|");
+
+            if (GUILayout.Button("Log", GUILayout.ExpandWidth(false)))
+                UnityFeatureHelper.OpenLog();
+
+            AssetBundleManagerHelper.DrawButtonIfAvailable();
+
             GUILayout.EndHorizontal();
         }
     }

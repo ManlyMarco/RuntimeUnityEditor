@@ -60,54 +60,6 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             _gameObjectSearcher = new RootGameObjectSearcher();
         }
 
-        private static bool _wireframe;
-        private static readonly Dictionary<Camera, CameraClearFlags> _origFlags = new Dictionary<Camera, CameraClearFlags>();
-        private static bool Wireframe
-        {
-            get => _wireframe;
-            set
-            {
-                if (_wireframe != value)
-                {
-                    _wireframe = value;
-                    if (value)
-                    {
-                        Camera.onPreRender += OnPreRender;
-                        Camera.onPostRender += OnPostRender;
-                    }
-                    else
-                    {
-                        Camera.onPreRender -= OnPreRender;
-                        Camera.onPostRender -= OnPostRender;
-                        GL.wireframe = false;
-
-                        foreach (var origFlag in _origFlags) origFlag.Key.clearFlags = origFlag.Value;
-                        _origFlags.Clear();
-                    }
-                }
-            }
-        }
-        private static void OnPostRender(Camera cam)
-        {
-            if (Wireframe)
-            {
-                cam.clearFlags = _origFlags[cam];
-                GL.wireframe = false;
-            }
-        }
-        private static void OnPreRender(Camera cam)
-        {
-            if (Wireframe)
-            {
-                GL.wireframe = true;
-
-                if (!_origFlags.ContainsKey(cam))
-                    _origFlags.Add(cam, cam.clearFlags);
-
-                cam.clearFlags = CameraClearFlags.Color;
-            }
-        }
-
         public Transform SelectedTransform
         {
             get => _selectedTransform;
@@ -227,80 +179,10 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             GUILayout.BeginVertical();
             {
                 DisplayObjectTree();
-
-                DisplayControls();
-
+                
                 DisplayObjectProperties();
             }
             GUILayout.EndVertical();
-        }
-
-        private void DisplayControls()
-        {
-            GUILayout.BeginHorizontal();
-            {
-                GUILayout.BeginHorizontal(GUI.skin.box);
-                {
-                    GUILayout.Label("Time", GUILayout.ExpandWidth(false));
-
-                    if (GUILayout.Button(">", GUILayout.ExpandWidth(false)))
-                        Time.timeScale = 1;
-                    if (GUILayout.Button("||", GUILayout.ExpandWidth(false)))
-                        Time.timeScale = 0;
-
-                    if (float.TryParse(GUILayout.TextField(Time.timeScale.ToString("F2", CultureInfo.InvariantCulture), _drawVector3FieldWidth), NumberStyles.Any, CultureInfo.InvariantCulture, out var newVal))
-                        Time.timeScale = newVal;
-                }
-                GUILayout.EndHorizontal();
-
-                GUILayout.BeginHorizontal(GUI.skin.box);
-                {
-                    if (GUILayout.Button("Log", GUILayout.ExpandWidth(false)))
-                        UnityFeatureHelper.OpenLog();
-
-                    GUILayout.FlexibleSpace();
-
-                    var origColor = GUI.backgroundColor;
-
-                    if (RuntimeUnityEditorCore.Instance.Inspector.Enabled)
-                        GUI.backgroundColor = Color.cyan;
-                    if (GUILayout.Button("Insp"))
-                        RuntimeUnityEditorCore.Instance.Inspector.Enabled = !RuntimeUnityEditorCore.Instance.Inspector.Enabled;
-                    GUI.backgroundColor = origColor;
-
-
-                    if (RuntimeUnityEditorCore.Instance.Repl != null)
-                    {
-                        if (RuntimeUnityEditorCore.Instance.ShowRepl)
-                            GUI.backgroundColor = Color.cyan;
-                        if (GUILayout.Button("REPL"))
-                            RuntimeUnityEditorCore.Instance.ShowRepl = !RuntimeUnityEditorCore.Instance.ShowRepl;
-
-                        GUI.backgroundColor = origColor;
-                    }
-
-                    if (RuntimeUnityEditorCore.Instance.ProfilerWindow.Enabled)
-                        GUI.backgroundColor = Color.cyan;
-                    if (GUILayout.Button("Profiler"))
-                        RuntimeUnityEditorCore.Instance.ProfilerWindow.Enabled = !RuntimeUnityEditorCore.Instance.ProfilerWindow.Enabled;
-                    GUI.backgroundColor = origColor;
-                }
-                GUILayout.EndHorizontal();
-            }
-            GUILayout.EndHorizontal();
-
-            // todo move out
-            GUILayout.BeginHorizontal(GUI.skin.box);
-            {
-                GUI.changed = false;
-                var n = GUILayout.Toggle(Application.runInBackground, "Run in bg");
-                if (GUI.changed) Application.runInBackground = n;
-                
-                Wireframe = GUILayout.Toggle(Wireframe, "Wireframe");
-            }
-            GUILayout.EndHorizontal();
-
-            AssetBundleManagerHelper.DrawButtonIfAvailable();
         }
 
         private void DisplayObjectProperties()
@@ -699,7 +581,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
             ClearCaches();
 
-            if (visible) 
+            if (visible)
                 _gameObjectSearcher.Refresh(true, null);
         }
     }

@@ -36,6 +36,7 @@ namespace RuntimeUnityEditor.Core
 
             DisplayName = "Unlock cursor";
             Enabled = true;
+            DisplayType = FeatureDisplayType.Hidden;
         }
 
         protected override void Update()

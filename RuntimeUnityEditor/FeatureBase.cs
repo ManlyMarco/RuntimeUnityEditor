@@ -38,7 +38,7 @@ namespace RuntimeUnityEditor.Core
         }
 
         private protected string _displayName;
-        private protected bool _enabled;
+        private bool _enabled;
 
         /// <summary>
         /// Name shown in taskbar
