@@ -349,7 +349,7 @@ namespace RuntimeUnityEditor.Core.REPL
                 _suggestions.Clear();
 
                 // A fix for ? characters causing an infinite loop in GetCompletions
-                if (!input.Contains('?'))
+                if (input.IndexOfAny(new[] { '?', '{', '}' }) < 0)
                 {
                     // Discard errors when searching for completions
                     var logLen = _sb.Length;
