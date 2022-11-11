@@ -343,7 +343,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
                                 if (tex != null)
                                 {
-                                    if (GUILayout.Button(tex, GUI.skin.box)) RuntimeUnityEditorCore.Instance.ObjectViewWindow.SetShownObject(tex, imgSprite.name);
+                                    if (GUILayout.Button(tex, GUI.skin.box)) RuntimeUnityEditorCore.Instance.PreviewWindow.SetShownObject(tex, imgSprite.name);
                                 }
                                 else
                                 {

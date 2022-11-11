@@ -8,6 +8,7 @@ using RuntimeUnityEditor.Core.REPL;
 using RuntimeUnityEditor.Core.UI;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
+#pragma warning disable CS0618
 
 namespace RuntimeUnityEditor.Core
 {
@@ -16,15 +17,14 @@ namespace RuntimeUnityEditor.Core
         public const string Version = "3.0";
         public const string GUID = "RuntimeUnityEditor";
 
-        public Inspector.Inspector Inspector => Core.Inspector.Inspector.Initialized ? Core.Inspector.Inspector.Instance : null;
-        public ObjectTreeViewer TreeViewer => ObjectTreeViewer.Initialized ? ObjectTreeViewer.Instance : null;
-        public ObjectViewWindow ObjectViewWindow => ObjectViewWindow.Initialized ? ObjectViewWindow.Instance : null;
-        public ProfilerWindow ProfilerWindow => ProfilerWindow.Initialized ? ProfilerWindow.Instance : null;
-        public ReplWindow Repl => ReplWindow.Initialized ? ReplWindow.Instance : null;
-        public WindowManager WindowManager => WindowManager.Instance;
+        [Obsolete("Use window Instance instead")] public Inspector.Inspector Inspector => Core.Inspector.Inspector.Initialized ? Core.Inspector.Inspector.Instance : null;
+        [Obsolete("Use window Instance instead")] public ObjectTreeViewer TreeViewer => ObjectTreeViewer.Initialized ? ObjectTreeViewer.Instance : null;
+        [Obsolete("Use window Instance instead")] public ObjectViewWindow PreviewWindow => ObjectViewWindow.Initialized ? ObjectViewWindow.Instance : null;
+        [Obsolete("Use window Instance instead")] public ProfilerWindow ProfilerWindow => ProfilerWindow.Initialized ? ProfilerWindow.Instance : null;
+        [Obsolete("Use window Instance instead")] public ReplWindow Repl => ReplWindow.Initialized ? ReplWindow.Instance : null;
+        [Obsolete("Use window Instance instead")] public WindowManager WindowManager => WindowManager.Instance;
 
-        [Obsolete("No longer works", true)]
-        public event EventHandler SettingsChanged;
+        [Obsolete("No longer works", true)] public event EventHandler SettingsChanged;
 
         public KeyCode ShowHotkey
         {
@@ -84,27 +84,35 @@ namespace RuntimeUnityEditor.Core
             var iFeatureType = typeof(IFeature);
             // Create all instances first so they are accessible in Initialize methods in case there's crosslinking spaghetti
             var allFeatures = typeof(RuntimeUnityEditorCore).Assembly.GetTypes().Where(t => !t.IsAbstract && iFeatureType.IsAssignableFrom(t)).Select(Activator.CreateInstance).Cast<IFeature>().ToList();
-            for (var index = 0; index < allFeatures.Count; index++)
+
+            foreach (var feature in allFeatures)
             {
-                var feature = allFeatures[index];
                 try
                 {
-                    feature.OnInitialize(initSettings);
+                    AddFeature(feature);
                 }
                 catch (Exception e)
                 {
                     Logger.Log(LogLevel.Warning, $"Failed to initialize {feature.GetType().Name} - " + e);
-                    continue;
                 }
-
-                _initializedFeatures.Add(feature);
-                //if (feature is IWindow window)
-                //    _initializedWindows.Add(window);
             }
 
             WindowManager.SetFeatures(_initializedFeatures);
 
             Logger.Log(LogLevel.Info, $"Successfully initialized {_initializedFeatures.Count}/{allFeatures.Count} features: {string.Join(", ", _initializedFeatures.Select(x => x.GetType().Name).ToArray())}");
+        }
+
+        /// <summary>
+        /// Add a new feature to runtime editor.
+        /// Will throw if feature fails to initialize.
+        /// </summary>
+        public void AddFeature(IFeature feature)
+        {
+            feature.OnInitialize(_initSettings);
+
+            _initializedFeatures.Add(feature);
+            //if (feature is IWindow window)
+            //    _initializedWindows.Add(window);
         }
 
         public bool Show
