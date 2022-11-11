@@ -21,6 +21,12 @@ namespace RuntimeUnityEditor.Bepin5
 
         private void Start()
         {
+            if (!TomlTypeConverter.CanConvert(typeof(Rect)))
+            {
+                var converter = RuntimeUnityEditor.Core.Utils.TomlTypeConverter.GetConverter(typeof(Rect));
+                TomlTypeConverter.AddConverter(typeof(Rect), new TypeConverter { ConvertToObject = converter.ConvertToObject, ConvertToString = converter.ConvertToString });
+            }
+
             Instance = new RuntimeUnityEditorCore(new Bep5InitSettings(this));
         }
 
