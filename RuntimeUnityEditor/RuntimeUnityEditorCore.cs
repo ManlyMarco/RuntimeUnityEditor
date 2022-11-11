@@ -1,35 +1,30 @@
 ﻿using System;
-using System.Collections;
-using System.Reflection;
-using BepInEx;
-using RuntimeUnityEditor.Core.Gizmos;
+using System.Collections.Generic;
+using System.Linq;
 using RuntimeUnityEditor.Core.ObjectTree;
-using RuntimeUnityEditor.Core.Preview;
+using RuntimeUnityEditor.Core.ObjectView;
 using RuntimeUnityEditor.Core.Profiler;
 using RuntimeUnityEditor.Core.REPL;
 using RuntimeUnityEditor.Core.UI;
-using RuntimeUnityEditor.Core.Utils;
+using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
+#pragma warning disable CS0618
 
 namespace RuntimeUnityEditor.Core
 {
     public class RuntimeUnityEditorCore
     {
-        public const string Version = "3.0";
+        public const string Version = "4.0";
         public const string GUID = "RuntimeUnityEditor";
 
-        public Inspector.Inspector Inspector { get; }
-        public ObjectTreeViewer TreeViewer { get; }
-        public PreviewWindow PreviewWindow { get; }
-        public ProfilerWindow ProfilerWindow { get; }
-        public ReplWindow Repl { get; private set; }
+        [Obsolete("Use window Instance instead")] public Inspector.Inspector Inspector => Core.Inspector.Inspector.Initialized ? Core.Inspector.Inspector.Instance : null;
+        [Obsolete("Use window Instance instead")] public ObjectTreeViewer TreeViewer => ObjectTreeViewer.Initialized ? ObjectTreeViewer.Instance : null;
+        [Obsolete("Use window Instance instead")] public ObjectViewWindow PreviewWindow => ObjectViewWindow.Initialized ? ObjectViewWindow.Instance : null;
+        [Obsolete("Use window Instance instead")] public ProfilerWindow ProfilerWindow => ProfilerWindow.Initialized ? ProfilerWindow.Instance : null;
+        [Obsolete("Use window Instance instead")] public ReplWindow Repl => ReplWindow.Initialized ? ReplWindow.Instance : null;
+        [Obsolete("Use window Instance instead")] public WindowManager WindowManager => WindowManager.Instance;
 
-        public event EventHandler SettingsChanged;
-
-        internal void OnSettingsChanged()
-        {
-            SettingsChanged?.Invoke(this, EventArgs.Empty);
-        }
+        [Obsolete("No longer works", true)] public event EventHandler SettingsChanged;
 
         public KeyCode ShowHotkey
         {
@@ -39,10 +34,12 @@ namespace RuntimeUnityEditor.Core
                 if (_showHotkey != value)
                 {
                     _showHotkey = value;
-                    OnSettingsChanged();
+                    _onHotkeyChanged?.Invoke(value);
                 }
             }
         }
+
+        private readonly Action<KeyCode> _onHotkeyChanged;
 
         public bool ShowRepl
         {
@@ -52,112 +49,89 @@ namespace RuntimeUnityEditor.Core
 
         public bool EnableMouseInspect
         {
-            get => MouseInspect.Enable;
-            set
-            {
-                if (MouseInspect.Enable != value)
-                {
-                    MouseInspect.Enable = value;
-                    OnSettingsChanged();
-                }
-            }
+            get => MouseInspect.Initialized && MouseInspect.Instance.Enabled;
+            set => MouseInspect.Instance.Enabled = value;
         }
 
         public bool ShowInspector
         {
-            get => Inspector.Enabled;
+            get => Inspector != null && Inspector.Enabled;
             set => Inspector.Enabled = value;
         }
 
         public static RuntimeUnityEditorCore Instance { get; private set; }
-        internal static MonoBehaviour PluginObject { get; private set; }
-        internal static ILoggerWrapper Logger { get; private set; }
 
-        private readonly GizmoDrawer _gizmoDrawer;
-        private readonly GameObjectSearcher _gameObjectSearcher = new GameObjectSearcher();
+        internal static MonoBehaviour PluginObject => _initSettings.PluginMonoBehaviour;
+        internal static ILoggerWrapper Logger => _initSettings.LoggerWrapper;
+        private static InitSettings _initSettings;
 
-        private bool _obsoleteCursor;
-
-        private PropertyInfo _curLockState;
-        private PropertyInfo _curVisible;
-
-        private int _previousCursorLockState;
-        private bool _previousCursorVisible;
-
+        private readonly List<IFeature> _initializedFeatures = new List<IFeature>();
         private KeyCode _showHotkey = KeyCode.F12;
 
-        internal RuntimeUnityEditorCore(MonoBehaviour pluginObject, ILoggerWrapper logger, string configPath)
+        //private readonly List<IWindow> _initializedWindows = new List<IWindow>();
+
+        public RuntimeUnityEditorCore(InitSettings initSettings)
         {
             if (Instance != null)
                 throw new InvalidOperationException("Can only create one instance of the Core object");
 
-            PluginObject = pluginObject;
-            Logger = logger;
+            _initSettings = initSettings;
+
             Instance = this;
 
-            // Reflection for compatibility with Unity 4.x
-            var tCursor = typeof(Cursor);
+            _onHotkeyChanged = initSettings.RegisterSetting("General", "Open/close runtime editor", KeyCode.F12, "", x => ShowHotkey = x);
 
-            _curLockState = tCursor.GetProperty("lockState", BindingFlags.Static | BindingFlags.Public);
-            _curVisible = tCursor.GetProperty("visible", BindingFlags.Static | BindingFlags.Public);
+            var iFeatureType = typeof(IFeature);
+            // Create all instances first so they are accessible in Initialize methods in case there's crosslinking spaghetti
+            var allFeatures = typeof(RuntimeUnityEditorCore).Assembly.GetTypes().Where(t => !t.IsAbstract && iFeatureType.IsAssignableFrom(t)).Select(Activator.CreateInstance).Cast<IFeature>().ToList();
 
-            if (_curLockState == null && _curVisible == null)
-            {
-                _obsoleteCursor = true;
-
-                _curLockState = typeof(Screen).GetProperty("lockCursor", BindingFlags.Static | BindingFlags.Public);
-                _curVisible = typeof(Screen).GetProperty("showCursor", BindingFlags.Static | BindingFlags.Public);
-            }
-
-            Inspector = new Inspector.Inspector(targetTransform => TreeViewer?.SelectAndShowObject(targetTransform));
-
-            TreeViewer = new ObjectTreeViewer(pluginObject, _gameObjectSearcher);
-            TreeViewer.InspectorOpenCallback = items =>
-            {
-                for (var i = 0; i < items.Length; i++)
-                {
-                    var stackEntry = items[i];
-                    Inspector.Push(stackEntry, i == 0);
-                }
-            };
-
-            PreviewWindow = new PreviewWindow();
-            ProfilerWindow = new ProfilerWindow();
-
-            if (UnityFeatureHelper.SupportsVectrosity)
-            {
-                _gizmoDrawer = new GizmoDrawer(pluginObject);
-                TreeViewer.TreeSelectionChangedCallback = transform => _gizmoDrawer.UpdateState(transform);
-            }
-
-            if (UnityFeatureHelper.SupportsRepl)
+            foreach (var feature in allFeatures)
             {
                 try
                 {
-                    Repl = new ReplWindow(configPath);
-                    PluginObject.StartCoroutine(DelayedReplSetup());
+                    AddFeature(feature);
                 }
-                catch (Exception ex)
+                catch (Exception e)
                 {
-                    Logger.Log(LogLevel.Warning, "Failed to load REPL - " + ex.Message);
-                    Repl = null;
+                    Logger.Log(LogLevel.Warning, $"Failed to initialize {feature.GetType().Name} - " + e);
                 }
+            }
+
+            WindowManager.SetFeatures(_initializedFeatures);
+
+            Logger.Log(LogLevel.Info, $"Successfully initialized {_initializedFeatures.Count}/{allFeatures.Count} features: {string.Join(", ", _initializedFeatures.Select(x => x.GetType().Name).ToArray())}");
+        }
+
+        /// <summary>
+        /// Add a new feature to runtime editor.
+        /// Will throw if feature fails to initialize.
+        /// </summary>
+        public void AddFeature(IFeature feature)
+        {
+            feature.OnInitialize(_initSettings);
+
+            _initializedFeatures.Add(feature);
+            //if (feature is IWindow window)
+            //    _initializedWindows.Add(window);
+        }
+
+        public bool Show
+        {
+            get => WindowManager.Enabled;
+            set
+            {
+                if (WindowManager.Enabled == value) return;
+                WindowManager.Enabled = value;
+
+                for (var index = 0; index < _initializedFeatures.Count; index++)
+                    _initializedFeatures[index].OnEditorShownChanged(value);
+
+                // todo safe invoke
+                //ShowChanged?.Invoke(this, EventArgs.Empty);
             }
         }
 
-        private IEnumerator DelayedReplSetup()
-        {
-            yield return null;
-            try
-            {
-                Repl.RunEnvSetup();
-            }
-            catch (Exception ex)
-            {
-                Logger.Log(LogLevel.Warning, "Failed to load REPL - " + ex.Message);
-                Repl = null;
-            }
-        }
+        //public event EventHandler ShowChanged;
 
         internal void OnGUI()
         {
@@ -166,66 +140,11 @@ namespace RuntimeUnityEditor.Core
                 var originalSkin = GUI.skin;
                 GUI.skin = InterfaceMaker.CustomSkin;
 
-                if (_obsoleteCursor)
-                    _curLockState.SetValue(null, false, null);
-                else
-                    _curLockState.SetValue(null, 0, null);
-
-                _curVisible.SetValue(null, true, null);
-
-                Inspector.DrawWindow();
-                TreeViewer.DrawWindow();
-                Repl?.DrawWindow();
-                PreviewWindow.DrawWindow();
-                ProfilerWindow.DrawWindow();
-
-                MouseInspect.OnGUI();
+                for (var index = 0; index < _initializedFeatures.Count; index++)
+                    _initializedFeatures[index].OnOnGUI();
 
                 // Restore old skin for maximum compatibility
                 GUI.skin = originalSkin;
-            }
-        }
-
-        public bool Show
-        {
-            get => TreeViewer.Enabled;
-            set
-            {
-                if (Show != value)
-                {
-                    if (value)
-                    {
-                        _previousCursorLockState = _obsoleteCursor ? Convert.ToInt32((bool)_curLockState.GetValue(null, null)) : (int)_curLockState.GetValue(null, null);
-                        _previousCursorVisible = (bool)_curVisible.GetValue(null, null);
-                    }
-                    else
-                    {
-                        if (!_previousCursorVisible || _previousCursorLockState != 0)
-                        {
-                            if (_obsoleteCursor)
-                                _curLockState.SetValue(null, Convert.ToBoolean(_previousCursorLockState), null);
-                            else
-                                _curLockState.SetValue(null, _previousCursorLockState, null);
-
-                            _curVisible.SetValue(null, _previousCursorVisible, null);
-                        }
-                    }
-                }
-
-                TreeViewer.Enabled = value;
-
-                if (_gizmoDrawer != null)
-                {
-                    _gizmoDrawer.Show = value;
-                    _gizmoDrawer.UpdateState(TreeViewer.SelectedTransform);
-                }
-
-                if (value)
-                {
-                    SetWindowSizes();
-
-                    RefreshGameObjectSearcher(true);
-                }
             }
         }
 
@@ -236,18 +155,8 @@ namespace RuntimeUnityEditor.Core
 
             if (Show)
             {
-                RefreshGameObjectSearcher(false);
-
-                if (_obsoleteCursor)
-                    _curLockState.SetValue(null, false, null);
-                else
-                    _curLockState.SetValue(null, 0, null);
-
-                _curVisible.SetValue(null, true, null);
-
-                TreeViewer.Update();
-
-                MouseInspect.Update();
+                for (var index = 0; index < _initializedFeatures.Count; index++)
+                    _initializedFeatures[index].OnUpdate();
             }
         }
 
@@ -255,50 +164,9 @@ namespace RuntimeUnityEditor.Core
         {
             if (Show)
             {
-                if (_obsoleteCursor)
-                    _curLockState.SetValue(null, false, null);
-                else
-                    _curLockState.SetValue(null, 0, null);
-
-                _curVisible.SetValue(null, true, null);
+                for (var index = 0; index < _initializedFeatures.Count; index++)
+                    _initializedFeatures[index].OnLateUpdate();
             }
-        }
-
-        private void RefreshGameObjectSearcher(bool full)
-        {
-            bool GizmoFilter(GameObject o) => o.name.StartsWith(GizmoDrawer.GizmoObjectName);
-            var gizmosExist = _gizmoDrawer != null && _gizmoDrawer.Lines.Count > 0;
-            _gameObjectSearcher.Refresh(full, gizmosExist ? GizmoFilter : (Predicate<GameObject>)null);
-        }
-
-        private void SetWindowSizes()
-        {
-            const int screenOffset = 10;
-
-            var screenRect = new Rect(
-                screenOffset,
-                screenOffset,
-                Screen.width - screenOffset * 2,
-                Screen.height - screenOffset * 2);
-
-            var centerWidth = (int)Mathf.Min(850, screenRect.width);
-            var centerX = (int)(screenRect.xMin + screenRect.width / 2 - Mathf.RoundToInt((float)centerWidth / 2));
-
-            var inspectorHeight = (int)(screenRect.height / 4) * 3;
-            Inspector.WindowRect = new Rect(centerX, screenRect.yMin, centerWidth, inspectorHeight);
-
-            const int sideWidth = 350;
-
-            PreviewWindow.WindowRect = new Rect(screenRect.xMin, screenRect.yMin, sideWidth, sideWidth);
-
-            ProfilerWindow.WindowRect = new Rect(Inspector.WindowRect);
-
-            var treeViewHeight = screenRect.height;
-            TreeViewer.WindowRect = new Rect(screenRect.xMax - sideWidth, screenRect.yMin, sideWidth, treeViewHeight);
-
-            const int replPadding = 8;
-            if (Repl != null)
-                Repl.WindowRect = new Rect(centerX, screenRect.yMin + inspectorHeight + replPadding, centerWidth, screenRect.height - inspectorHeight - replPadding);
         }
     }
 }

@@ -1,31 +1,64 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
+using System.Collections;
 using RuntimeUnityEditor.Core.Utils;
+using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
 
 namespace RuntimeUnityEditor.Core
 {
-    [SuppressMessage("ReSharper", "StaticMemberInGenericType")]
-    public abstract class WindowBase<T> where T : WindowBase<T>
+    public interface IWindow : IFeature
     {
+        string Title { get; set; }
+        int WindowId { get; set; }
+        Rect WindowRect { get; set; }
+        Vector2 MinimumSize { get; set; }
+        void ResetWindowRect();
+    }
+
+    public abstract class Window<T> : FeatureBase<T>, IWindow where T : Window<T>
+    {
+        protected const int ScreenOffset = 10;
+        protected const int SideWidth = 350;
+
         private const int TooltipWidth = 400;
+        // ReSharper disable StaticMemberInGenericType
         private static GUIStyle _tooltipStyle;
         private static GUIContent _tooltipContent;
         private static Texture2D _tooltipBackground;
+        // ReSharper restore StaticMemberInGenericType
 
-        public static T Instance { get; private set; }
+        private bool _canShow;
+        private Rect _windowRect;
+        private Action<Rect> _confRect;
 
-        public WindowBase()
+        protected Window()
         {
-            WindowId = base.GetHashCode();
-            WindowBase<T>.Instance = (T)this;
+            DisplayType = FeatureDisplayType.Window;
+            SettingCategory = "Windows";
         }
 
-        internal void DrawWindow()
+        protected override void AfterInitialized(InitSettings initSettings)
         {
-            if (!Enabled) return;
+            base.AfterInitialized(initSettings);
+            WindowId = base.GetHashCode();
+            _confRect = initSettings.RegisterSetting(SettingCategory, DisplayName + " window size", WindowRect, string.Empty, b => WindowRect = b);
+        }
 
-            WindowRect = GUILayout.Window(WindowId, WindowRect, DrawContentsInt, Title);
+        public override string DisplayName
+        {
+            get => _displayName ?? (_displayName = Title ?? base.DisplayName);
+            set => _displayName = value;
+        }
+
+        protected override void OnGUI()
+        {
+            if (!_canShow) return;
+
+            var title = Title;
+#if DEBUG
+            title = $"{title} {WindowRect}";
+#endif
+            WindowRect = GUILayout.Window(WindowId, WindowRect, DrawContentsInt, title);
             if (WindowRect.width < MinimumSize.x)
             {
                 var rect = WindowRect;
@@ -85,7 +118,7 @@ namespace RuntimeUnityEditor.Core
                 }
 
                 _tooltipContent.text = GUI.tooltip;
-                var height = _tooltipStyle.CalcHeight(_tooltipContent, 400) + 10;
+                var height = _tooltipStyle.CalcHeight(_tooltipContent, TooltipWidth) + 10;
 
                 var currentEvent = Event.current;
 
@@ -101,12 +134,85 @@ namespace RuntimeUnityEditor.Core
             }
         }
 
+        protected override void OnVisibleChanged(bool visible)
+        {
+            // If the taskbar didn't have a chance to initialize yet, wait for a frame. Necessary to calculate free screen space.
+            if (visible && WindowManager.Instance.Height == 0)
+            {
+                // todo more efficient way?
+                IEnumerator DelayedVisible()
+                {
+                    yield return null;
+                    base.OnVisibleChanged(Visible);
+                }
+                RuntimeUnityEditorCore.PluginObject.StartCoroutine(DelayedVisible());
+            }
+            else
+            {
+                base.OnVisibleChanged(visible);
+            }
+        }
+
+        protected override void VisibleChanged(bool visible)
+        {
+            if (visible)
+            {
+                if (!IsWindowRectValid())
+                    ResetWindowRect();
+
+                _canShow = true;
+            }
+        }
+
+        public void ResetWindowRect()
+        {
+            var screenRect = new Rect(
+                x: ScreenOffset,
+                y: ScreenOffset,
+                width: Screen.width - ScreenOffset * 2,
+                height: Screen.height - ScreenOffset * 2 - WindowManager.Instance.Height);
+            WindowRect = GetDefaultWindowRect(screenRect);
+        }
+
+        private bool IsWindowRectValid()
+        {
+            return WindowRect.width >= MinimumSize.x &&
+                   WindowRect.height >= MinimumSize.y &&
+                   WindowRect.x < Screen.width - ScreenOffset &&
+                   WindowRect.y < Screen.height - ScreenOffset &&
+                   WindowRect.x >= -WindowRect.width + ScreenOffset &&
+                   WindowRect.y >= -WindowRect.height + ScreenOffset;
+        }
+
+        protected abstract Rect GetDefaultWindowRect(Rect screenRect);
+
+        public static Rect GetCenterWindowDefaultRect(Rect screenRect)
+        {
+            var centerWidth = (int)Mathf.Min(850, screenRect.width);
+            var centerX = (int)(screenRect.xMin + screenRect.width / 2 - Mathf.RoundToInt((float)centerWidth / 2));
+
+            var inspectorHeight = (int)(screenRect.height / 4) * 3;
+            return new Rect(centerX, screenRect.yMin, centerWidth, inspectorHeight);
+        }
+
         protected abstract void DrawContents();
 
-        public virtual bool Enabled { get; set; }
         public virtual string Title { get; set; }
         public int WindowId { get; set; }
-        public virtual Rect WindowRect { get; set; }
+
+        public virtual Rect WindowRect
+        {
+            get => _windowRect;
+            set
+            { 
+                if (_windowRect != value)
+                {
+                    _windowRect = value;
+                    _confRect?.Invoke(value);
+                }
+            }
+        }
+
         public Vector2 MinimumSize { get; set; } = new Vector2(100, 100);
     }
 }
