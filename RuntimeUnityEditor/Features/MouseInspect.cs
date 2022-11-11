@@ -1,72 +1,133 @@
-﻿using RuntimeUnityEditor.Core.Utils;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using RuntimeUnityEditor.Core.ObjectTree;
+using RuntimeUnityEditor.Core.Utils;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
 
 namespace RuntimeUnityEditor.Core
 {
-    // Based on https://github.com/sinai-dev/CppExplorer/blob/master/src/Menu/InspectUnderMouse.cs (MIT License)
     public class MouseInspect : FeatureBase<MouseInspect>
     {
-        private static Transform _objUnderMouse;
-        private static string _hoverText;
-        private static bool _clickedOnce;
+        private static readonly StringBuilder _hoverTextSb = new StringBuilder(100);
+        private static string _hoverText = string.Empty;
+        private GUIStyle _labelSkin;
 
         protected override void Initialize(InitSettings initSettings)
         {
-            initSettings.RegisterSetting("General", "Enable Mouse Inspector", true, "", x => Enabled = x);
             DisplayName = "Mouse inspect";
         }
 
         protected override void Update()
         {
-            InspectRaycast();
-        }
-
-        private static void InspectRaycast()
-        {
             var camera = Camera.main;
-            if (camera == null) return;
+            var raycastHit = DoRaycast(camera);
+            var canvasHits = DoCanvas(camera);
 
-            var ray = camera.ScreenPointToRay(UnityInput.Current.mousePosition);
+            var selectedTransform = ObjectTreeViewer.Instance.SelectedTransform;
 
-            if (Physics.Raycast(ray, out RaycastHit hit, 1000f))
+            _hoverTextSb.Length = 0;
+
+            if (raycastHit != null)
             {
-                var obj = hit.transform;
+                _hoverTextSb.AppendFormat("Raycast hit:\n{0}0: {1} pos={2}\n", selectedTransform == raycastHit ? "> " : "", raycastHit.name, raycastHit.position);
+            }
 
-                if (_objUnderMouse != obj)
+            if (canvasHits.Count > 0)
+            {
+                _hoverTextSb.AppendLine("Canvas hits:");
+                for (var index = 0; index < canvasHits.Count && index < 10; index++)
                 {
-                    _objUnderMouse = obj;
-                    var position = obj.position;
-                    _hoverText = $"{_objUnderMouse.GetFullTransfromPath()}\nPosition: X={position.x:F} Y={position.y:F} Z={position.z:F}";
-                    if (!_clickedOnce) _hoverText += "\nClick to select";
+                    var hit = canvasHits[index];
+                    _hoverTextSb.AppendFormat("{0}{1}: {2} pos={3} size={4}\n", selectedTransform == hit ? "> " : "", index + 1, hit.name, hit.position, hit.sizeDelta);
+                }
+            }
+
+            if (_hoverTextSb.Length > 0)
+            {
+                if (ObjectTreeViewer.Initialized)
+                {
+                    _hoverTextSb.Append("[ Press Middle Mouse Button to browse to the next object ]");
+                    if (UnityInput.Current.GetMouseButtonDown(2))
+                    {
+                        var all = Enumerable.Repeat(raycastHit, 1).Concat(canvasHits.Cast<Transform>()).Where(x => x != null).ToList();
+
+                        var currentIndex = all.IndexOf(selectedTransform);
+                        // If nothing is selected -1 + 1 = 0 so start from 0
+                        var nextObject = all.Concat(all).Skip(currentIndex + 1).First();
+
+                        ObjectTreeViewer.Instance.SelectAndShowObject(nextObject);
+                    }
                 }
 
-                if (UnityInput.Current.GetMouseButtonDown(0))
-                {
-                    _clickedOnce = true;
-                    RuntimeUnityEditorCore.Instance.TreeViewer.SelectAndShowObject(obj);
-                }
+                _hoverText = _hoverTextSb.ToString();
             }
             else
             {
-                _objUnderMouse = null;
+                _hoverText = string.Empty;
             }
         }
 
         protected override void OnGUI()
         {
-            if (_objUnderMouse != null)
+            if (_hoverText.Length > 0)
             {
+                if (_labelSkin == null) _labelSkin = new GUIStyle(GUI.skin.label);
+
+                // Figure out which corner of the screen to draw the hover text in
+                _labelSkin.alignment = TextAnchor.UpperLeft;
+
                 var pos = UnityInput.Current.mousePosition;
-                var rect = new Rect(pos.x - (int)(Screen.width / 2), Screen.height - pos.y - 50, Screen.width, 50);
+                var displayRect = new Rect((int)pos.x + 5, Screen.height - (int)pos.y + 20, (int)(Screen.width / 2), 500);
 
-                var origAlign = GUI.skin.label.alignment;
-                GUI.skin.label.alignment = TextAnchor.MiddleCenter;
+                if ((int)displayRect.x > Screen.width / 2)
+                {
+                    displayRect.x = (int)(displayRect.x - displayRect.width);
+                    _labelSkin.alignment = TextAnchor.UpperRight;
+                }
 
-                IMGUIUtils.DrawLabelWithOutline(rect, _hoverText, GUI.skin.label, Color.white, Color.black, 1);
+                if ((int)displayRect.y > Screen.height / 2)
+                {
+                    displayRect.y = (int)(displayRect.y - (displayRect.height + 23));
+                    // Upper -> Lower
+                    _labelSkin.alignment += TextAnchor.LowerRight - TextAnchor.UpperRight;
+                }
 
-                GUI.skin.label.alignment = origAlign;
+                IMGUIUtils.DrawLabelWithOutline(displayRect, _hoverText, _labelSkin, Color.white, Color.black, 2);
             }
+        }
+
+        private static Transform DoRaycast(Camera camera)
+        {
+            if (camera == null) return null;
+            // Based on https://github.com/sinai-dev/CppExplorer/blob/master/src/Menu/InspectUnderMouse.cs (MIT License)
+            var ray = camera.ScreenPointToRay(UnityInput.Current.mousePosition);
+            return Physics.Raycast(ray, out RaycastHit hit, 1000f) ? hit.transform : null;
+        }
+
+        private static List<RectTransform> DoCanvas(Camera camera)
+        {
+            Vector2 mousePosition = UnityInput.Current.mousePosition;
+
+            var hits = Object.FindObjectsOfType<RectTransform>().Where(rt =>
+            {
+                // Only RTs that are visible on screen
+                if (rt && rt.sizeDelta.x > 0 && rt.sizeDelta.y > 0 && rt.gameObject.activeInHierarchy)
+                {
+                    var canvas = rt.GetComponentInParent<Canvas>();
+                    if (canvas != null && canvas.enabled && rt.GetComponentsInParent<CanvasGroup>().All(x => x.alpha > 0.1f))
+                    {
+                        // Figure out what camera this canvas is drawn to, overlay draws to a hidden camera that's accessed by a null
+                        var cam = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera != null ? canvas.worldCamera : camera;
+                        return RectTransformUtility.RectangleContainsScreenPoint(rt, mousePosition, cam);
+                    }
+                }
+                return false;
+            });
+
+            // Smallest rect first since generally UI elements get progressively smaller inside each other, and we mostly care about buttons which are the smallest
+            return hits.OrderBy(x => x.sizeDelta.sqrMagnitude).ToList();
         }
     }
 }
