@@ -6,6 +6,7 @@ using RuntimeUnityEditor.Core.ObjectView;
 using RuntimeUnityEditor.Core.Profiler;
 using RuntimeUnityEditor.Core.REPL;
 using RuntimeUnityEditor.Core.UI;
+using RuntimeUnityEditor.Core.Utils;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
 #pragma warning disable CS0618
@@ -87,7 +88,7 @@ namespace RuntimeUnityEditor.Core
 
             var iFeatureType = typeof(IFeature);
             // Create all instances first so they are accessible in Initialize methods in case there's crosslinking spaghetti
-            var allFeatures = typeof(RuntimeUnityEditorCore).Assembly.GetTypes().Where(t => !t.IsAbstract && iFeatureType.IsAssignableFrom(t)).Select(Activator.CreateInstance).Cast<IFeature>().ToList();
+            var allFeatures = typeof(RuntimeUnityEditorCore).Assembly.GetTypesSafe().Where(t => !t.IsAbstract && iFeatureType.IsAssignableFrom(t)).Select(Activator.CreateInstance).Cast<IFeature>().ToList();
 
             foreach (var feature in allFeatures)
             {
