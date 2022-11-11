@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using RuntimeUnityEditor.Core.ObjectTree;
-using RuntimeUnityEditor.Core.Preview;
+using RuntimeUnityEditor.Core.ObjectView;
 using RuntimeUnityEditor.Core.Profiler;
 using RuntimeUnityEditor.Core.REPL;
 using RuntimeUnityEditor.Core.UI;
@@ -18,7 +18,7 @@ namespace RuntimeUnityEditor.Core
 
         public Inspector.Inspector Inspector => Core.Inspector.Inspector.Initialized ? Core.Inspector.Inspector.Instance : null;
         public ObjectTreeViewer TreeViewer => ObjectTreeViewer.Initialized ? ObjectTreeViewer.Instance : null;
-        public PreviewWindow PreviewWindow => PreviewWindow.Initialized ? PreviewWindow.Instance : null;
+        public ObjectViewWindow ObjectViewWindow => ObjectViewWindow.Initialized ? ObjectViewWindow.Instance : null;
         public ProfilerWindow ProfilerWindow => ProfilerWindow.Initialized ? ProfilerWindow.Instance : null;
         public ReplWindow Repl => ReplWindow.Initialized ? ReplWindow.Instance : null;
         public WindowManager WindowManager => WindowManager.Instance;

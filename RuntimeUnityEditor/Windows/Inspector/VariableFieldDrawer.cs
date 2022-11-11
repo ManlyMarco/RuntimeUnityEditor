@@ -329,7 +329,7 @@ namespace RuntimeUnityEditor.Core.Inspector
             GUILayout.FlexibleSpace();
 
             if (GUILayout.Button("View", GUILayout.ExpandWidth(false)))
-                RuntimeUnityEditorCore.Instance.PreviewWindow.SetShownObject(tex, tex.name);
+                RuntimeUnityEditorCore.Instance.ObjectViewWindow.SetShownObject(tex, tex.name);
         }
 
         private static void DrawSprite(ICacheEntry obj, object value)
@@ -354,7 +354,7 @@ namespace RuntimeUnityEditor.Core.Inspector
             GUILayout.FlexibleSpace();
 
             if (GUILayout.Button("View", GUILayout.ExpandWidth(false)))
-                RuntimeUnityEditorCore.Instance.PreviewWindow.SetShownObject(spr.GetVisibleTexture(), objectName);
+                RuntimeUnityEditorCore.Instance.ObjectViewWindow.SetShownObject(spr.GetVisibleTexture(), objectName);
         }
 
         private static void DrawImage(ICacheEntry obj, object value)

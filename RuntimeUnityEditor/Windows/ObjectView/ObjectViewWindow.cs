@@ -2,9 +2,9 @@
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
 
-namespace RuntimeUnityEditor.Core.Preview
+namespace RuntimeUnityEditor.Core.ObjectView
 {
-    public sealed class PreviewWindow : Window<PreviewWindow>
+    public sealed class ObjectViewWindow : Window<ObjectViewWindow>
     {
         private object _objToDisplay;
         private Vector2 _scrollPos;
@@ -17,13 +17,13 @@ namespace RuntimeUnityEditor.Core.Preview
             else
                 _objToDisplay = $"Unsupported object type: {objToDisplay.GetType()}\n{new System.Diagnostics.StackTrace()}";
 
-            Title = "Object preview window - " + (objName ?? "NULL");
-            
+            Title = "Object viewer - " + (objName ?? "NULL");
+
             Enabled = true;
         }
 
         protected override Rect GetDefaultWindowRect(Rect screenRect)
-        {       
+        {
             return new Rect(screenRect.xMin, screenRect.yMin, SideWidth, SideWidth);
         }
 
@@ -34,7 +34,7 @@ namespace RuntimeUnityEditor.Core.Preview
                 if (_objToDisplay == null)
                 {
                     GUILayout.FlexibleSpace();
-                    GUILayout.Label("No object selected or the object has been destroyed.");
+                    GUILayout.Label("No object selected or the object has been destroyed.\n\nYou can send objects here from other windows by clicking the \"View\" or \"V\" buttons.");
                     GUILayout.FlexibleSpace();
                 }
                 else
@@ -63,8 +63,8 @@ namespace RuntimeUnityEditor.Core.Preview
 
         protected override void Initialize(InitSettings initSettings)
         {
-            Title = "Object preview window - Empty";
-            DisplayName = "Preview";
+            Title = "Object viewer - Empty";
+            DisplayName = "Viewer";
         }
     }
 }

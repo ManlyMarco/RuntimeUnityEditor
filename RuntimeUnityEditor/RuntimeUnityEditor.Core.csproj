@@ -107,7 +107,7 @@
     <Compile Include="Utils\Abstractions\DnSpyHelper.cs" />
     <Compile Include="Windows\Inspector\VariableFieldDrawer.cs" />
     <Compile Include="Windows\Inspector\Inspector.InspectorTab.cs" />
-    <Compile Include="Windows\Preview\PreviewWindow.cs" />
+    <Compile Include="Windows\ObjectView\ObjectViewWindow.cs" />
     <Compile Include="Utils\Abstractions\AssetBundleManagerHelper.cs" />
     <Compile Include="Windows\ObjectTree\RootGameObjectSearcher.cs" />
     <Compile Include="Utils\Abstractions\ILoggerWrapper.cs" />
