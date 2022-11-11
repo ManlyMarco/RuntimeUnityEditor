@@ -14,7 +14,7 @@ namespace RuntimeUnityEditor.Core
 {
     public class RuntimeUnityEditorCore
     {
-        public const string Version = "4.0";
+        public const string Version = "4.0.0.1";
         public const string GUID = "RuntimeUnityEditor";
 
         [Obsolete("Use window Instance instead")] public Inspector.Inspector Inspector => Core.Inspector.Inspector.Initialized ? Core.Inspector.Inspector.Instance : null;
@@ -66,6 +66,10 @@ namespace RuntimeUnityEditor.Core
         private static InitSettings _initSettings;
 
         private readonly List<IFeature> _initializedFeatures = new List<IFeature>();
+        /// <summary>
+        /// All features that have been successfully initialized so far
+        /// </summary>
+        public IEnumerable<IFeature> InitializedFeatures => _initializedFeatures;
         private KeyCode _showHotkey = KeyCode.F12;
 
         //private readonly List<IWindow> _initializedWindows = new List<IWindow>();
@@ -89,7 +93,7 @@ namespace RuntimeUnityEditor.Core
             {
                 try
                 {
-                    AddFeature(feature);
+                    AddFeatureInt(feature);
                 }
                 catch (Exception e)
                 {
@@ -107,6 +111,12 @@ namespace RuntimeUnityEditor.Core
         /// Will throw if feature fails to initialize.
         /// </summary>
         public void AddFeature(IFeature feature)
+        {
+            AddFeatureInt(feature);
+            WindowManager.SetFeatures(_initializedFeatures);
+        }
+
+        private void AddFeatureInt(IFeature feature)
         {
             feature.OnInitialize(_initSettings);
 
