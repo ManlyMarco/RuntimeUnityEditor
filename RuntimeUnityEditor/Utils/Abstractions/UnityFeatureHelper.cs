@@ -24,10 +24,6 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
             if (!SupportsCursorIndex)
                 RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "TextEditor.cursorIndex and TextEditor.pos are not available, some features will be disabled");
 
-            SupportsVectrosity = _vectrosity != null;
-            if (!SupportsVectrosity)
-                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "Vectrosity.dll is not available, drawing gizmos will be disabled");
-
             if (SupportsCursorIndex)
             {
                 SupportsRepl = true;
@@ -53,7 +49,6 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
         public static bool SupportsScenes { get; private set; }
         public static bool SupportsCursorIndex { get; }
         public static bool SupportsRepl { get; }
-        public static bool SupportsVectrosity { get; }
 
         public static GameObject[] GetSceneGameObjects()
         {
