@@ -34,7 +34,7 @@ namespace RuntimeUnityEditor.Core
         {
             //var groups = initializedFeatures.ToLookup(x => x.DisplayType);
             //groups[FeatureDisplayType.Window]
-            _orderedFeatures = initializedFeatures.OrderByDescending(x => x.DisplayType).ThenByDescending(x => x.DisplayName).ToList();
+            _orderedFeatures = initializedFeatures.OrderByDescending(x => x.DisplayType).ThenBy(x => x.DisplayName).ToList();
         }
 
         void IFeature.OnOnGUI()

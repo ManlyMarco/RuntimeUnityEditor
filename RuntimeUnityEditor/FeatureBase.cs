@@ -7,7 +7,6 @@ namespace RuntimeUnityEditor.Core
     public interface IFeature
     {
         bool Enabled { get; set; }
-        //bool Visible { get; }
         void OnInitialize(InitSettings initSettings);
         void OnUpdate();
         void OnLateUpdate();
