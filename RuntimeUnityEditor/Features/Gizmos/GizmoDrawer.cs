@@ -12,6 +12,7 @@ namespace RuntimeUnityEditor.Core.Gizmos
     {
         private readonly List<KeyValuePair<Action<Component>, Component>> _drawList = new List<KeyValuePair<Action<Component>, Component>>();
         private GizmosInstance _gizmosInstance;
+        private Type _dbcType;
 
         protected override void Initialize(InitSettings initSettings)
         {
@@ -56,18 +57,21 @@ namespace RuntimeUnityEditor.Core.Gizmos
         {
             _drawList.Clear();
 
-            var dbcType = AccessTools.TypeByName("DynamicBoneCollider");
+            if (_dbcType == null)
+                _dbcType = AccessTools.TypeByName("DynamicBoneCollider");
 
             var allComponents = rootTransform.GetComponentsInChildren<Component>();
             foreach (var component in allComponents)
             {
-                if (component is Renderer)
+                if (component == null)
+                    continue;
+                else if (component is Renderer)
                     _drawList.Add(new KeyValuePair<Action<Component>, Component>(DrawRendererGizmo, component));
                 else if (component is Transform)
                     _drawList.Add(new KeyValuePair<Action<Component>, Component>(DrawTransformGizmo, component));
                 else if (component is Collider)
                     _drawList.Add(new KeyValuePair<Action<Component>, Component>(DrawColliderGizmo, component));
-                else if (component.GetType() == dbcType)
+                else if (component.GetType() == _dbcType)
                     _drawList.Add(new KeyValuePair<Action<Component>, Component>(DrawDynamicBoneColliderGizmo, component));
 
             }
@@ -88,7 +92,8 @@ namespace RuntimeUnityEditor.Core.Gizmos
             {
                 var offset = Vector3.zero;
                 offset[cc.direction] = cc.height * 0.5f - cc.radius;
-                DrawWireCapsule(cc.center + offset, cc.center - offset, cc.radius, Color.cyan);
+                //todo does scale affect this?
+                DrawWireCapsule(cc.transform.position + cc.center + offset, cc.transform.position + cc.center - offset, cc.radius, Color.cyan);
             }
             else if (obj is BoxCollider bc)
             {
@@ -135,6 +140,7 @@ namespace RuntimeUnityEditor.Core.Gizmos
         {
             if (obj == null) return;
 
+            var transform = obj.transform;
             var tv = Traverse.Create(obj);
 
             var mBound = (int)tv.Field("m_Bound").GetValue(); // Bound enum
@@ -143,11 +149,11 @@ namespace RuntimeUnityEditor.Core.Gizmos
             var mRadius = tv.Field("m_Radius").GetValue<float>();
             var mHeight = tv.Field("m_Height").GetValue<float>();
             var mCenter = tv.Field("m_Center").GetValue<Vector3>();
-            var radius = mRadius * Mathf.Abs(obj.transform.lossyScale.z);
+            var radius = mRadius * Mathf.Abs(transform.lossyScale.z);
             var height = (mHeight - mRadius) * 0.5f;
             if (height <= 0f)
             {
-                lib.Gizmos.Sphere(obj.transform.TransformPoint(mCenter), radius, color);
+                lib.Gizmos.Sphere(transform.TransformPoint(mCenter), radius, color);
                 return;
             }
             var center = mCenter;
@@ -168,14 +174,13 @@ namespace RuntimeUnityEditor.Core.Gizmos
                     center2.z += height;
                     break;
             }
-            //Popcron.Gizmos.Sphere(obj.transform.TransformPoint(center), radius, color);
-            //Popcron.Gizmos.Sphere(obj.transform.TransformPoint(center2), radius, color);
-            DrawWireCapsule(obj.transform.TransformPoint(center), obj.transform.TransformPoint(center2), radius, color);
+            DrawWireCapsule(transform.TransformPoint(center), transform.TransformPoint(center2), radius, color);
         }
 
         // Based on code by Qriva
         private static void DrawWireCapsule(Vector3 p1, Vector3 p2, float radius, Color color)
         {
+            //Console.WriteLine($"{p1} {p2} {radius} {color}");
             // Special case when both points are in the same position
             if (p1 == p2)
             {
@@ -193,7 +198,6 @@ namespace RuntimeUnityEditor.Core.Gizmos
                 p2Rotation = Quaternion.Euler(p2Rotation.eulerAngles.x, p2Rotation.eulerAngles.y + 180f, p2Rotation.eulerAngles.z);
             }
             // First side
-
             lib.Gizmos.Arc(p1, radius, p1Rotation * Quaternion.Euler(90, 0, 0), 0f, 180f, color);
             lib.Gizmos.Arc(p1, radius, p1Rotation * Quaternion.Euler(0, 90, 0), 90f, 180f, color);
             lib.Gizmos.Circle(p1, radius, p1Rotation, color);
