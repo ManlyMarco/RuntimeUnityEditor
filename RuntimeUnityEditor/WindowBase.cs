@@ -28,11 +28,20 @@ namespace RuntimeUnityEditor.Core
         // ReSharper restore StaticMemberInGenericType
 
         private bool _canShow;
+        private Rect _windowRect;
+        private Action<Rect> _confRect;
 
         protected Window()
         {
-            WindowId = base.GetHashCode();
             DisplayType = FeatureDisplayType.Window;
+            SettingCategory = "Windows";
+        }
+
+        protected override void AfterInitialized(InitSettings initSettings)
+        {
+            base.AfterInitialized(initSettings);
+            WindowId = base.GetHashCode();
+            _confRect = initSettings.RegisterSetting(SettingCategory, DisplayName + " window size", WindowRect, string.Empty, b => WindowRect = b);
         }
 
         public override string DisplayName
@@ -190,7 +199,20 @@ namespace RuntimeUnityEditor.Core
 
         public virtual string Title { get; set; }
         public int WindowId { get; set; }
-        public virtual Rect WindowRect { get; set; }
+
+        public virtual Rect WindowRect
+        {
+            get => _windowRect;
+            set
+            { 
+                if (_windowRect != value)
+                {
+                    _windowRect = value;
+                    _confRect?.Invoke(value);
+                }
+            }
+        }
+
         public Vector2 MinimumSize { get; set; } = new Vector2(100, 100);
     }
 }

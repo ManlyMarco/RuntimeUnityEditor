@@ -52,34 +52,36 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
         public void Refresh(bool full, Predicate<GameObject> objectFilter)
         {
-            Stopwatch sw = null;
-            if (full) sw = Stopwatch.StartNew();
-
-            if (_cachedRootGameObjects == null || full)
-            {
-                _cachedRootGameObjects = FindAllRootGameObjects().OrderBy(x => x.name, StringComparer.InvariantCultureIgnoreCase).ToList();
+            if (_cachedRootGameObjects == null)
                 full = true;
+
+            Stopwatch sw = null;
+
+            if (full)
+            {
+                sw = Stopwatch.StartNew();
+                _cachedRootGameObjects = FindAllRootGameObjects().OrderBy(x => x.name, StringComparer.InvariantCultureIgnoreCase).ToList();
             }
             else
             {
                 _cachedRootGameObjects.RemoveAll(o => o == null);
-            }
 
-            if (UnityFeatureHelper.SupportsScenes && !full)
-            {
-                var any = false;
-                var newItems = UnityFeatureHelper.GetSceneGameObjects();
-                foreach (var newItem in newItems)
+                if (UnityFeatureHelper.SupportsScenes)
                 {
-                    if (!_cachedRootGameObjects.Contains(newItem))
+                    var any = false;
+                    var newItems = UnityFeatureHelper.GetSceneGameObjects();
+                    foreach (var newItem in newItems)
                     {
-                        any = true;
-                        _cachedRootGameObjects.Add(newItem);
+                        if (!_cachedRootGameObjects.Contains(newItem))
+                        {
+                            any = true;
+                            _cachedRootGameObjects.Add(newItem);
+                        }
                     }
-                }
-                if (any)
-                {
-                    _cachedRootGameObjects.Sort((o1, o2) => string.Compare(o1.name, o2.name, StringComparison.InvariantCultureIgnoreCase));
+                    if (any)
+                    {
+                        _cachedRootGameObjects.Sort((o1, o2) => string.Compare(o1.name, o2.name, StringComparison.InvariantCultureIgnoreCase));
+                    }
                 }
             }
 

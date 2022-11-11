@@ -37,8 +37,10 @@ namespace RuntimeUnityEditor.Core
             FeatureBase<T>.Instance = (T)this;
         }
 
+        protected string SettingCategory = "Features";
         private protected string _displayName;
         private bool _enabled;
+        private Action<bool> _confEnabled;
 
         /// <summary>
         /// Name shown in taskbar
@@ -57,16 +59,21 @@ namespace RuntimeUnityEditor.Core
             get => _enabled;
             set
             {
-                if(_enabled != value)
+                if (_enabled != value)
                 {
+                    // Need to get this before setting _enabled
                     var prevVisible = Visible;
                     _enabled = value;
+
                     var nowVisible = Visible;
                     if (prevVisible != nowVisible)
                         OnVisibleChanged(nowVisible);
+
+                    _confEnabled?.Invoke(value);
                 }
             }
         }
+
 
         /// <summary>
         /// If this instance is actually shown on screen / has its events fired.
@@ -83,7 +90,13 @@ namespace RuntimeUnityEditor.Core
             if (Initialized) throw new InvalidOperationException("The Feature is already initialized");
 
             Initialize(initSettings);
+            AfterInitialized(initSettings);
             _initialized = true;
+        }
+
+        protected virtual void AfterInitialized(InitSettings initSettings)
+        {
+            _confEnabled = initSettings.RegisterSetting(SettingCategory, DisplayName + " enabled", Enabled, string.Empty, b => Enabled = b);
         }
 
         void IFeature.OnUpdate()

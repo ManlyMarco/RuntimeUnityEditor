@@ -7,19 +7,25 @@ using UnityEngine;
 
 namespace RuntimeUnityEditor.Core
 {
-    public class WindowManager : FeatureBase<WindowManager>
+    public class WindowManager : IFeature
     {
         private int _windowId;
         private Rect _windowRect;
         private List<IFeature> _orderedFeatures;
         private string _title;
 
+        public static WindowManager Instance { get; private set; }
+
         protected string GetTitle() => RuntimeUnityEditorCore.Instance.ShowHotkey == KeyCode.None ? _title : _title + $" / Press {RuntimeUnityEditorCore.Instance.ShowHotkey} to show/hide";
         public int Height => (int)_windowRect.height;
 
-        protected override void Initialize(InitSettings initSettings)
+        public WindowManager()
         {
-            DisplayType = FeatureDisplayType.Hidden;
+            Instance = this;
+        }
+
+        void IFeature.OnInitialize(InitSettings initSettings)
+        {
             _windowId = GetHashCode();
             _title = $"{RuntimeUnityEditorCore.GUID} v{RuntimeUnityEditorCore.Version}";
         }
@@ -31,7 +37,7 @@ namespace RuntimeUnityEditor.Core
             _orderedFeatures = initializedFeatures.OrderByDescending(x => x.DisplayType).ToList();
         }
 
-        protected override void OnGUI()
+        void IFeature.OnOnGUI()
         {
             _windowRect = GUILayout.Window(_windowId, _windowRect, DrawTaskbar, GetTitle(), GUILayout.ExpandHeight(false), GUILayout.ExpandWidth(false), GUILayout.MaxWidth(Screen.width));
             IMGUIUtils.EatInputInRect(_windowRect);
@@ -56,7 +62,7 @@ namespace RuntimeUnityEditor.Core
                 {
                     if (firstFeature)
                     {
-                        GUI.color = Color.gray;
+                        GUI.color = new Color(1f, 1f, 1f, 0.75f);
                         if (GUILayout.Button("Reset"))
                         {
                             foreach (var window in _orderedFeatures.OfType<IWindow>())
@@ -95,5 +101,12 @@ namespace RuntimeUnityEditor.Core
 
             GUILayout.EndHorizontal();
         }
+
+        public bool Enabled { get; set; }
+        void IFeature.OnUpdate() { }
+        void IFeature.OnLateUpdate() { }
+        void IFeature.OnEditorShownChanged(bool visible) { }
+        FeatureDisplayType IFeature.DisplayType => FeatureDisplayType.Hidden;
+        string IFeature.DisplayName => "WindowManager";
     }
 }
