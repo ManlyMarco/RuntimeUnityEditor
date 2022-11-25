@@ -90,18 +90,30 @@ namespace RuntimeUnityEditor.Core.Gizmos
 
             if (obj is CapsuleCollider cc)
             {
+                var lossyScale = cc.transform.lossyScale;
+                var radiusScale = Mathf.Max(Mathf.Abs(lossyScale.x) * (cc.direction != 0 ? 1 : 0),
+                                        Mathf.Abs(lossyScale.y) * (cc.direction != 1 ? 1 : 0),
+                                        Mathf.Abs(lossyScale.z) * (cc.direction != 2 ? 1 : 0));
+                var heightScale = lossyScale[cc.direction];
+
+                var radiusScaled = cc.radius * radiusScale;
                 var offset = Vector3.zero;
-                offset[cc.direction] = cc.height * 0.5f - cc.radius;
-                //todo does scale affect this?
-                DrawWireCapsule(cc.transform.position + cc.center + offset, cc.transform.position + cc.center - offset, cc.radius, Color.cyan);
+                var height = Mathf.Max(Mathf.Abs(cc.height * heightScale), radiusScaled);
+                offset[cc.direction] = (height - radiusScaled) / 2f;
+                // take rotation into account
+                offset = cc.transform.rotation * offset;
+                var center = Vector3.Scale(cc.center, lossyScale);
+                DrawWireCapsule(cc.transform.position + center + offset, cc.transform.position + center - offset, radiusScaled, Color.cyan);
             }
             else if (obj is BoxCollider bc)
             {
-                lib.Gizmos.Cube(bc.transform.position + bc.center, bc.transform.rotation, bc.size, Color.cyan);
+                lib.Gizmos.Cube(bc.transform.position + bc.center, bc.transform.rotation, Vector3.Scale(bc.transform.lossyScale, bc.size), Color.cyan);
             }
             else if (obj is SphereCollider sc)
             {
-                lib.Gizmos.Sphere(sc.transform.position + sc.center, sc.radius, Color.cyan);
+                //todo rotation? not really needed
+                var lossyScale = sc.transform.lossyScale;
+                lib.Gizmos.Sphere(sc.transform.position + sc.center, sc.radius * Mathf.Max(lossyScale.x, lossyScale.y, lossyScale.z), Color.cyan);
             }
             else if (obj is MeshCollider mc)
             {
@@ -184,7 +196,7 @@ namespace RuntimeUnityEditor.Core.Gizmos
             // Special case when both points are in the same position
             if (p1 == p2)
             {
-                lib.Gizmos.Sphere(p1, radius, Color.blue);
+                lib.Gizmos.Sphere(p1, radius, color);
                 return;
             }
 
