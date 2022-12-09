@@ -11,12 +11,6 @@ namespace RuntimeUnityEditor.Bepin5
     [BepInPlugin(RuntimeUnityEditorCore.GUID, "Runtime Unity Editor", RuntimeUnityEditorCore.Version)]
     public class RuntimeUnityEditor5 : BaseUnityPlugin
     {
-        [Obsolete("No longer used", true)] public ConfigEntry<string> DnSpyPath { get; private set; }
-        [Obsolete("No longer used", true)] public ConfigEntry<string> DnSpyArgs { get; private set; }
-        [Obsolete("No longer used", true)] public ConfigEntry<bool> ShowRepl { get; private set; }
-        [Obsolete("No longer used", true)] public ConfigEntry<bool> EnableMouseInspector { get; private set; }
-        [Obsolete("No longer used", true)] public ConfigEntry<KeyboardShortcut> Hotkey { get; private set; }
-
         public static RuntimeUnityEditorCore Instance { get; private set; }
 
         private void Start()
