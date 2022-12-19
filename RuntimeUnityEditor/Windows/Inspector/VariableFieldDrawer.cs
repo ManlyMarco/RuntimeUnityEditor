@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using HarmonyLib;
+using RuntimeUnityEditor.Core.Clipboard;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.UI;
 using RuntimeUnityEditor.Core.Utils;
@@ -10,7 +12,7 @@ using UnityEngine;
 
 namespace RuntimeUnityEditor.Core.Inspector
 {
-    internal class VariableFieldDrawer
+    internal static class VariableFieldDrawer
     {
         public static Dictionary<Type, Action<ICacheEntry, object>> SettingDrawHandlers { get; }
 
@@ -40,8 +42,10 @@ namespace RuntimeUnityEditor.Core.Inspector
         {
             if (Event.current.isKey && (Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter)) _userHasHitReturn = true;
 
-            if (setting is MethodCacheEntry)
-                DrawUnknownField(value);
+            if (setting is MethodCacheEntry mce)
+            {
+                DrawInvokeField(mce);
+            }
             else
             {
                 var canSetValue = setting.CanSetValue();
@@ -82,7 +86,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                 GUI.color = Color.white;
             }
         }
-
+        
         private static void DrawUnknownField(object value)
         {
             GUILayout.TextArea(ToStringConverter.ObjectToString(value), GUI.skin.label, GUILayout.ExpandWidth(true));
@@ -328,8 +332,8 @@ namespace RuntimeUnityEditor.Core.Inspector
 
             GUILayout.FlexibleSpace();
 
-            if (GUILayout.Button("View", GUILayout.ExpandWidth(false)))
-                RuntimeUnityEditorCore.Instance.PreviewWindow.SetShownObject(tex, tex.name);
+            if (ObjectView.ObjectViewWindow.Initialized && GUILayout.Button("View", GUILayout.ExpandWidth(false)))
+                ObjectView.ObjectViewWindow.Instance.SetShownObject(tex, tex.name);
         }
 
         private static void DrawSprite(ICacheEntry obj, object value)
@@ -353,8 +357,8 @@ namespace RuntimeUnityEditor.Core.Inspector
 
             GUILayout.FlexibleSpace();
 
-            if (GUILayout.Button("View", GUILayout.ExpandWidth(false)))
-                RuntimeUnityEditorCore.Instance.PreviewWindow.SetShownObject(spr.GetVisibleTexture(), objectName);
+            if (ObjectView.ObjectViewWindow.Initialized && GUILayout.Button("View", GUILayout.ExpandWidth(false)))
+                ObjectView.ObjectViewWindow.Instance.SetShownObject(spr.GetVisibleTexture(), objectName);
         }
 
         private static void DrawImage(ICacheEntry obj, object value)
@@ -362,5 +366,201 @@ namespace RuntimeUnityEditor.Core.Inspector
             var img = (UnityEngine.UI.Image)value;
             DrawSprite(img.sprite, $"{img.transform.GetFullTransfromPath()} [Image ({img.name})]");
         }
+
+        #region Method Invoke
+        
+        private static readonly GUIContent _buttonInvokeContent = new GUIContent("Invoke", "Execute this method. Will open a new window to let you specify any necessary parameters.");
+        private static readonly int _currentlyInvokingWindowId = Core.RuntimeUnityEditorCore.Version.GetHashCode() + 80085;
+
+        private static MethodCacheEntry _currentlyInvoking;
+        private static object _currentlyInvokingResult;
+        private static Exception _currentlyInvokingException;
+        private static Rect _currentlyInvokingRect;
+        private static Vector2 _currentlyInvokingPos;
+        private static readonly List<string> _currentlyInvokingParams = new List<string>();
+        private static readonly List<string> _currentlyInvokingArgs = new List<string>();
+
+        private static void DrawInvokeField(MethodCacheEntry method)
+        {
+            if (GUILayout.Button(_buttonInvokeContent, GUILayout.ExpandWidth(false)))
+                ShowInvokeWindow(method);
+
+            GUILayout.Label(method.ParameterString, GUILayout.ExpandWidth(true));
+        }
+
+        public static void ShowInvokeWindow(MethodCacheEntry method)
+        {
+            if (_currentlyInvoking != method)
+            {
+                _currentlyInvoking = method;
+                _currentlyInvokingResult = null;
+                _currentlyInvokingException = null;
+                _currentlyInvokingRect.Set(0, 0, 0, 0);
+                _currentlyInvokingArgs.Clear();
+                _currentlyInvokingParams.Clear();
+
+                if (method != null)
+                {
+                    _currentlyInvokingArgs.AddRange(Enumerable.Repeat(string.Empty, method.MethodInfo.GetGenericArguments().Length));
+                    _currentlyInvokingParams.AddRange(Enumerable.Repeat(string.Empty, method.MethodInfo.GetParameters().Length));
+                }
+            }
+        }
+
+        public static void DrawInvokeWindow()
+        {
+            if (_currentlyInvoking == null) return;
+
+            if (_currentlyInvokingRect.height == 0 || _currentlyInvokingRect.width == 0)
+            {
+                var inspectorMidX = Inspector.Instance.WindowRect.xMin + Inspector.Instance.WindowRect.width / 2;
+                var inspectorMidY = Inspector.Instance.WindowRect.yMin + Inspector.Instance.WindowRect.height / 2;
+                const int w = 320;
+                const int h = 240;
+                _currentlyInvokingRect.Set(inspectorMidX - w / 2f, inspectorMidY - h / 2f, w, h);
+
+                GUI.BringWindowToFront(_currentlyInvokingWindowId);
+                GUI.FocusWindow(_currentlyInvokingWindowId);
+            }
+
+            _currentlyInvokingRect = GUILayout.Window(_currentlyInvokingWindowId, _currentlyInvokingRect, DrawInvokeWindowFunc, "Invoke " + _currentlyInvoking.Name());
+        }
+
+        private static void DrawInvokeWindowFunc(int id)
+        {
+            GUILayout.BeginVertical();
+            {
+                _currentlyInvokingPos = GUILayout.BeginScrollView(_currentlyInvokingPos, GUI.skin.box);
+                {
+                    const int indexColWidth = 25;
+
+                    var generics = _currentlyInvoking.MethodInfo.GetGenericArguments();
+                    if (generics.Length > 0)
+                    {
+                        GUILayout.Label("Generic arguments (Input a Type name, or pick a Type object from clipboard by typing #0, #1, #2...)");
+                        for (var index = 0; index < generics.Length; index++)
+                        {
+                            var genericArg = generics[index];
+
+                            GUILayout.BeginHorizontal();
+                            GUILayout.Label("#" + index, GUILayout.Width(indexColWidth));
+                            GUILayout.Label(genericArg.FullDescription(), GUILayout.Width((_currentlyInvokingRect.width - indexColWidth) / 2.3f));
+                            _currentlyInvokingArgs[index] = GUILayout.TextField(_currentlyInvokingArgs[index], GUILayout.ExpandWidth(true));
+                            GUILayout.EndHorizontal();
+                        }
+                    }
+
+                    var parameters = _currentlyInvoking.MethodInfo.GetParameters();
+                    if (parameters.Length > 0)
+                    {
+                        GUILayout.Label("Parameters (Input a value, or pick a value from clipboard by typing #0, #1, #2...)");
+                        for (var index = 0; index < parameters.Length; index++)
+                        {
+                            var parameter = parameters[index];
+
+                            GUILayout.BeginHorizontal();
+                            GUILayout.Label("#" + index, GUILayout.Width(indexColWidth));
+                            GUILayout.Label(parameter.ParameterType.FullDescription() + " " + parameter.Name, GUILayout.Width((_currentlyInvokingRect.width - indexColWidth) / 2.3f));
+                            _currentlyInvokingParams[index] = GUILayout.TextField(_currentlyInvokingParams[index], GUILayout.ExpandWidth(true));
+                            GUILayout.EndHorizontal();
+                        }
+                    }
+
+                    if (generics.Length == 0 && parameters.Length == 0)
+                        GUILayout.Label("This method has no parameters, click Invoke to run it.");
+                }
+                GUILayout.EndScrollView();
+
+                GUILayout.BeginHorizontal(GUI.skin.box);
+                {
+                    GUILayout.Label("Invoke result: ", GUILayout.ExpandWidth(false));
+                    GUILayout.TextArea(_currentlyInvokingException != null ? _currentlyInvokingException.GetType().Name + " - " + _currentlyInvokingException.Message : _currentlyInvokingResult == null ? "None / NULL" : _currentlyInvokingResult.ToString(), GUI.skin.label, GUILayout.ExpandWidth(true));
+                }
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal(GUI.skin.box);
+                {
+                    //todo
+                    if (GUILayout.Button("Invoke"))
+                    {
+                        try
+                        {
+                            _currentlyInvokingException = null;
+
+                            var methodInfo = _currentlyInvoking.MethodInfo;
+
+                            if (_currentlyInvokingArgs.Count > 0)
+                            {
+                                var typeArgs = new Type[_currentlyInvokingArgs.Count];
+                                for (var index = 0; index < _currentlyInvokingArgs.Count; index++)
+                                {
+                                    try
+                                    {
+                                        var arg = _currentlyInvokingArgs[index];
+                                        typeArgs[index] = arg.StartsWith("#") ? (Type)ClipboardWindow.Contents[int.Parse(arg.Substring(1))] : AccessTools.TypeByName(arg);
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        throw new ArgumentException($"Invalid generic argument #{index} - " + e.Message);
+                                    }
+                                }
+
+                                methodInfo = methodInfo.MakeGenericMethod(typeArgs);
+                            }
+
+                            var methodParams = methodInfo.GetParameters();
+                            var paramArgs = new object[_currentlyInvokingParams.Count];
+                            for (var index = 0; index < _currentlyInvokingParams.Count; index++)
+                            {
+                                try
+                                {
+                                    var arg = _currentlyInvokingParams[index];
+                                    var param = methodParams[index];
+                                    var obj = arg.StartsWith("#") ? ClipboardWindow.Contents[int.Parse(arg.Substring(1))] : Convert.ChangeType(arg, param.ParameterType);
+                                    paramArgs[index] = obj;
+                                }
+                                catch (Exception e)
+                                {
+                                    throw new ArgumentException($"Invalid parameter #{index} - " + e.Message);
+                                }
+                            }
+
+                            _currentlyInvokingResult = methodInfo.Invoke(_currentlyInvoking.Instance, paramArgs);
+                        }
+                        catch (Exception e)
+                        {
+                            _currentlyInvokingResult = null;
+                            _currentlyInvokingException = e;
+                        }
+                    }
+
+                    GUILayout.FlexibleSpace();
+
+                    GUI.enabled = _currentlyInvokingResult != null;
+                    if (GUILayout.Button("Inspect result"))
+                    {
+                        Inspector.Instance.Push(new InstanceStackEntry(_currentlyInvokingResult, "Invoke " + _currentlyInvoking.Name(), _currentlyInvoking), false);
+                        _currentlyInvoking = null;
+                    }
+                    if (GUILayout.Button("Copy result to clipboard"))
+                    {
+                        ClipboardWindow.Contents.Add(_currentlyInvokingResult);
+                    }
+                    GUI.enabled = true;
+
+                    GUILayout.FlexibleSpace();
+
+                    if (GUILayout.Button("Close"))
+                        _currentlyInvoking = null;
+                }
+                GUILayout.EndHorizontal();
+
+            }
+            GUILayout.EndVertical();
+
+            _currentlyInvokingRect = IMGUIUtils.DragResizeEat(id, _currentlyInvokingRect);
+        }
+
+        #endregion
     }
 }

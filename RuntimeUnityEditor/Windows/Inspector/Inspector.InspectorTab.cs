@@ -70,23 +70,9 @@ namespace RuntimeUnityEditor.Core.Inspector
                                                                           IEnumerable<MethodInfo> methodsToCheck)
             {
                 var cacheItems = methodsToCheck
-                    .Where(x => !x.IsConstructor && !x.IsSpecialName && x.GetParameters().Length == 0)
+                    .Where(x => !x.IsConstructor && !x.IsSpecialName)
                     .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
                     .Where(x => x.Name != "MemberwiseClone" && x.Name != "obj_address") // Instant game crash
-                    .Select(m =>
-                    {
-                        if (m.ContainsGenericParameters)
-                            try
-                            {
-                                return m.MakeGenericMethod(instanceType);
-                            }
-                            catch (Exception)
-                            {
-                                return null;
-                            }
-
-                        return m;
-                    }).Where(x => x != null)
                     .Select(m => new MethodCacheEntry(instance, m)).Cast<ICacheEntry>();
                 return cacheItems;
             }

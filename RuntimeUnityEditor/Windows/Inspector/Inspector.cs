@@ -125,8 +125,19 @@ namespace RuntimeUnityEditor.Core.Inspector
             return MakeDefaultWindowRect(screenRect, TextAlignment.Center);
         }
 
+        protected override void OnGUI()
+        {
+            base.OnGUI();
+
+            VariableFieldDrawer.DrawInvokeWindow();
+        }
+
         protected override void DrawContents()
         {
+            // Close the invoke window if the main inspector window was clicked (event check needs to be inside of the clicked window func)
+            if (Event.current.type == EventType.MouseDown) 
+                VariableFieldDrawer.ShowInvokeWindow(null);
+
             // Clean up dead tab contents
             foreach (var tab in _tabs.ToList())
             {
@@ -379,7 +390,7 @@ namespace RuntimeUnityEditor.Core.Inspector
 
                     VariableFieldDrawer.DrawSettingValue(entry, value);
 
-                    if(Clipboard.ClipboardWindow.Initialized && value != null && GUILayout.Button(_buttonCopyContent, _buttonDnspyOptions))
+                    if (Clipboard.ClipboardWindow.Initialized && value != null && GUILayout.Button(_buttonCopyContent, _buttonDnspyOptions))
                     {
                         Clipboard.ClipboardWindow.Contents.Add(value);
                         Clipboard.ClipboardWindow.Instance.Enabled = true;

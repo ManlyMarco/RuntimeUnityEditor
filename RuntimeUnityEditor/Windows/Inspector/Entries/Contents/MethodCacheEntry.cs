@@ -16,20 +16,19 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
             _name = FieldCacheEntry.GetMemberName(instance, methodInfo);
             _returnTypeName = MethodInfo.ReturnType.FullDescription();
 
-            _text = string.Empty;
+            ParameterString = string.Empty;
             var strGenerics = methodInfo.GetGenericArguments().Join(p => p.FullDescription(), ", ");
-            if (strGenerics.Length > 0) _text += "<" + strGenerics + ">";
+            if (strGenerics.Length > 0) ParameterString += "<" + strGenerics + ">";
             var strParams = methodInfo.GetParameters().Join(p => p.ParameterType.FullDescription() + " " + p.Name, ", ");
-            _text += "(" + strParams + ")";
+            ParameterString += "(" + strParams + ")";
 
             _content = new GUIContent(_name, methodInfo.GetFancyDescription());
         }
 
         public MethodInfo MethodInfo { get; }
         public object Instance { get; }
-
+        public string ParameterString { get; }
         private readonly string _name;
-        private readonly string _text;
         private readonly string _returnTypeName;
         private readonly GUIContent _content;
 
@@ -41,7 +40,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
 
         public object EnterValue() => throw new InvalidOperationException();
 
-        public object GetValue() => _text;
+        public object GetValue() => null;
 
         public void SetValue(object newValue) => throw new InvalidOperationException();
 

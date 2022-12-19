@@ -59,20 +59,20 @@ namespace RuntimeUnityEditor.Core.Utils
             switch (member)
             {
                 case FieldInfo fieldInfo:
-                    return (fieldInfo.IsPublic ? "public " : (fieldInfo.IsPrivate ? "private " : (fieldInfo.IsFamily ? "protected" : "non-public "))) + (fieldInfo.IsStatic ? "static " : "") + (fieldInfo.IsLiteral ? "const " : fieldInfo.IsInitOnly ? "readonly " : "") + "field" + "\n\n" +
+                    return (fieldInfo.IsPublic ? "public " : (fieldInfo.IsPrivate ? "private " : (fieldInfo.IsFamily ? "protected " : (fieldInfo.IsAssembly ? "internal " : "non-public ")))) + (fieldInfo.IsStatic ? "static " : "instance ") + (fieldInfo.IsLiteral ? "const " : fieldInfo.IsInitOnly ? "readonly " : "") + "field" + "\n\n" +
                            "Field type: " + fieldInfo.FieldType.FullDescription() + "\n\n" +
                            "Declared in: " + fieldInfo.DeclaringType.FullDescription();
                 case PropertyInfo propertyInfo:
                     var getter = propertyInfo.GetGetMethod(true);
                     var setter = propertyInfo.GetSetMethod(true);
-                    return (getter?.IsPublic ?? setter.IsPublic ? "public " : (getter?.IsPrivate ?? setter.IsPrivate ? "private " : (getter?.IsFamily ?? setter.IsFamily ? "protected" : "non-public "))) + (getter?.IsStatic ?? setter.IsStatic ? "static " : "") + "property" + "\n\n" +
-                           "Getter: " + (getter != null ? ((getter.IsPublic ? "(public) " : "(non-public) ") + getter.FullDescription()) : "-") + "\n" +
-                           "Setter: " + (setter != null ? ((setter.IsPublic ? "(public) " : "(non-public) ") + setter.FullDescription()) : "-") + "\n" +
+                    return (getter?.IsPublic ?? setter.IsPublic ? "public " : (getter?.IsPrivate ?? setter.IsPrivate ? "private " : (getter?.IsFamily ?? setter.IsFamily ? "protected " : (getter?.IsAssembly ?? setter.IsAssembly ? "internal " : "non-public ")))) + (getter?.IsStatic ?? setter.IsStatic ? "static " : "instance ") + "property" + "\n\n" +
+                           "Getter: " + (getter != null ? ((getter.IsPublic ? "(public) " : "(non-public) ") + getter.FullDescription()) : "No getter") + "\n" +
+                           "Setter: " + (setter != null ? ((setter.IsPublic ? "(public) " : "(non-public) ") + setter.FullDescription()) : "No setter") + "\n" +
                            "Property type: " + propertyInfo.PropertyType.FullDescription() + "\n\n" +
                            "Declared in: " + propertyInfo.DeclaringType.FullDescription();
                 case MethodInfo methodInfo:
-                    return (methodInfo.IsPublic ? "public " : (methodInfo.IsPrivate ? "private " : (methodInfo.IsFamily ? "protected" : "non-public "))) + (methodInfo.IsStatic ? "static " : "") + "method" + "\n\n" +
-                           "Generic parameters: " + methodInfo.GetGenericArguments().Join(p => p.FullDescription(), ", ") + "\n" +
+                    return (methodInfo.IsPublic ? "public " : (methodInfo.IsPrivate ? "private " : (methodInfo.IsFamily ? "protected " : (methodInfo.IsAssembly ? "internal " : "non-public ")))) + (methodInfo.IsStatic ? "static " : "instance ") + "method" + "\n\n" +
+                           "Generic arguments: " + methodInfo.GetGenericArguments().Join(p => p.FullDescription(), ", ") + "\n" +
                            "Parameters: " + methodInfo.GetParameters().Join(p => p.ParameterType.FullDescription() + " " + p.Name, ", ") + "\n" +
                            "Return type: " + methodInfo.ReturnType.FullDescription() + "\n\n" +
                            "Declared in: " + methodInfo.DeclaringType.FullDescription();
@@ -80,10 +80,10 @@ namespace RuntimeUnityEditor.Core.Utils
                     var adder = eventInfo.GetAddMethod(true);
                     var remover = eventInfo.GetRemoveMethod(true);
                     var raiser = eventInfo.GetRaiseMethod(true);
-                    return (adder.IsPublic ? "public " : (adder.IsPrivate ? "private " : (adder.IsFamily ? "protected" : "non-public "))) + (adder.IsStatic ? "static " : "") + "event" + "\n\n" +
+                    return (adder.IsPublic ? "public " : (adder.IsPrivate ? "private " : (adder.IsFamily ? "protected " : (adder.IsAssembly ? "internal " : "non-public ")))) + (adder.IsStatic ? "static " : "instance ") + "event" + "\n\n" +
                            "Add: " + (adder.IsPublic ? "(public) " : "(non-public) ") + adder.FullDescription() + "\n" +
-                           "Remove: " + (remover != null ? ((remover.IsPublic ? "(public) " : "(non-public) ") + remover.FullDescription()) : "-") + "\n" +
-                           "Invoke: " + (raiser != null ? ((raiser.IsPublic ? "(public) " : "(non-public) ") + raiser.FullDescription()) : "-") + "\n" +
+                           "Remove: " + (remover != null ? ((remover.IsPublic ? "(public) " : "(non-public) ") + remover.FullDescription()) : "No remove") + "\n" +
+                           "Invoke: " + (raiser != null ? ((raiser.IsPublic ? "(public) " : "(non-public) ") + raiser.FullDescription()) : "No invoke") + "\n" +
                            "Event handler type: " + eventInfo.EventHandlerType.FullDescription() + "\n\n" +
                            "Declared in: " + eventInfo.DeclaringType.FullDescription();
                 case null:
