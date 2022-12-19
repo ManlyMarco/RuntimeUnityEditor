@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 
 namespace RuntimeUnityEditor.Core.Inspector.Entries
 {
@@ -6,11 +7,10 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
     {
         string Name();
         string TypeName();
-
+        GUIContent GetNameContent();
         /// <summary>
         /// Get object that is entered when variable name is clicked in inspector
         /// </summary>
-        /// <returns></returns>
         object EnterValue();
         object GetValue();
         void SetValue(object newValue);

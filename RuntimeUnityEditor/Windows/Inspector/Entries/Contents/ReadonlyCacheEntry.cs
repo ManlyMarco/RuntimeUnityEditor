@@ -8,7 +8,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         private readonly Type _type;
         private string _tostringCache;
 
-        public ReadonlyCacheEntry(string name, object obj) : base(name)
+        public ReadonlyCacheEntry(string name, object obj) : base(name, "Read-only item (RUE-only, it doesn't actually exist).")
         {
             Object = obj;
             _type = obj.GetType();

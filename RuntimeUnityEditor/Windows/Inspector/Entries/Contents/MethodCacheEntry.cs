@@ -1,95 +1,54 @@
 ﻿using System;
-using System.Linq;
 using System.Reflection;
+using HarmonyLib;
 using RuntimeUnityEditor.Core.Utils;
-using RuntimeUnityEditor.Core.Utils.Abstractions;
+using UnityEngine;
 
 namespace RuntimeUnityEditor.Core.Inspector.Entries
 {
-    public class MethodCacheEntry : CacheEntryBase
+    public class MethodCacheEntry : ICacheEntry
     {
-        public MethodCacheEntry(object ins, MethodInfo m) : base(GetMethodName(ins, m))
+        public MethodCacheEntry(object instance, MethodInfo methodInfo)
         {
-            if (m == null)
-                throw new ArgumentNullException(nameof(m));
+            Instance = instance;
+            MethodInfo = methodInfo ?? throw new ArgumentNullException(nameof(methodInfo));
 
-            _instance = ins;
-            MethodInfo = m;
-        }
+            _name = FieldCacheEntry.GetMemberName(instance, methodInfo);
+            _returnTypeName = MethodInfo.ReturnType.FullDescription();
 
-        private static string GetMethodName(object ins, MethodBase methodInfo)
-        {
-            if (methodInfo != null)
-            {
-                var name = FieldCacheEntry.GetMemberName(ins, methodInfo);
+            _text = string.Empty;
+            var strGenerics = methodInfo.GetGenericArguments().Join(p => p.FullDescription(), ", ");
+            if (strGenerics.Length > 0) _text += "<" + strGenerics + ">";
+            var strParams = methodInfo.GetParameters().Join(p => p.ParameterType.FullDescription() + " " + p.Name, ", ");
+            _text += "(" + strParams + ")";
 
-                var genericArguments = methodInfo.GetGenericArguments();
-                if (genericArguments.Any())
-                {
-                    name += "<" + string.Join(", ", genericArguments.Select(x => x.Name).ToArray()) + ">";
-                }
-
-                return name;
-            }
-            return "INVALID";
+            _content = new GUIContent(_name, methodInfo.GetFancyDescription());
         }
 
         public MethodInfo MethodInfo { get; }
+        public object Instance { get; }
 
-        private readonly object _instance;
-        private object _valueCache;
+        private readonly string _name;
+        private readonly string _text;
+        private readonly string _returnTypeName;
+        private readonly GUIContent _content;
 
-        public override object GetValueToCache()
-        {
-            return (_instance == null ? "Static " : "") + "Method call - enter to evaluate";
-        }
+        public string Name() => _name;
 
-        public override object GetValue()
-        {
-            return _valueCache ?? base.GetValue();
-        }
+        public string TypeName() => _returnTypeName;
 
-        public override object EnterValue()
-        {
-            try
-            {
-                // If this is the first user clicked, eval the method and display the result. second time enter as normal
-                if (_valueCache == null)
-                {
-                    var result = MethodInfo.Invoke(_instance, null);
+        public GUIContent GetNameContent() => _content;
 
-                    _valueCache = result;
-                    return null;
-                }
+        public object EnterValue() => throw new InvalidOperationException();
 
-                return _valueCache;
-            }
-            catch (Exception ex)
-            {
-                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, $"Failed to evaluate the method {Name()} - {ex.Message}");
-                _valueCache = ex;
-                return null;
-            }
-        }
+        public object GetValue() => _text;
 
-        protected override bool OnSetValue(object newValue)
-        {
-            return false;
-        }
+        public void SetValue(object newValue) => throw new InvalidOperationException();
 
-        public override Type Type()
-        {
-            return MethodInfo.ReturnType;
-        }
+        public Type Type() => MethodInfo.ReturnType;
 
-        public override bool CanSetValue()
-        {
-            return false;
-        }
+        public bool CanSetValue() => false;
 
-        public override bool CanEnterValue()
-        {
-            return _valueCache == null || base.CanEnterValue();
-        }
+        public bool CanEnterValue() => false;
     }
 }

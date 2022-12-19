@@ -14,7 +14,10 @@ namespace RuntimeUnityEditor.Core.Inspector
         private readonly GUILayoutOption[] _inspectorTypeWidth = { GUILayout.Width(170), GUILayout.MaxWidth(170) };
         private readonly GUILayoutOption[] _inspectorNameWidth = { GUILayout.Width(240), GUILayout.MaxWidth(240) };
         private readonly GUILayoutOption _inspectorRecordHeight = GUILayout.Height(InspectorRecordHeight);
-        private readonly GUILayoutOption _dnSpyButtonOptions = GUILayout.Width(19);
+
+        private readonly GUILayoutOption _buttonDnspyOptions = GUILayout.Width(19);
+        private readonly GUIContent _buttonDnspyContent = new GUIContent("^", "Open in DnSpy (launches DnSpy, loads assembly containing this member, and opens a new tab focused on this member)");
+        private readonly GUIContent _buttonCopyContent = new GUIContent("C", "Copy to clipboard");
 
         private readonly List<InspectorTab> _tabs = new List<InspectorTab>();
         private InspectorTab _currentTab;
@@ -66,7 +69,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                 };
             }
 
-            if (GUILayout.Button(field.Name(), _alignedButtonStyle, _inspectorNameWidth))
+            if (GUILayout.Button(field.GetNameContent(), _alignedButtonStyle, _inspectorNameWidth))
             {
                 var val = field.EnterValue();
                 if (val != null)
@@ -372,17 +375,17 @@ namespace RuntimeUnityEditor.Core.Inspector
                     if (entry.CanEnterValue() || value is Exception)
                         DrawVariableNameEnterButton(entry);
                     else
-                        GUILayout.TextArea(entry.Name(), GUI.skin.label, _inspectorNameWidth);
+                        GUILayout.Label(entry.GetNameContent(), _inspectorNameWidth);
 
                     VariableFieldDrawer.DrawSettingValue(entry, value);
 
-                    if(Clipboard.ClipboardWindow.Initialized && value != null && GUILayout.Button("C", _dnSpyButtonOptions))
+                    if(Clipboard.ClipboardWindow.Initialized && value != null && GUILayout.Button(_buttonCopyContent, _buttonDnspyOptions))
                     {
                         Clipboard.ClipboardWindow.Contents.Add(value);
                         Clipboard.ClipboardWindow.Instance.Enabled = true;
                     }
 
-                    if (DnSpyHelper.IsAvailable && GUILayout.Button("^", _dnSpyButtonOptions))
+                    if (DnSpyHelper.IsAvailable && GUILayout.Button(_buttonDnspyContent, _buttonDnspyOptions))
                         DnSpyHelper.OpenInDnSpy(entry);
                 }
                 catch (Exception ex)

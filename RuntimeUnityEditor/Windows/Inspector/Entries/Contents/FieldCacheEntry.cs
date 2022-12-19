@@ -1,25 +1,24 @@
 ﻿using System;
 using System.Reflection;
+using RuntimeUnityEditor.Core.Utils;
 
 namespace RuntimeUnityEditor.Core.Inspector.Entries
 {
     public class FieldCacheEntry : CacheEntryBase
     {
         public FieldCacheEntry(object ins, FieldInfo f) : this(ins, f, null) { }
-        public FieldCacheEntry(object ins, FieldInfo f, ICacheEntry parent) : base(GetMemberName(ins, f))
+        public FieldCacheEntry(object ins, FieldInfo f, ICacheEntry parent) : base(GetMemberName(ins, f), f.GetFancyDescription())
         {
-            if (f == null)
-                throw new ArgumentNullException(nameof(f));
-
             _instance = ins;
-            FieldInfo = f;
+            FieldInfo = f ?? throw new ArgumentNullException(nameof(f));
             _parent = parent;
         }
 
         internal static string GetMemberName(object ins, MemberInfo f)
         {
-            if (ins != null) return f?.Name;
-            return "S/" + f?.Name;
+            //if (ins != null)
+                return f?.Name;
+            //return "S/" + f?.Name;
         }
 
         public FieldInfo FieldInfo { get; }

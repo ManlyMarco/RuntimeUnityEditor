@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using HarmonyLib;
 
 namespace RuntimeUnityEditor.Core.Inspector.Entries
 {
@@ -9,7 +10,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         private readonly IList _list;
         private readonly int _index;
 
-        public ListCacheEntry(IList container, int index) : base(ReadonlyListCacheEntry.GetListItemName(index))
+        public ListCacheEntry(IList container, int index) : base(ReadonlyListCacheEntry.GetListItemName(index), $"Item contained inside of a list.\n\nIndex: {index}\n\nList type: {container.GetType().FullDescription()}")
         {
             _index = index;
             _list = container;

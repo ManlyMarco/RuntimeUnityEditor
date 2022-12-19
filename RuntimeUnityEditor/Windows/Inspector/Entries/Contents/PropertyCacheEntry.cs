@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Reflection;
+using RuntimeUnityEditor.Core.Utils;
 
 namespace RuntimeUnityEditor.Core.Inspector.Entries
 {
     public class PropertyCacheEntry : CacheEntryBase
     {
         public PropertyCacheEntry(object ins, PropertyInfo p) : this(ins, p, null) { }
-        public PropertyCacheEntry(object ins, PropertyInfo p, ICacheEntry parent) : base(FieldCacheEntry.GetMemberName(ins, p))
+        public PropertyCacheEntry(object ins, PropertyInfo p, ICacheEntry parent) : base(FieldCacheEntry.GetMemberName(ins, p), p.GetFancyDescription())
         {
             if (p == null)
                 throw new ArgumentNullException(nameof(p));

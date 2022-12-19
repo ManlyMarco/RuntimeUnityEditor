@@ -1,5 +1,6 @@
 ﻿using System;
 using RuntimeUnityEditor.Core.Utils;
+using UnityEngine;
 
 namespace RuntimeUnityEditor.Core.Inspector.Entries
 {
@@ -8,10 +9,13 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         // todo add gui option
         public static bool CachingEnabled { get; set; } = false;
 
-        protected CacheEntryBase(string name)
+        protected CacheEntryBase(string name, string description)
         {
             _name = name;
+            _nameContent = new GUIContent(_name, description + "\n\nLeft click to inspect in current tab, Right/Middle click to inspect in a new tab.");
         }
+
+        public GUIContent GetNameContent() => _nameContent;
 
         public virtual object EnterValue()
         {
@@ -59,6 +63,8 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         }
 
         private bool? _canEnter;
+        private GUIContent _nameContent;
+
         public virtual bool CanEnterValue()
         {
             if (_canEnter == null)
