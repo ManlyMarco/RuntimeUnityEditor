@@ -146,7 +146,7 @@ namespace RuntimeUnityEditor.Core.REPL
                     }
                     catch { }
                 }
-                finish:;
+            finish:;
             }
 
             return results.ToArray();
@@ -223,6 +223,19 @@ namespace RuntimeUnityEditor.Core.REPL
         public static void message(string message)
         {
             RuntimeUnityEditorCore.Logger.Log(LogLevel.Message, message);
+        }
+
+        [Documentation("paste(index) - paste clipboard contents from a given int index.")]
+        public static object paste(int index)
+        {
+            return Clipboard.ClipboardWindow.Contents[index];
+        }
+
+        [Documentation("copy(object) - copy given object to clipboard (classes are copied by reference, returns the index it was added under).")]
+        public static int copy(object @object)
+        {
+            Clipboard.ClipboardWindow.Contents.Add(@object);
+            return Clipboard.ClipboardWindow.Contents.Count - 1;
         }
 
         [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property)]

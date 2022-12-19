@@ -24,7 +24,7 @@ namespace RuntimeUnityEditor.Core.ObjectView
 
         protected override Rect GetDefaultWindowRect(Rect screenRect)
         {
-            return new Rect(screenRect.xMin, screenRect.yMin, SideWidth, SideWidth);
+            return MakeDefaultWindowRect(screenRect, TextAlignment.Left);
         }
 
         protected override void DrawContents()

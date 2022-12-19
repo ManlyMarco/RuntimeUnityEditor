@@ -101,6 +101,7 @@
     <Compile Include="Utils\MovingAverage.cs" />
     <Compile Include="WindowBase.cs" />
     <Compile Include="Features\WireframeFeature.cs" />
+    <Compile Include="Windows\Clipboard\ClipboardWindow.cs" />
     <Compile Include="Windows\WindowManager.cs" />
     <Compile Include="Windows\Profiler\ProfilerWindow.cs" />
     <Compile Include="Utils\Abstractions\UnityInput.cs" />

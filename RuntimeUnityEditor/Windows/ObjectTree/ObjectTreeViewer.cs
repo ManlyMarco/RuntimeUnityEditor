@@ -571,8 +571,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
         protected override Rect GetDefaultWindowRect(Rect screenRect)
         {
-            var treeViewHeight = screenRect.height;
-            return new Rect(screenRect.xMax - SideWidth, screenRect.yMin, SideWidth, treeViewHeight);
+            return MakeDefaultWindowRect(screenRect, TextAlignment.Right);
         }
 
         protected override void VisibleChanged(bool visible)

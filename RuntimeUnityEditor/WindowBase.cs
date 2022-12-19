@@ -186,15 +186,28 @@ namespace RuntimeUnityEditor.Core
 
         protected abstract Rect GetDefaultWindowRect(Rect screenRect);
 
-        public static Rect GetCenterWindowDefaultRect(Rect screenRect)
+        public static Rect MakeDefaultWindowRect(Rect screenRect, TextAlignment side)
         {
-            var centerWidth = (int)Mathf.Min(850, screenRect.width);
-            var centerX = (int)(screenRect.xMin + screenRect.width / 2 - Mathf.RoundToInt((float)centerWidth / 2));
+            switch (side)
+            {
+                case TextAlignment.Left:
+                    return new Rect(screenRect.xMin, screenRect.yMin, SideWidth, screenRect.height / 2);
 
-            var inspectorHeight = (int)(screenRect.height / 4) * 3;
-            return new Rect(centerX, screenRect.yMin, centerWidth, inspectorHeight);
+                case TextAlignment.Center:
+                    var centerWidth = (int)Mathf.Min(850, screenRect.width);
+                    var centerX = (int)(screenRect.xMin + screenRect.width / 2 - Mathf.RoundToInt((float)centerWidth / 2));
+
+                    var inspectorHeight = (int)(screenRect.height / 4) * 3;
+                    return new Rect(centerX, screenRect.yMin, centerWidth, inspectorHeight);
+
+                case TextAlignment.Right:
+                    return new Rect(screenRect.xMax - SideWidth, screenRect.yMin, SideWidth, screenRect.height);
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(side), side, null);
+            }
         }
-
+        
         protected abstract void DrawContents();
 
         public virtual string Title { get; set; }
@@ -204,7 +217,7 @@ namespace RuntimeUnityEditor.Core
         {
             get => _windowRect;
             set
-            { 
+            {
                 if (_windowRect != value)
                 {
                     _windowRect = value;

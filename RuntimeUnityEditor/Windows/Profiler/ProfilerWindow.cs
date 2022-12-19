@@ -59,7 +59,7 @@ namespace RuntimeUnityEditor.Core.Profiler
 
         protected override Rect GetDefaultWindowRect(Rect screenRect)
         {
-            return GetCenterWindowDefaultRect(screenRect);
+            return MakeDefaultWindowRect(screenRect, TextAlignment.Center);
         }
 
         protected override void DrawContents()

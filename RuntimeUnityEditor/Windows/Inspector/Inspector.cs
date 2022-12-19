@@ -119,7 +119,7 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         protected override Rect GetDefaultWindowRect(Rect screenRect)
         {
-            return GetCenterWindowDefaultRect(screenRect);
+            return MakeDefaultWindowRect(screenRect, TextAlignment.Center);
         }
 
         protected override void DrawContents()
@@ -375,6 +375,12 @@ namespace RuntimeUnityEditor.Core.Inspector
                         GUILayout.TextArea(entry.Name(), GUI.skin.label, _inspectorNameWidth);
 
                     VariableFieldDrawer.DrawSettingValue(entry, value);
+
+                    if(Clipboard.ClipboardWindow.Initialized && value != null && GUILayout.Button("C", _dnSpyButtonOptions))
+                    {
+                        Clipboard.ClipboardWindow.Contents.Add(value);
+                        Clipboard.ClipboardWindow.Instance.Enabled = true;
+                    }
 
                     if (DnSpyHelper.IsAvailable && GUILayout.Button("^", _dnSpyButtonOptions))
                         DnSpyHelper.OpenInDnSpy(entry);
