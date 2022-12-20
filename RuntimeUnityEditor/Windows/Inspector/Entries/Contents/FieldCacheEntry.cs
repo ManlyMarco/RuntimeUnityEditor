@@ -6,8 +6,8 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
 {
     public class FieldCacheEntry : CacheEntryBase
     {
-        public FieldCacheEntry(object ins, FieldInfo f) : this(ins, f, null) { }
-        public FieldCacheEntry(object ins, FieldInfo f, ICacheEntry parent) : base(GetMemberName(ins, f), f.GetFancyDescription())
+        public FieldCacheEntry(object ins, FieldInfo f, Type owner) : this(ins, f, owner, null) { }
+        public FieldCacheEntry(object ins, FieldInfo f, Type owner, ICacheEntry parent) : base(GetMemberName(ins, f), f.GetFancyDescription(), owner)
         {
             _instance = ins;
             FieldInfo = f ?? throw new ArgumentNullException(nameof(f));
@@ -17,18 +17,16 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         internal static string GetMemberName(object ins, MemberInfo f)
         {
             //if (ins != null)
-                return f?.Name;
+            return f?.Name;
             //return "S/" + f?.Name;
         }
 
         public FieldInfo FieldInfo { get; }
+        public bool IsDeclared => Owner == FieldInfo.DeclaringType;
         private readonly object _instance;
         private readonly ICacheEntry _parent;
 
-        public override object GetValueToCache()
-        {
-            return FieldInfo.GetValue(_instance);
-        }
+        public override object GetValueToCache() => FieldInfo.GetValue(_instance);
 
         protected override bool OnSetValue(object newValue)
         {

@@ -58,6 +58,12 @@ namespace RuntimeUnityEditor.Core.Inspector
             }
         }
 
+        private bool _showFields = true;
+        private bool _showProperties = true;
+        private bool _showMethods = true;
+        private bool _showDeclaredOnly = false;
+        private bool _showTooltips = true;
+
         private void DrawVariableNameEnterButton(ICacheEntry field)
         {
             if (_alignedButtonStyle == null)
@@ -135,7 +141,7 @@ namespace RuntimeUnityEditor.Core.Inspector
         protected override void DrawContents()
         {
             // Close the invoke window if the main inspector window was clicked (event check needs to be inside of the clicked window func)
-            if (Event.current.type == EventType.MouseDown) 
+            if (Event.current.type == EventType.MouseDown)
                 VariableFieldDrawer.ShowInvokeWindow(null);
 
             // Clean up dead tab contents
@@ -168,6 +174,12 @@ namespace RuntimeUnityEditor.Core.Inspector
                             _focusSearchBox = false;
                         }
 
+                        _showFields = GUILayout.Toggle(_showFields, "Fields");
+                        _showProperties = GUILayout.Toggle(_showProperties, "Properties");
+                        _showMethods = GUILayout.Toggle(_showMethods, "Methods");
+                        _showDeclaredOnly = GUILayout.Toggle(_showDeclaredOnly, "Only declared");
+
+                        /* todo
                         GUILayout.Label("Find:", GUILayout.ExpandWidth(false));
                         foreach (var obj in new[]
                         {
@@ -181,20 +193,22 @@ namespace RuntimeUnityEditor.Core.Inspector
                             if (obj.Key == null) continue;
                             if (GUILayout.Button(obj.Value, GUILayout.ExpandWidth(false)))
                                 Push(new InstanceStackEntry(obj.Key, obj.Value), true);
-                        }
+                        }*/
                     }
                     GUILayout.EndHorizontal();
 
                     GUILayout.BeginHorizontal(GUI.skin.box, GUILayout.Width(80));
                     {
                         if (_tabs.Count == 0) GUI.enabled = false;
-                        if (GUILayout.Button("Close all"))
+                        if (GUILayout.Button("Close all tabs"))
                         {
                             _tabs.Clear();
                             _currentTab = null;
                         }
                         GUI.enabled = true;
-
+                        
+                        _showTooltips = GUILayout.Toggle(_showTooltips, "Tooltips");
+                        
                         if (GUILayout.Button("Help"))
                             Push(InspectorHelpObject.Create(), true);
                     }
@@ -308,6 +322,9 @@ namespace RuntimeUnityEditor.Core.Inspector
             GUILayout.EndVertical();
 
             VariableFieldDrawer.DrawCurrentDropdown();
+
+            if (!_showTooltips)
+                GUI.tooltip = string.Empty;
         }
 
         private static string LimitStringLengthForPreview(string name, int maxLetters)
@@ -335,9 +352,11 @@ namespace RuntimeUnityEditor.Core.Inspector
             {
                 GUILayout.BeginVertical();
                 {
-                    var visibleFields = string.IsNullOrEmpty(SearchString) ?
-                        tab.FieldCache :
-                        tab.FieldCache.Where(x =>
+                    //todo optimize gc
+                    IEnumerable<ICacheEntry> visibleFieldsQuery = tab.FieldCache;
+                    if (!string.IsNullOrEmpty(SearchString))
+                    {
+                        visibleFieldsQuery = visibleFieldsQuery.Where(x =>
                         {
                             var name = x.Name();
                             if (name != null && name.Contains(SearchString, StringComparison.OrdinalIgnoreCase)) return true;
@@ -345,7 +364,21 @@ namespace RuntimeUnityEditor.Core.Inspector
                             if (typeName != null && typeName.Contains(SearchString, StringComparison.OrdinalIgnoreCase)) return true;
                             var value = x.GetValue();
                             return value != null && value.ToString().Contains(SearchString, StringComparison.OrdinalIgnoreCase);
-                        }).ToList();
+                        });
+                    }
+                    visibleFieldsQuery = visibleFieldsQuery.Where(x =>
+                    {
+                        switch (x)
+                        {
+                            case PropertyCacheEntry p when !_showProperties || _showDeclaredOnly && !p.IsDeclared:
+                            case FieldCacheEntry f when !_showFields || _showDeclaredOnly && !f.IsDeclared:
+                            case MethodCacheEntry m when !_showMethods || _showDeclaredOnly && !m.IsDeclared:
+                                return false;
+                            default:
+                                return true;
+                        }
+                    });
+                    var visibleFields = visibleFieldsQuery.ToList();
 
                     var firstIndex = (int)(currentItem.ScrollPosition.y / InspectorRecordHeight);
 

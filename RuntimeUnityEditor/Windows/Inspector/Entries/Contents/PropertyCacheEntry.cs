@@ -6,25 +6,20 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
 {
     public class PropertyCacheEntry : CacheEntryBase
     {
-        public PropertyCacheEntry(object ins, PropertyInfo p) : this(ins, p, null) { }
-        public PropertyCacheEntry(object ins, PropertyInfo p, ICacheEntry parent) : base(FieldCacheEntry.GetMemberName(ins, p), p.GetFancyDescription())
+        public PropertyCacheEntry(object ins, PropertyInfo p, Type owner) : this(ins, p, owner, null) { }
+        public PropertyCacheEntry(object ins, PropertyInfo p, Type owner, ICacheEntry parent) : base(FieldCacheEntry.GetMemberName(ins, p), p.GetFancyDescription(), owner)
         {
-            if (p == null)
-                throw new ArgumentNullException(nameof(p));
-
             _instance = ins;
-            PropertyInfo = p;
+            PropertyInfo = p ?? throw new ArgumentNullException(nameof(p));
             _parent = parent;
         }
 
         public PropertyInfo PropertyInfo { get; }
+        public bool IsDeclared => Owner == PropertyInfo.DeclaringType;
         private readonly object _instance;
         private readonly ICacheEntry _parent;
 
-        public override bool CanEnterValue()
-        {
-            return PropertyInfo.CanRead && base.CanEnterValue();
-        }
+        public override bool CanEnterValue() => PropertyInfo.CanRead && base.CanEnterValue();
 
         public override object GetValueToCache()
         {

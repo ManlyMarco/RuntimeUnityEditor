@@ -9,8 +9,9 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         // todo add gui option
         public static bool CachingEnabled { get; set; } = false;
 
-        protected CacheEntryBase(string name, string description)
+        protected CacheEntryBase(string name, string description, Type owner = null)
         {
+            Owner = owner;
             _name = name;
             _nameContent = new GUIContent(_name, description + "\n\nLeft click to inspect in current tab, Right/Middle click to inspect in a new tab.");
         }
@@ -46,6 +47,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
 
         private readonly string _name;
         private string _typeName;
+        public Type Owner { get; }
 
         public string Name() => _name;
 

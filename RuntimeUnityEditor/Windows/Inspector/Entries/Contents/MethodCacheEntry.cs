@@ -8,10 +8,11 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
 {
     public class MethodCacheEntry : ICacheEntry
     {
-        public MethodCacheEntry(object instance, MethodInfo methodInfo)
+        public MethodCacheEntry(object instance, MethodInfo methodInfo, Type owner)
         {
             Instance = instance;
             MethodInfo = methodInfo ?? throw new ArgumentNullException(nameof(methodInfo));
+            Owner = owner ?? throw new ArgumentNullException(nameof(owner));
 
             _name = FieldCacheEntry.GetMemberName(instance, methodInfo);
             _returnTypeName = MethodInfo.ReturnType.FullDescription();
@@ -26,6 +27,8 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         }
 
         public MethodInfo MethodInfo { get; }
+        public bool IsDeclared => Owner == MethodInfo.DeclaringType;
+        public Type Owner { get; }
         public object Instance { get; }
         public string ParameterString { get; }
         private readonly string _name;

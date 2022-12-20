@@ -8,6 +8,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         string Name();
         string TypeName();
         GUIContent GetNameContent();
+        Type Owner { get; }
         /// <summary>
         /// Get object that is entered when variable name is clicked in inspector
         /// </summary>
