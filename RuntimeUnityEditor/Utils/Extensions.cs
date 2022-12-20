@@ -97,12 +97,10 @@ namespace RuntimeUnityEditor.Core.Utils
 
             switch (centry)
             {
-                case MethodCacheEntry m:
-                    return m.MethodInfo;
-                case PropertyCacheEntry p:
-                    return p.PropertyInfo;
-                case FieldCacheEntry f:
-                    return f.FieldInfo;
+                case MethodCacheEntry m: return m.MethodInfo;
+                case PropertyCacheEntry p: return p.PropertyInfo;
+                case FieldCacheEntry f: return f.FieldInfo;
+                case EventCacheEntry e: return e.EventInfo;
                 default:
                     if (throwOnError)
                         throw new Exception("Cannot open items of type " + centry.GetType().FullName);
@@ -176,6 +174,15 @@ namespace RuntimeUnityEditor.Core.Utils
         {
             var flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly | (getStatic ? BindingFlags.Static : BindingFlags.Instance);
             return t.BaseType == null ? t.GetMethods(flags) : t.GetMethods(flags).Concat(GetAllMethods(t.BaseType, getStatic));
+        }
+
+        /// <summary>
+        /// Get all public and private methods, including from base classes
+        /// </summary>
+        public static IEnumerable<EventInfo> GetAllEvents(this Type t, bool getStatic)
+        {
+            var flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly | (getStatic ? BindingFlags.Static : BindingFlags.Instance);
+            return t.BaseType == null ? t.GetEvents(flags) : t.GetEvents(flags).Concat(GetAllEvents(t.BaseType, getStatic));
         }
 
         public static void SetLossyScale(this Transform targetTransform, Vector3 lossyScale)

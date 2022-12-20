@@ -16,9 +16,9 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
 
         internal static string GetMemberName(object ins, MemberInfo f)
         {
-            //if (ins != null)
-            return f?.Name;
-            //return "S/" + f?.Name;
+            if (ins != null)
+                return f?.Name;
+            return "S/" + f?.Name;
         }
 
         public FieldInfo FieldInfo { get; }

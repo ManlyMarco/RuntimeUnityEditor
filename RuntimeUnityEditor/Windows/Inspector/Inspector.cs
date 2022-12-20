@@ -61,6 +61,7 @@ namespace RuntimeUnityEditor.Core.Inspector
         private bool _showFields = true;
         private bool _showProperties = true;
         private bool _showMethods = true;
+        private bool _showEvents = true;
         private bool _showDeclaredOnly = false;
         private bool _showTooltips = true;
 
@@ -142,7 +143,7 @@ namespace RuntimeUnityEditor.Core.Inspector
         {
             // Close the invoke window if the main inspector window was clicked (event check needs to be inside of the clicked window func)
             if (Event.current.type == EventType.MouseDown)
-                VariableFieldDrawer.ShowInvokeWindow(null);
+                VariableFieldDrawer.ShowInvokeWindow(null, null);
 
             // Clean up dead tab contents
             foreach (var tab in _tabs.ToList())
@@ -177,6 +178,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                         _showFields = GUILayout.Toggle(_showFields, "Fields");
                         _showProperties = GUILayout.Toggle(_showProperties, "Properties");
                         _showMethods = GUILayout.Toggle(_showMethods, "Methods");
+                        _showEvents = GUILayout.Toggle(_showEvents, "Events");
                         _showDeclaredOnly = GUILayout.Toggle(_showDeclaredOnly, "Only declared");
 
                         /* todo
@@ -373,6 +375,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                             case PropertyCacheEntry p when !_showProperties || _showDeclaredOnly && !p.IsDeclared:
                             case FieldCacheEntry f when !_showFields || _showDeclaredOnly && !f.IsDeclared:
                             case MethodCacheEntry m when !_showMethods || _showDeclaredOnly && !m.IsDeclared:
+                            case EventCacheEntry e when !_showEvents || _showDeclaredOnly && !e.IsDeclared:
                                 return false;
                             default:
                                 return true;

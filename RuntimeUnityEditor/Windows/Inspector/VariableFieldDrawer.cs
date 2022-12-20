@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using HarmonyLib;
 using RuntimeUnityEditor.Core.Clipboard;
 using RuntimeUnityEditor.Core.Inspector.Entries;
@@ -44,7 +45,11 @@ namespace RuntimeUnityEditor.Core.Inspector
 
             if (setting is MethodCacheEntry mce)
             {
-                DrawInvokeField(mce);
+                DrawMethodInvokeField(mce);
+            }
+            else if (setting is EventCacheEntry ece)
+            {
+                DrawEventInvokeField(ece);
             }
             else
             {
@@ -86,7 +91,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                 GUI.color = Color.white;
             }
         }
-        
+
         private static void DrawUnknownField(object value)
         {
             GUILayout.TextArea(ToStringConverter.ObjectToString(value), GUI.skin.label, GUILayout.ExpandWidth(true));
@@ -368,11 +373,12 @@ namespace RuntimeUnityEditor.Core.Inspector
         }
 
         #region Method Invoke
-        
+
         private static readonly GUIContent _buttonInvokeContent = new GUIContent("Invoke", "Execute this method. Will open a new window to let you specify any necessary parameters.");
         private static readonly int _currentlyInvokingWindowId = Core.RuntimeUnityEditorCore.Version.GetHashCode() + 80085;
 
-        private static MethodCacheEntry _currentlyInvoking;
+        private static MethodInfo _currentlyInvoking;
+        private static object _currentlyInvokingInstance;
         private static object _currentlyInvokingResult;
         private static Exception _currentlyInvokingException;
         private static Rect _currentlyInvokingRect;
@@ -380,19 +386,52 @@ namespace RuntimeUnityEditor.Core.Inspector
         private static readonly List<string> _currentlyInvokingParams = new List<string>();
         private static readonly List<string> _currentlyInvokingArgs = new List<string>();
 
-        private static void DrawInvokeField(MethodCacheEntry method)
+        private static void DrawMethodInvokeField(MethodCacheEntry method)
         {
             if (GUILayout.Button(_buttonInvokeContent, GUILayout.ExpandWidth(false)))
-                ShowInvokeWindow(method);
+                ShowInvokeWindow(method.MethodInfo, method.Instance);
 
             GUILayout.Label(method.ParameterString, GUILayout.ExpandWidth(true));
         }
+        private static void DrawEventInvokeField(EventCacheEntry @event)
+        {
+            var eventInfo = @event.EventInfo;
 
-        public static void ShowInvokeWindow(MethodCacheEntry method)
+            GUILayout.Label("Invoke event method: ", GUILayout.ExpandWidth(false));
+            if (GUILayout.Button("Add", GUILayout.ExpandWidth(false)))
+                ShowInvokeWindow(eventInfo.GetAddMethod(true), @event.Instance);
+
+            if (GUILayout.Button("Remove", GUILayout.ExpandWidth(false)))
+                ShowInvokeWindow(eventInfo.GetRemoveMethod(true), @event.Instance);
+
+            // Raise method is always null in C# assemblies, but exists if assembly was compiled from VB.NET, F# or C++/CLI
+            var raiseMethod = eventInfo.GetRaiseMethod(true);
+            if (raiseMethod != null && GUILayout.Button("Raise", GUILayout.ExpandWidth(false)))
+                ShowInvokeWindow(raiseMethod, @event.Instance);
+
+            var backingDelegate = (Delegate)@event.GetValue();
+            if (backingDelegate != null)
+            {
+                GUILayout.Space(10);
+                //if (GUILayout.Button("Raise", GUILayout.ExpandWidth(false)))
+                //    ShowInvokeWindow(backingDelegate.DynamicInvoke(), @event.Instance);
+
+                var invocationList = backingDelegate.GetInvocationList();
+                if (GUILayout.Button(invocationList.Length + " listener(s)"))
+                    Inspector.Instance.Push(new InstanceStackEntry(invocationList, @event.Name() + " Invocation List", @event), false);
+            }
+
+            GUILayout.FlexibleSpace();
+
+            //GUILayout.Label(method.ParameterString, GUILayout.ExpandWidth(true));
+        }
+
+        public static void ShowInvokeWindow(MethodInfo method, object instance)
         {
             if (_currentlyInvoking != method)
             {
                 _currentlyInvoking = method;
+                _currentlyInvokingInstance = instance;
                 _currentlyInvokingResult = null;
                 _currentlyInvokingException = null;
                 _currentlyInvokingRect.Set(0, 0, 0, 0);
@@ -401,8 +440,8 @@ namespace RuntimeUnityEditor.Core.Inspector
 
                 if (method != null)
                 {
-                    _currentlyInvokingArgs.AddRange(Enumerable.Repeat(string.Empty, method.MethodInfo.GetGenericArguments().Length));
-                    _currentlyInvokingParams.AddRange(Enumerable.Repeat(string.Empty, method.MethodInfo.GetParameters().Length));
+                    _currentlyInvokingArgs.AddRange(Enumerable.Repeat(string.Empty, method.GetGenericArguments().Length));
+                    _currentlyInvokingParams.AddRange(Enumerable.Repeat(string.Empty, method.GetParameters().Length));
                 }
             }
         }
@@ -423,7 +462,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                 GUI.FocusWindow(_currentlyInvokingWindowId);
             }
 
-            _currentlyInvokingRect = GUILayout.Window(_currentlyInvokingWindowId, _currentlyInvokingRect, DrawInvokeWindowFunc, "Invoke " + _currentlyInvoking.Name());
+            _currentlyInvokingRect = GUILayout.Window(_currentlyInvokingWindowId, _currentlyInvokingRect, DrawInvokeWindowFunc, "Invoke " + _currentlyInvoking.Name);
         }
 
         private static void DrawInvokeWindowFunc(int id)
@@ -434,7 +473,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                 {
                     const int indexColWidth = 25;
 
-                    var generics = _currentlyInvoking.MethodInfo.GetGenericArguments();
+                    var generics = _currentlyInvoking.GetGenericArguments();
                     if (generics.Length > 0)
                     {
                         GUILayout.Label("Generic arguments (Input a Type name, or pick a Type object from clipboard by typing #0, #1, #2...)");
@@ -450,7 +489,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                         }
                     }
 
-                    var parameters = _currentlyInvoking.MethodInfo.GetParameters();
+                    var parameters = _currentlyInvoking.GetParameters();
                     if (parameters.Length > 0)
                     {
                         GUILayout.Label("Parameters (Input a value, or pick a value from clipboard by typing #0, #1, #2...)");
@@ -487,7 +526,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                         {
                             _currentlyInvokingException = null;
 
-                            var methodInfo = _currentlyInvoking.MethodInfo;
+                            var methodInfo = _currentlyInvoking;
 
                             if (_currentlyInvokingArgs.Count > 0)
                             {
@@ -525,7 +564,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                                 }
                             }
 
-                            _currentlyInvokingResult = methodInfo.Invoke(_currentlyInvoking.Instance, paramArgs);
+                            _currentlyInvokingResult = methodInfo.Invoke(_currentlyInvokingInstance, paramArgs);
                         }
                         catch (Exception e)
                         {
@@ -539,7 +578,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                     GUI.enabled = _currentlyInvokingResult != null;
                     if (GUILayout.Button("Inspect result"))
                     {
-                        Inspector.Instance.Push(new InstanceStackEntry(_currentlyInvokingResult, "Invoke " + _currentlyInvoking.Name(), _currentlyInvoking), false);
+                        Inspector.Instance.Push(new InstanceStackEntry(_currentlyInvokingResult, "Invoke " + _currentlyInvoking.Name), false);
                         _currentlyInvoking = null;
                     }
                     if (GUILayout.Button("Copy result to clipboard"))

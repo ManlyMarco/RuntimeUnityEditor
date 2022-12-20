@@ -152,9 +152,15 @@ namespace RuntimeUnityEditor.Core.Inspector
                     _fieldCache.AddRange(type.GetAllFields(false)
                         .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
                         .Select(f => new FieldCacheEntry(objectToOpen, f, type, parent)).Cast<ICacheEntry>());
+
                     _fieldCache.AddRange(type.GetAllProperties(false)
                         .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
                         .Select(p => new PropertyCacheEntry(objectToOpen, p, type, parent)).Cast<ICacheEntry>());
+
+                    _fieldCache.AddRange(type.GetAllEvents(false)
+                        .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
+                        .Select(p => new EventCacheEntry(objectToOpen, p, type)).Cast<ICacheEntry>());
+
                     _fieldCache.AddRange(MethodsToCacheEntries(objectToOpen, type, type.GetAllMethods(false)));
 
                     CacheStaticMembersHelper(type);
@@ -186,9 +192,15 @@ namespace RuntimeUnityEditor.Core.Inspector
                 _fieldCache.AddRange(type.GetAllFields(true)
                     .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
                     .Select(f => new FieldCacheEntry(null, f, type)).Cast<ICacheEntry>());
+
                 _fieldCache.AddRange(type.GetAllProperties(true)
                     .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
                     .Select(p => new PropertyCacheEntry(null, p, type)).Cast<ICacheEntry>());
+
+                _fieldCache.AddRange(type.GetAllEvents(true)
+                    .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
+                    .Select(p => new EventCacheEntry(null, p, type)).Cast<ICacheEntry>());
+
                 _fieldCache.AddRange(MethodsToCacheEntries(null, type, type.GetAllMethods(true)));
             }
 

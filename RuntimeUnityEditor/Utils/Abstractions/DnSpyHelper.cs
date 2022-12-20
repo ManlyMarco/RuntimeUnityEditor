@@ -128,6 +128,10 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
                     if (declaringType.FullName.Contains(','))
                         throw new Exception("Unsupported type with generic parameters");
                     return $"\"{declaringType.Assembly.Location}\" --select F:{declaringType.FullName}.{f.Name}";
+                case EventInfo e:
+                    if (declaringType.FullName.Contains(','))
+                        throw new Exception("Unsupported type with generic parameters");
+                    return $"\"{declaringType.Assembly.Location}\" --select E:{declaringType.FullName}.{e.Name}";
                 default:
                     throw new Exception("Unknown MemberInfo " + entry.GetType().FullName);
             }
