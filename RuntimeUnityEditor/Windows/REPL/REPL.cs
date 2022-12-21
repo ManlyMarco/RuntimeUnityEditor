@@ -8,6 +8,7 @@ using Mono.CSharp;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.Utils;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
+using RuntimeUnityEditor.Core.Utils.ObjectDumper;
 using UnityEngine;
 using Attribute = System.Attribute;
 using Object = UnityEngine.Object;
@@ -236,6 +237,18 @@ namespace RuntimeUnityEditor.Core.REPL
         {
             Clipboard.ClipboardWindow.Contents.Add(@object);
             return Clipboard.ClipboardWindow.Contents.Count - 1;
+        }
+
+        [Documentation("dump(object, fileName) - dump given object to a new text file at specitied path.")]
+        public static void dump(object @object, string fileName)
+        {
+            @object.DumpToFile("REPL_OBJECT", fileName);
+        }
+
+        [Documentation("dump(object) - dump given object to a temporary text file and open it in notepad. Returns path to the temp file.")]
+        public static string dump(object @object)
+        {
+            return Dumper.DumpToTempFile(@object, "REPL_OBJECT");
         }
 
         [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property)]

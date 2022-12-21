@@ -4,6 +4,7 @@ using System.Linq;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.Utils;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
+using RuntimeUnityEditor.Core.Utils.ObjectDumper;
 using UnityEngine;
 
 namespace RuntimeUnityEditor.Core.Inspector
@@ -17,7 +18,8 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         private readonly GUILayoutOption _buttonDnspyOptions = GUILayout.Width(19);
         private readonly GUIContent _buttonDnspyContent = new GUIContent("^", "Open in DnSpy (launches DnSpy, loads assembly containing this member, and opens a new tab focused on this member)");
-        private readonly GUIContent _buttonCopyContent = new GUIContent("C", "Copy to clipboard");
+        private readonly GUIContent _buttonCopyContent = new GUIContent("C", "Copy the object to clipboard (adds it to the list in the clipboard window).");
+        private readonly GUIContent _buttonDumpContent = new GUIContent("D", "Dump the object to a temporary file and view it in notepad.");
 
         private readonly List<InspectorTab> _tabs = new List<InspectorTab>();
         private InspectorTab _currentTab;
@@ -62,7 +64,7 @@ namespace RuntimeUnityEditor.Core.Inspector
         private bool _showProperties = true;
         private bool _showMethods = true;
         private bool _showEvents = true;
-        private bool _showDeclaredOnly = false;
+        private bool _showDeclaredOnly;
         private bool _showTooltips = true;
 
         private void DrawVariableNameEnterButton(ICacheEntry field)
@@ -208,9 +210,9 @@ namespace RuntimeUnityEditor.Core.Inspector
                             _currentTab = null;
                         }
                         GUI.enabled = true;
-                        
+
                         _showTooltips = GUILayout.Toggle(_showTooltips, "Tooltips");
-                        
+
                         if (GUILayout.Button("Help"))
                             Push(InspectorHelpObject.Create(), true);
                     }
@@ -426,14 +428,23 @@ namespace RuntimeUnityEditor.Core.Inspector
 
                     VariableFieldDrawer.DrawSettingValue(entry, value);
 
-                    if (Clipboard.ClipboardWindow.Initialized && value != null && GUILayout.Button(_buttonCopyContent, _buttonDnspyOptions))
+                    var hasValue = value != null && entry.Type() != typeof(void);
+
+                    if (Clipboard.ClipboardWindow.Initialized && hasValue && GUILayout.Button(_buttonCopyContent, _buttonDnspyOptions))
                     {
                         Clipboard.ClipboardWindow.Contents.Add(value);
                         Clipboard.ClipboardWindow.Instance.Enabled = true;
                     }
 
-                    if (DnSpyHelper.IsAvailable && GUILayout.Button(_buttonDnspyContent, _buttonDnspyOptions))
-                        DnSpyHelper.OpenInDnSpy(entry);
+                    if (hasValue && GUILayout.Button(_buttonDumpContent, _buttonDnspyOptions))
+                        Dumper.DumpToTempFile(value, entry.Name());
+
+                    if (DnSpyHelper.IsAvailable)
+                    {
+                        var memberInfo = entry.GetMemberInfo(false);
+                        if (memberInfo != null && GUILayout.Button(_buttonDnspyContent, _buttonDnspyOptions))
+                            DnSpyHelper.OpenInDnSpy(memberInfo);
+                    }
                 }
                 catch (Exception ex)
                 {

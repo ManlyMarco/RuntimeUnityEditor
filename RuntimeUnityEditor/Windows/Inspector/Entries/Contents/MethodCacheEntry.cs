@@ -15,7 +15,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
             Owner = owner ?? throw new ArgumentNullException(nameof(owner));
 
             _name = FieldCacheEntry.GetMemberName(instance, methodInfo);
-            _returnTypeName = MethodInfo.ReturnType.FullDescription();
+            _returnTypeName = MethodInfo.ReturnType.GetSourceCodeRepresentation();
 
             ParameterString = string.Empty;
             var strGenerics = methodInfo.GetGenericArguments().Join(p => p.FullDescription(), ", ");

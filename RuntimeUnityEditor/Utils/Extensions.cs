@@ -23,7 +23,7 @@ namespace RuntimeUnityEditor.Core.Utils
             var j = Array.IndexOf(arr, src) + 1;
             return (arr.Length == j) ? arr[0] : arr[j];
         }
-        
+
         public static object GetPrivateExplicit<T>(this T self, string name)
         {
             return typeof(T).GetField(name, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy).GetValue(self);
@@ -89,22 +89,15 @@ namespace RuntimeUnityEditor.Core.Utils
 
         public static MemberInfo GetMemberInfo(this ICacheEntry centry, bool throwOnError)
         {
-            if (centry == null)
-            {
-                if (!throwOnError) return null;
-                throw new ArgumentNullException(nameof(centry));
-            }
-
             switch (centry)
             {
                 case MethodCacheEntry m: return m.MethodInfo;
                 case PropertyCacheEntry p: return p.PropertyInfo;
                 case FieldCacheEntry f: return f.FieldInfo;
                 case EventCacheEntry e: return e.EventInfo;
-                default:
-                    if (throwOnError)
-                        throw new Exception("Cannot open items of type " + centry.GetType().FullName);
-                    return null;
+
+                case null: return throwOnError ? throw new ArgumentNullException(nameof(centry)) : (MemberInfo)null;
+                default: return throwOnError ? throw new Exception("Cannot open items of type " + centry.GetType().FullName) : (MemberInfo)null;
             }
         }
 
@@ -157,7 +150,7 @@ namespace RuntimeUnityEditor.Core.Utils
             var flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly | (getStatic ? BindingFlags.Static : BindingFlags.Instance);
             return t.BaseType == null ? t.GetFields(flags) : t.GetFields(flags).Concat(GetAllFields(t.BaseType, getStatic));
         }
-        
+
         /// <summary>
         /// Get all public and private properties, including from base classes
         /// </summary>

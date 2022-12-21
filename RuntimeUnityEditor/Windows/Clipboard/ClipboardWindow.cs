@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using RuntimeUnityEditor.Core.Inspector;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
+using RuntimeUnityEditor.Core.Utils.ObjectDumper;
 using UnityEngine;
 
 namespace RuntimeUnityEditor.Core.Clipboard
@@ -34,7 +35,7 @@ namespace RuntimeUnityEditor.Core.Clipboard
                     GUILayout.FlexibleSpace();
                     GUILayout.Label("You can copy objects to clipboard by clicking the 'C' button in inspector, or by running the 'copy(object)' command in REPL. Structs are copied by value, classes by reference.\n\n" +
                                     "Clipboard contents can be used in REPL by running the 'paste(index)' command, or in inspector when invoking a method.\n\n" +
-                                    "Press 'X' to remove item from clipboard, 'I' to inspect it.", GUILayout.ExpandWidth(true));
+                                    "Press 'X' to remove item from clipboard, 'I' to inspect it, 'D' to dump it to file.", GUILayout.ExpandWidth(true));
                     GUILayout.FlexibleSpace();
                 }
                 GUILayout.EndVertical();
@@ -83,15 +84,17 @@ namespace RuntimeUnityEditor.Core.Clipboard
 
                             GUI.enabled = prevEnabled;
 
-                            if (type != null && type.IsClass && Inspector.Inspector.Initialized && GUILayout.Button("I", GUILayout.ExpandWidth(false)))
+                            if (type != null)
                             {
-                                Inspector.Inspector.Instance.Push(new InstanceStackEntry(content, "Clipboard #" + index), true);
+                                if (type.IsClass && Inspector.Inspector.Initialized && GUILayout.Button("I", GUILayout.ExpandWidth(false)))
+                                    Inspector.Inspector.Instance.Push(new InstanceStackEntry(content, "Clipboard #" + index), true);
+
+                                if (GUILayout.Button("D", GUILayout.ExpandWidth(false)))
+                                    Dumper.DumpToTempFile(content, "CLIPBOARD_" + index);
                             }
 
-                            if (GUILayout.Button("X", GUILayout.ExpandWidth(false)))
-                            {
+                            if (GUILayout.Button("X", GUILayout.ExpandWidth(false))) 
                                 Contents.RemoveAt(index);
-                            }
                         }
                         GUILayout.EndHorizontal();
                     }
