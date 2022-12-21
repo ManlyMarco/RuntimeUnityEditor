@@ -23,5 +23,6 @@
     <Delete Files="$(OutputPath)\UnityEngine.dll" />
     <Delete Files="$(OutputPath)\0Harmony.dll" />
     <Delete Files="$(OutputPath)\0Harmony.xml" />
+    <Delete Files="$(OutputPath)\mcs.pdb" />
   </Target>
 </Project>
