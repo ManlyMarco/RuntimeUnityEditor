@@ -14,7 +14,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
     /// </summary>
     public class RootGameObjectSearcher
     {
-        private List<GameObject> _cachedRootGameObjects;
+        private OrderedSet<GameObject> _cachedRootGameObjects;
         private List<GameObject> _searchResults;
 
         private Predicate<GameObject> _lastObjectFilter;
@@ -34,7 +34,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         {
             if (_cachedRootGameObjects != null)
             {
-                _cachedRootGameObjects.RemoveAll(o => o == null);
+                _cachedRootGameObjects.RemoveAll(IsGameObjectNull);
                 return _cachedRootGameObjects;
             }
             return Enumerable.Empty<GameObject>();
@@ -44,7 +44,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         {
             if (_searchResults != null)
             {
-                _searchResults.RemoveAll(o => o == null);
+                _searchResults.RemoveAll(IsGameObjectNull);
                 return _searchResults;
             }
             return GetRootObjects();
@@ -60,28 +60,17 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             if (full)
             {
                 sw = Stopwatch.StartNew();
-                _cachedRootGameObjects = FindAllRootGameObjects().OrderBy(x => x.name, StringComparer.InvariantCultureIgnoreCase).ToList();
+                _cachedRootGameObjects = new OrderedSet<GameObject>();
+                foreach (var gameObject in FindAllRootGameObjects().OrderBy(x => x.name, StringComparer.InvariantCultureIgnoreCase))
+                    _cachedRootGameObjects.AddLast(gameObject);
             }
             else
             {
-                _cachedRootGameObjects.RemoveAll(o => o == null);
-
                 if (UnityFeatureHelper.SupportsScenes)
                 {
-                    var any = false;
                     var newItems = UnityFeatureHelper.GetSceneGameObjects();
-                    foreach (var newItem in newItems)
-                    {
-                        if (!_cachedRootGameObjects.Contains(newItem))
-                        {
-                            any = true;
-                            _cachedRootGameObjects.Add(newItem);
-                        }
-                    }
-                    if (any)
-                    {
-                        _cachedRootGameObjects.Sort((o1, o2) => string.Compare(o1.name, o2.name, StringComparison.InvariantCultureIgnoreCase));
-                    }
+                    for (var index = 0; index < newItems.Length; index++)
+                        _cachedRootGameObjects.InsertSorted(newItems[index], GameObjectNameComparer.Instance);
                 }
             }
 
@@ -93,7 +82,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             {
                 RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, $"Full GameObject list refresh finished in {sw.ElapsedMilliseconds}ms");
 
-                // _lastSearchProperties=true takes too long to open the editor
+                // _lastSearchProperties==true takes too long to open the editor
                 if (_searchResults != null && !_lastSearchProperties && _lastSearchString != null)
                     Search(_lastSearchString, _lastSearchProperties, false);
             }
@@ -186,6 +175,30 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             }
 
             return false;
+        }
+
+        private static bool IsGameObjectNull(GameObject o)
+        {
+            // This is around 25% faster than o == null
+            // Object.IsNativeObjectAlive would be even better at above 35% but isn't public and reflection would eat the gains
+            var isGameObjectNull = (object)o == null || o.GetInstanceID() == 0;
+            System.Diagnostics.Debug.Assert(isGameObjectNull == (o == null));
+            return isGameObjectNull;
+        }
+
+        private sealed class GameObjectNameComparer : IComparer<GameObject>
+        {
+            public static readonly GameObjectNameComparer Instance = new GameObjectNameComparer();
+            public int Compare(GameObject x, GameObject y)
+            {
+                if (ReferenceEquals(x, y)) return 0;
+                if (x == null) return -1;
+                if (y == null) return 1;
+                var compare = string.Compare(x.name, y.name, StringComparison.OrdinalIgnoreCase);
+                // Handle different GOs with same names
+                if (compare == 0) compare = x.GetInstanceID().CompareTo(y.GetInstanceID());
+                return compare;
+            }
         }
     }
 }

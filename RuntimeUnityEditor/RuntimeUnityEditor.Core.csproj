@@ -105,6 +105,7 @@
     <Compile Include="Features\WireframeFeature.cs" />
     <Compile Include="Windows\Clipboard\ClipboardWindow.cs" />
     <Compile Include="Windows\Inspector\Entries\Contents\EventCacheEntry.cs" />
+    <Compile Include="Utils\OrderedSet.cs" />
     <Compile Include="Windows\WindowManager.cs" />
     <Compile Include="Windows\Profiler\ProfilerWindow.cs" />
     <Compile Include="Utils\Abstractions\UnityInput.cs" />
