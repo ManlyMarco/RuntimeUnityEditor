@@ -98,7 +98,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             }
         }
 
-        private void DisplayObjectTreeHelper(GameObject go, int indent, ref int currentCount)
+        private void DisplayObjectTreeHelper(GameObject go, int indent, ref int currentCount, ref int notVisibleCount)
         {
             currentCount++;
 
@@ -109,6 +109,12 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
             if (isVisible || needsHeightMeasure || _scrollTreeToSelected)
             {
+                if (notVisibleCount > 0)
+                {
+                    GUILayout.Space(_singleObjectTreeItemHeight * notVisibleCount);
+                    notVisibleCount = 0;
+                }
+
                 var c = GUI.color;
                 if (SelectedTransform == go.transform)
                 {
@@ -164,13 +170,13 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             }
             else
             {
-                GUILayout.Space(_singleObjectTreeItemHeight);
+                notVisibleCount++;
             }
 
             if (_openedObjects.Contains(go))
             {
                 for (var i = 0; i < go.transform.childCount; ++i)
-                    DisplayObjectTreeHelper(go.transform.GetChild(i).gameObject, indent + 1, ref currentCount);
+                    DisplayObjectTreeHelper(go.transform.GetChild(i).gameObject, indent + 1, ref currentCount, ref notVisibleCount);
             }
         }
 
@@ -179,7 +185,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             GUILayout.BeginVertical();
             {
                 DisplayObjectTree();
-                
+
                 DisplayObjectProperties();
             }
             GUILayout.EndVertical();
@@ -479,8 +485,12 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                     GUILayout.Height(_objectTreeHeight), GUILayout.ExpandWidth(true));
                 {
                     var currentCount = 0;
+                    var notVisibleCount = 0;
                     foreach (var rootGameObject in _gameObjectSearcher.GetSearchedOrAllObjects())
-                        DisplayObjectTreeHelper(rootGameObject, 0, ref currentCount);
+                        DisplayObjectTreeHelper(rootGameObject, 0, ref currentCount, ref notVisibleCount);
+
+                    if (notVisibleCount > 0)
+                        GUILayout.Space(_singleObjectTreeItemHeight * notVisibleCount);
                 }
                 GUILayout.EndScrollView();
             }
