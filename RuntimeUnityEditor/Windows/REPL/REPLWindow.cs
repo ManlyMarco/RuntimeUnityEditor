@@ -67,6 +67,10 @@ namespace RuntimeUnityEditor.Core.REPL
         {
             if (!UnityFeatureHelper.SupportsRepl) throw new InvalidOperationException("mcs is not supported on this Unity version");
 
+            var disable = false;
+            initSettings.RegisterSetting("General", "Disable REPL function", false, "Completely turn off REPL even if it's supported. Useful if mcs is causing compatibility issues (e.g. in rare cases it can crash the game when used together with some versions of RuntimeDetours in some Unity versions).", x => disable = x);
+            if(disable) throw new InvalidOperationException("REPL is disabled in config");
+
             var configPath = initSettings.ConfigPath;
             _autostartFilename = Path.Combine(configPath, "RuntimeUnityEditor.Autostart.cs");
             _snippletFilename = Path.Combine(configPath, "RuntimeUnityEditor.Snipplets.cs");
