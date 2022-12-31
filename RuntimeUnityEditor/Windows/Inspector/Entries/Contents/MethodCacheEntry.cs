@@ -17,13 +17,19 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
             _name = FieldCacheEntry.GetMemberName(instance, methodInfo);
             _returnTypeName = MethodInfo.ReturnType.GetSourceCodeRepresentation();
 
-            ParameterString = string.Empty;
-            var strGenerics = methodInfo.GetGenericArguments().Join(p => p.FullDescription(), ", ");
-            if (strGenerics.Length > 0) ParameterString += "<" + strGenerics + ">";
-            var strParams = methodInfo.GetParameters().Join(p => p.ParameterType.FullDescription() + " " + p.Name, ", ");
-            ParameterString += "(" + strParams + ")";
+            ParameterString = GetParameterPreviewString(methodInfo);
 
             _content = new GUIContent(_name, methodInfo.GetFancyDescription());
+        }
+
+        internal static string GetParameterPreviewString(MethodBase methodInfo)
+        {
+            var parameterString = string.Empty;
+            var strGenerics = methodInfo.GetGenericArguments().Join(p => p.FullDescription(), ", ");
+            if (strGenerics.Length > 0) parameterString += "<" + strGenerics + ">";
+            var strParams = methodInfo.GetParameters().Join(p => p.ParameterType.FullDescription() + " " + p.Name, ", ");
+            parameterString += "(" + strParams + ")";
+            return parameterString;
         }
 
         public MethodInfo MethodInfo { get; }

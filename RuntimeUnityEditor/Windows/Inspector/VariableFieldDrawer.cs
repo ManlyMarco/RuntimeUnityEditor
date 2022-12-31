@@ -64,6 +64,10 @@ namespace RuntimeUnityEditor.Core.Inspector
                     else
                         DrawComboboxField(setting, Enum.GetValues(t), value);
                 }
+                else if (typeof(Delegate).IsAssignableFrom(t))
+                {
+                    DrawDelegateField(setting);
+                }
                 else
                 {
                     if (setting.CanEnterValue())
@@ -383,8 +387,10 @@ namespace RuntimeUnityEditor.Core.Inspector
         private static Exception _currentlyInvokingException;
         private static Rect _currentlyInvokingRect;
         private static Vector2 _currentlyInvokingPos;
-        private static readonly List<string> _currentlyInvokingParams = new List<string>();
-        private static readonly List<string> _currentlyInvokingArgs = new List<string>();
+        private static ParameterInfo[] _currentlyInvokingParams;
+        private static Type[] _currentlyInvokingArgs;
+        private static readonly List<string> _currentlyInvokingParamsValues = new List<string>();
+        private static readonly List<string> _currentlyInvokingArgsValues = new List<string>();
 
         private static void DrawMethodInvokeField(MethodCacheEntry method)
         {
@@ -426,7 +432,7 @@ namespace RuntimeUnityEditor.Core.Inspector
             //GUILayout.Label(method.ParameterString, GUILayout.ExpandWidth(true));
         }
 
-        public static void ShowInvokeWindow(MethodInfo method, object instance)
+        public static void ShowInvokeWindow(MethodInfo method, object instance, Type[] genericArguments = null, ParameterInfo[] parameters = null)
         {
             if (_currentlyInvoking != method)
             {
@@ -435,15 +441,48 @@ namespace RuntimeUnityEditor.Core.Inspector
                 _currentlyInvokingResult = null;
                 _currentlyInvokingException = null;
                 _currentlyInvokingRect.Set(0, 0, 0, 0);
-                _currentlyInvokingArgs.Clear();
-                _currentlyInvokingParams.Clear();
-
+                _currentlyInvokingArgs = genericArguments ?? method?.GetGenericArguments();
+                _currentlyInvokingParams = parameters ?? method?.GetParameters();
+                _currentlyInvokingArgsValues.Clear();
+                _currentlyInvokingParamsValues.Clear();
                 if (method != null)
                 {
-                    _currentlyInvokingArgs.AddRange(Enumerable.Repeat(string.Empty, method.GetGenericArguments().Length));
-                    _currentlyInvokingParams.AddRange(Enumerable.Repeat(string.Empty, method.GetParameters().Length));
+                    _currentlyInvokingArgsValues.AddRange(Enumerable.Repeat(string.Empty, _currentlyInvokingArgs.Length));
+                    _currentlyInvokingParamsValues.AddRange(Enumerable.Repeat(string.Empty, _currentlyInvokingParams.Length));
                 }
             }
+        }
+
+        private static void DrawDelegateField(ICacheEntry cacheEntry)
+        {
+            var v = (Delegate)cacheEntry.GetValue();
+
+            if (v == null)
+            {
+                GUILayout.Label("NULL / Empty", GUILayout.ExpandWidth(true));
+                return;
+            }
+
+            var t = cacheEntry.Type();
+            // todo better handle parameters
+            var invokeM = t.GetMethod("Invoke", AccessTools.all);
+            var dynInvokeM = t.GetMethod(nameof(v.DynamicInvoke), AccessTools.all);
+
+            var invocationList = v.GetInvocationList();
+
+            //todo v.Method is null, work on delegate directly
+            if (GUILayout.Button(_buttonInvokeContent, GUILayout.ExpandWidth(false)))
+            {
+                if (invokeM != null)
+                    ShowInvokeWindow(invokeM, v);
+                else
+                    ShowInvokeWindow(dynInvokeM, v, null, v.Method.GetParameters());
+            }
+
+            if (GUILayout.Button(invocationList.Length + " delegate(s)", GUILayout.ExpandWidth(false)))
+                Inspector.Instance.Push(new InstanceStackEntry(invocationList, cacheEntry.Name() + " Invocation List", cacheEntry), false);
+
+            GUILayout.Label(MethodCacheEntry.GetParameterPreviewString(invokeM), GUILayout.ExpandWidth(true));
         }
 
         public static void DrawInvokeWindow()
@@ -473,7 +512,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                 {
                     const int indexColWidth = 25;
 
-                    var generics = _currentlyInvoking.GetGenericArguments();
+                    var generics = _currentlyInvokingArgs;
                     if (generics.Length > 0)
                     {
                         GUILayout.Label("Generic arguments (Input a Type name, or pick a Type object from clipboard by typing #0, #1, #2...)");
@@ -484,12 +523,12 @@ namespace RuntimeUnityEditor.Core.Inspector
                             GUILayout.BeginHorizontal();
                             GUILayout.Label("#" + index, GUILayout.Width(indexColWidth));
                             GUILayout.Label(genericArg.FullDescription(), GUILayout.Width((_currentlyInvokingRect.width - indexColWidth) / 2.3f));
-                            _currentlyInvokingArgs[index] = GUILayout.TextField(_currentlyInvokingArgs[index], GUILayout.ExpandWidth(true));
+                            _currentlyInvokingArgsValues[index] = GUILayout.TextField(_currentlyInvokingArgsValues[index], GUILayout.ExpandWidth(true));
                             GUILayout.EndHorizontal();
                         }
                     }
 
-                    var parameters = _currentlyInvoking.GetParameters();
+                    var parameters = _currentlyInvokingParams;
                     if (parameters.Length > 0)
                     {
                         GUILayout.Label("Parameters (Input a value, or pick a value from clipboard by typing #0, #1, #2...)");
@@ -500,7 +539,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                             GUILayout.BeginHorizontal();
                             GUILayout.Label("#" + index, GUILayout.Width(indexColWidth));
                             GUILayout.Label(parameter.ParameterType.FullDescription() + " " + parameter.Name, GUILayout.Width((_currentlyInvokingRect.width - indexColWidth) / 2.3f));
-                            _currentlyInvokingParams[index] = GUILayout.TextField(_currentlyInvokingParams[index], GUILayout.ExpandWidth(true));
+                            _currentlyInvokingParamsValues[index] = GUILayout.TextField(_currentlyInvokingParamsValues[index], GUILayout.ExpandWidth(true));
                             GUILayout.EndHorizontal();
                         }
                     }
@@ -528,14 +567,14 @@ namespace RuntimeUnityEditor.Core.Inspector
 
                             var methodInfo = _currentlyInvoking;
 
-                            if (_currentlyInvokingArgs.Count > 0)
+                            if (_currentlyInvokingArgs.Length > 0)
                             {
-                                var typeArgs = new Type[_currentlyInvokingArgs.Count];
-                                for (var index = 0; index < _currentlyInvokingArgs.Count; index++)
+                                var typeArgs = new Type[_currentlyInvokingArgs.Length];
+                                for (var index = 0; index < _currentlyInvokingArgs.Length; index++)
                                 {
                                     try
                                     {
-                                        var arg = _currentlyInvokingArgs[index];
+                                        var arg = _currentlyInvokingArgsValues[index];
                                         typeArgs[index] = arg.StartsWith("#") ? (Type)ClipboardWindow.Contents[int.Parse(arg.Substring(1))] : AccessTools.TypeByName(arg);
                                     }
                                     catch (Exception e)
@@ -547,13 +586,13 @@ namespace RuntimeUnityEditor.Core.Inspector
                                 methodInfo = methodInfo.MakeGenericMethod(typeArgs);
                             }
 
-                            var methodParams = methodInfo.GetParameters();
-                            var paramArgs = new object[_currentlyInvokingParams.Count];
-                            for (var index = 0; index < _currentlyInvokingParams.Count; index++)
+                            var methodParams = _currentlyInvokingParams;
+                            var paramArgs = new object[_currentlyInvokingParams.Length];
+                            for (var index = 0; index < _currentlyInvokingParams.Length; index++)
                             {
                                 try
                                 {
-                                    var arg = _currentlyInvokingParams[index];
+                                    var arg = _currentlyInvokingParamsValues[index];
                                     var param = methodParams[index];
                                     var obj = arg.StartsWith("#") ? ClipboardWindow.Contents[int.Parse(arg.Substring(1))] : Convert.ChangeType(arg, param.ParameterType);
                                     paramArgs[index] = obj;
@@ -564,7 +603,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                                 }
                             }
 
-                            _currentlyInvokingResult = methodInfo.Invoke(_currentlyInvokingInstance, paramArgs);
+                            _currentlyInvokingResult = methodInfo.Invoke(_currentlyInvokingInstance, methodInfo.Name == "DynamicInvoke" ? new object[] { paramArgs } : paramArgs);
                         }
                         catch (Exception e)
                         {
