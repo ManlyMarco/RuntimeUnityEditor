@@ -203,9 +203,10 @@ namespace RuntimeUnityEditor.Core.Inspector
         {
             var isBeingEdited = _currentlyEditingTag == field;
             var text = isBeingEdited ? _currentlyEditingText : ToStringConverter.GetEditValue(field, value);
+            GUI.changed = false;
             var result = GUILayout.TextField(text, layoutParams);
 
-            if (!Equals(text, result) || isBeingEdited)
+            if ((GUI.changed && !Equals(text, result)) || isBeingEdited)
             {
                 if (_userHasHitReturn)
                 {
@@ -224,43 +225,47 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         private static void DrawVector2(ICacheEntry obj, object value)
         {
+            GUI.changed = false;
             var setting = (Vector2)value;
             var copy = setting;
             setting.x = DrawSingleVectorSlider(setting.x, "X");
             setting.y = DrawSingleVectorSlider(setting.y, "Y");
-            if (setting != copy) obj.SetValue(setting);
+            if (GUI.changed && setting != copy) obj.SetValue(setting);
         }
 
         private static void DrawVector3(ICacheEntry obj, object value)
         {
+            GUI.changed = false;
             var setting = (Vector3)value;
             var copy = setting;
             setting.x = DrawSingleVectorSlider(setting.x, "X");
             setting.y = DrawSingleVectorSlider(setting.y, "Y");
             setting.z = DrawSingleVectorSlider(setting.z, "Z");
-            if (setting != copy) obj.SetValue(setting);
+            if (GUI.changed && setting != copy) obj.SetValue(setting);
         }
 
         private static void DrawVector4(ICacheEntry obj, object value)
         {
+            GUI.changed = false;
             var setting = (Vector4)value;
             var copy = setting;
             setting.x = DrawSingleVectorSlider(setting.x, "X");
             setting.y = DrawSingleVectorSlider(setting.y, "Y");
             setting.z = DrawSingleVectorSlider(setting.z, "Z");
             setting.w = DrawSingleVectorSlider(setting.w, "W");
-            if (setting != copy) obj.SetValue(setting);
+            if (GUI.changed && setting != copy) obj.SetValue(setting);
         }
 
         private static void DrawQuaternion(ICacheEntry obj, object value)
         {
+            GUI.changed = false;
             var setting = (Quaternion)value;
             var copy = setting;
             setting.x = DrawSingleVectorSlider(setting.x, "X");
             setting.y = DrawSingleVectorSlider(setting.y, "Y");
             setting.z = DrawSingleVectorSlider(setting.z, "Z");
             setting.w = DrawSingleVectorSlider(setting.w, "W");
-            if (setting != copy) obj.SetValue(setting);
+            if (GUI.changed && setting != copy) obj.SetValue(setting);
         }
 
         private static float DrawSingleVectorSlider(float setting, string label)
