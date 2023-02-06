@@ -271,7 +271,7 @@ namespace RuntimeUnityEditor.Core.Inspector
         private static float DrawSingleVectorSlider(float setting, string label)
         {
             GUILayout.Label(label, GUILayout.ExpandWidth(false));
-            float.TryParse(GUILayout.TextField(setting.ToString("F", CultureInfo.InvariantCulture), GUILayout.ExpandWidth(true)), NumberStyles.Any, CultureInfo.InvariantCulture, out var x);
+            float.TryParse(GUILayout.TextField(setting.ToString("F4", CultureInfo.InvariantCulture), GUILayout.ExpandWidth(true)), NumberStyles.Any, CultureInfo.InvariantCulture, out var x);
             return x;
         }
 
