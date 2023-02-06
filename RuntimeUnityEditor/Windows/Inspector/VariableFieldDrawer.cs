@@ -56,40 +56,33 @@ namespace RuntimeUnityEditor.Core.Inspector
                 var canSetValue = setting.CanSetValue();
                 if (!canSetValue) GUI.color = Color.gray;
 
-                var t = setting.Type();
-                if (t.IsEnum)
+                var settingType = setting.Type();
+                if (settingType.IsEnum)
                 {
-                    if (t.GetCustomAttributes(typeof(FlagsAttribute), false).Any())
-                        DrawFlagsField(setting, Enum.GetValues(t), value);
+                    if (settingType.GetCustomAttributes(typeof(FlagsAttribute), false).Any())
+                        DrawFlagsField(setting, Enum.GetValues(settingType), value);
                     else
-                        DrawComboboxField(setting, Enum.GetValues(t), value);
+                        DrawComboboxField(setting, Enum.GetValues(settingType), value);
                 }
-                else if (typeof(Delegate).IsAssignableFrom(t))
+                else if (typeof(Delegate).IsAssignableFrom(settingType))
                 {
                     DrawDelegateField(setting);
                 }
+                else if (value is Texture)
+                {
+                    DrawAnyTexture(value);
+                }
+                else if (SettingDrawHandlers.TryGetValue(settingType, out var drawMethod))
+                {
+                    drawMethod(setting, value);
+                }
+                else if (canSetValue && ToStringConverter.CanEditValue(setting, value))
+                {
+                    DrawGenericEditableValue(setting, value, GUILayout.ExpandWidth(true));
+                }
                 else
                 {
-                    if (setting.CanEnterValue())
-                    {
-                        if (value is Texture)
-                        {
-                            DrawAnyTexture(value);
-                            goto wasDrawn;
-                        }
-                        else if (SettingDrawHandlers.TryGetValue(setting.Type(), out var drawMethod))
-                        {
-                            drawMethod(setting, value);
-                            goto wasDrawn;
-                        }
-                    }
-
-                    if (canSetValue && ToStringConverter.CanEditValue(setting, value))
-                        DrawGenericEditableValue(setting, value, GUILayout.ExpandWidth(true));
-                    else
-                        DrawUnknownField(value);
-
-                    wasDrawn:;
+                    DrawUnknownField(value);
                 }
 
                 GUI.color = Color.white;
@@ -354,11 +347,19 @@ namespace RuntimeUnityEditor.Core.Inspector
         {
             var spr = (Sprite)value;
 
-            DrawSprite(spr, spr.name);
+            DrawSprite(spr, spr?.name);
         }
 
         private static void DrawSprite(Sprite spr, string objectName)
         {
+            var isNullOrDestroyed = spr.IsNullOrDestroyed();
+            if (isNullOrDestroyed != null)
+            {
+                GUILayout.Label(isNullOrDestroyed);
+                GUILayout.FlexibleSpace();
+                return;
+            }
+
             var extraData = "";
             if (spr.packed)
             {
@@ -378,7 +379,7 @@ namespace RuntimeUnityEditor.Core.Inspector
         private static void DrawImage(ICacheEntry obj, object value)
         {
             var img = (UnityEngine.UI.Image)value;
-            DrawSprite(img.sprite, $"{img.transform.GetFullTransfromPath()} [Image ({img.name})]");
+            DrawSprite(img?.sprite, $"{img?.transform.GetFullTransfromPath()} [Image ({img?.name})]");
         }
 
         #region Method Invoke
