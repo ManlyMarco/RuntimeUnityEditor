@@ -367,7 +367,8 @@ namespace RuntimeUnityEditor.Core.Inspector
                             var typeName = x.TypeName();
                             if (typeName != null && typeName.Contains(SearchString, StringComparison.OrdinalIgnoreCase)) return true;
                             var value = x.GetValue();
-                            return value != null && value.ToString().Contains(SearchString, StringComparison.OrdinalIgnoreCase);
+                            if (value == null || (value is UnityEngine.Object obj && !obj)) return false;
+                            return value.ToString().Contains(SearchString, StringComparison.OrdinalIgnoreCase);
                         });
                     }
                     visibleFieldsQuery = visibleFieldsQuery.Where(x =>
