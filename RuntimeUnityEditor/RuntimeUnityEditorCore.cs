@@ -15,7 +15,7 @@ namespace RuntimeUnityEditor.Core
 {
     public class RuntimeUnityEditorCore
     {
-        public const string Version = "4.1.1";
+        public const string Version = "4.2";
         public const string GUID = "RuntimeUnityEditor";
 
         [Obsolete("Use window Instance instead")] public Inspector.Inspector Inspector => Core.Inspector.Inspector.Initialized ? Core.Inspector.Inspector.Instance : null;
