@@ -8,11 +8,13 @@ using UnityEngine;
 
 namespace RuntimeUnityEditor.Core.Gizmos
 {
+    //todo ShowGizmosOutsideEditor
     public sealed class GizmoDrawer : FeatureBase<GizmoDrawer>
     {
         private readonly List<KeyValuePair<Action<Component>, Component>> _drawList = new List<KeyValuePair<Action<Component>, Component>>();
         private GizmosInstance _gizmosInstance;
         private Type _dbcType;
+        private bool _dbcTypeAttempted;
 
         protected override void Initialize(InitSettings initSettings)
         {
@@ -25,40 +27,35 @@ namespace RuntimeUnityEditor.Core.Gizmos
         {
             base.VisibleChanged(visible);
 
+            _drawList.Clear();
+
             if (visible)
             {
                 if (_gizmosInstance == null)
                     _gizmosInstance = RuntimeUnityEditorCore.PluginObject.gameObject.AddComponent<GizmosInstance>();
                 _gizmosInstance.enabled = true;
+
+                UpdateState(ObjectTreeViewer.Instance.SelectedTransform);
             }
             else if (_gizmosInstance != null)
+            {
                 _gizmosInstance.enabled = false;
+            }
 
             lib.Gizmos.Enabled = visible;
         }
 
-        //todo
-        //public static void DisplayControls()
-        //{
-        //    if (Initialized)
-        //    {
-        //        GUILayout.BeginHorizontal(GUI.skin.box);
-        //        {
-        //            GUILayout.Label("Gizmos");
-        //            GUILayout.FlexibleSpace();
-        //            Instance.Enabled = GUILayout.Toggle(Instance.Enabled, "Show selection");
-        //            //ShowGizmosOutsideEditor = GUILayout.Toggle(ShowGizmosOutsideEditor, "When closed");
-        //        }
-        //        GUILayout.EndHorizontal();
-        //    }
-        //}
-
         public void UpdateState(Transform rootTransform)
         {
+            if (!Visible || rootTransform == null) return;
+            
             _drawList.Clear();
 
-            if (_dbcType == null)
+            if (!_dbcTypeAttempted)
+            {
+                _dbcTypeAttempted = true;
                 _dbcType = AccessTools.TypeByName("DynamicBoneCollider");
+            }
 
             var allComponents = rootTransform.GetComponentsInChildren<Component>();
             foreach (var component in allComponents)
@@ -71,7 +68,7 @@ namespace RuntimeUnityEditor.Core.Gizmos
                     _drawList.Add(new KeyValuePair<Action<Component>, Component>(DrawTransformGizmo, component));
                 else if (component is Collider)
                     _drawList.Add(new KeyValuePair<Action<Component>, Component>(DrawColliderGizmo, component));
-                else if (component.GetType() == _dbcType)
+                else if (_dbcType != null && component.GetType() == _dbcType)
                     _drawList.Add(new KeyValuePair<Action<Component>, Component>(DrawDynamicBoneColliderGizmo, component));
 
             }
