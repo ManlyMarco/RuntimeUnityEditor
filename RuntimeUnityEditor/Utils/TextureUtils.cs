@@ -98,6 +98,58 @@ namespace RuntimeUnityEditor.Core.Utils
                 RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, e.StackTrace);
             }
         }
+        public static Texture2D LoadTextureFromFileWithDialog()
+        {
+            const OpenFileDialog.OpenSaveFileDialgueFlags loadFileFlags = OpenFileDialog.OpenSaveFileDialgueFlags.OFN_LONGNAMES |
+                                                                          OpenFileDialog.OpenSaveFileDialgueFlags.OFN_EXPLORER |
+                                                                          OpenFileDialog.OpenSaveFileDialgueFlags.OFN_FILEMUSTEXIST |
+                                                                          OpenFileDialog.OpenSaveFileDialgueFlags.OFN_READONLY;
+            try
+            {
+                var filename = OpenFileDialog.ShowDialog("Load texture from file...", null, ".PNG file|*.png", ".png", loadFileFlags, "");
+                if (filename != null && filename.Length > 0)
+                {
+                    RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, "Loading texture data from file at " + filename[0]);
+                    
+                    var data = File.ReadAllBytes(filename[0]);
+                    var tex = new Texture2D(4, 4, TextureFormat.ARGB32, false);
+                    
+                    try
+                    {
+                        var m = typeof(Texture2D).GetMethod("LoadImage", new Type[] { typeof(byte[]) });
+                        if (m != null)
+                        {
+                            m.Invoke(tex, new object[] { data });
+                            return tex;
+                        }
+                        else
+                        {
+                            //LoadImage(this Texture2D tex, byte[] data)
+                            var t = Type.GetType("UnityEngine.ImageConversion, UnityEngine.ImageConversionModule", false);
+                            var m2 = t?.GetMethod("LoadImage", new Type[] { typeof(Texture2D), typeof(byte[]) }); //BindingFlags.Static | BindingFlags.Public
+                            if (m2 != null)
+                            {
+                                m2.Invoke(null, new object[] { tex, data });
+                                return tex;
+                            }
+                        }
+                        throw new Exception("Could not find method LoadImage.");
+                    }
+                    catch
+                    {
+                        Object.Destroy(tex);
+                        throw;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Error | LogLevel.Message, "Could not load texture. Reason: " + e.Message);
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, e.StackTrace);
+            }
+
+            return null;
+        }
 
         /// <summary>
         /// Gets texture as it is shown by this sprite. If it's not packed then returns the original texture.

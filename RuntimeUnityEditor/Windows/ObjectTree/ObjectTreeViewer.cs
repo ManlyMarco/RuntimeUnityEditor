@@ -349,7 +349,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
                                 if (tex != null)
                                 {
-                                    if (GUILayout.Button(tex, GUI.skin.box)) RuntimeUnityEditorCore.Instance.PreviewWindow.SetShownObject(tex, imgSprite.name);
+                                    if (GUILayout.Button(tex, GUI.skin.box)) ObjectView.ObjectViewWindow.Instance.SetShownObject(tex, imgSprite.name);
                                 }
                                 else
                                 {
@@ -380,6 +380,11 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                         {
                             GUILayout.Label(rMainTexture);
                             GUILayout.FlexibleSpace();
+                            if (GUILayout.Button("L"))
+                            {
+                                var newTex = TextureUtils.LoadTextureFromFileWithDialog();
+                                if (newTex != null) r.texture = newTex;
+                            }
                             if (GUILayout.Button("S")) rMainTexture.SaveTextureToFileWithDialog();
                         }
                         else
@@ -397,6 +402,11 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                             var rendTex = reMaterial.mainTexture;
                             GUILayout.Label(rendTex);
                             GUILayout.FlexibleSpace();
+                            if (GUILayout.Button("L"))
+                            {
+                                var newTex = TextureUtils.LoadTextureFromFileWithDialog();
+                                if (newTex != null) reMaterial.mainTexture = newTex;
+                            }
                             if (GUILayout.Button("S")) rendTex.SaveTextureToFileWithDialog();
                         }
                         break;
