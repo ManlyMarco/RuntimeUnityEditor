@@ -13,18 +13,26 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
 
         static AssetBundleManagerHelper()
         {
-            var abmType = AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypesSafe()).FirstOrDefault(x => x.Name == "AssetBundleManager");
-            if (abmType != null)
+            try
             {
-                // public static Dictionary<string, AssetBundleManager.BundlePack> ManifestBundlePack {get;}
-                var mbpProp = abmType.GetProperty("ManifestBundlePack", BindingFlags.Static | BindingFlags.Public);
-                _abCacheManifestDic = mbpProp?.GetValue(null, null) as IDictionary;
-
-                if (_abCacheManifestDic != null)
+                var abmType = AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypesSafe()).FirstOrDefault(x => x.Name == "AssetBundleManager");
+                if (abmType != null)
                 {
-                    // public static void UnloadAssetBundle(string assetBundleName, bool isUnloadForceRefCount, string manifestAssetBundleName = null, bool unloadAllLoadedObjects = false)
-                    _abCacheUnloadMethod = abmType.GetMethod("UnloadAssetBundle", BindingFlags.Static | BindingFlags.Public, null, new[] { typeof(string), typeof(bool), typeof(string), typeof(bool) }, null);
+                    // public static Dictionary<string, AssetBundleManager.BundlePack> ManifestBundlePack {get;}
+                    var mbpProp = abmType.GetProperty("ManifestBundlePack", BindingFlags.Static | BindingFlags.Public);
+                    _abCacheManifestDic = mbpProp?.GetValue(null, null) as IDictionary;
+
+                    if (_abCacheManifestDic != null)
+                    {
+                        // public static void UnloadAssetBundle(string assetBundleName, bool isUnloadForceRefCount, string manifestAssetBundleName = null, bool unloadAllLoadedObjects = false)
+                        _abCacheUnloadMethod = abmType.GetMethod("UnloadAssetBundle", BindingFlags.Static | BindingFlags.Public, null, new[] { typeof(string), typeof(bool), typeof(string), typeof(bool) },
+                                                                 null);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
             }
         }
 
