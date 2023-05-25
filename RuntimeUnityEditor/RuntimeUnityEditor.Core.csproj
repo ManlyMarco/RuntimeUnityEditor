@@ -100,6 +100,7 @@
     <Compile Include="Utils\Abstractions\InitSettings.cs" />
     <Compile Include="Utils\MovingAverage.cs" />
     <Compile Include="Utils\ObjectDumper\Dumper.cs" />
+    <Compile Include="Utils\ObjectDumper\MeshExport.cs" />
     <Compile Include="Utils\ObjectDumper\ObjectDumperExtensions.cs" />
     <Compile Include="WindowBase.cs" />
     <Compile Include="Features\WireframeFeature.cs" />

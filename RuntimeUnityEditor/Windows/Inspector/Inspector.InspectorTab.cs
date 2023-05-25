@@ -9,6 +9,7 @@ using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.ObjectTree;
 using RuntimeUnityEditor.Core.Utils;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
+using RuntimeUnityEditor.Core.Utils.ObjectDumper;
 using UnityEngine;
 using Component = UnityEngine.Component;
 
@@ -105,6 +106,12 @@ namespace RuntimeUnityEditor.Core.Inspector
 
                         if (objectToOpen is UnityEngine.UI.Image img)
                             _fieldCache.Add(GetExportTexEntry(img.mainTexture));
+                        else if (objectToOpen is Renderer rend && MeshExport.CanExport(rend))
+                        {
+                            _fieldCache.Add(new CallbackCacheEntry("Export mesh to .obj", "Save base mesh used by this renderer to file", () => MeshExport.ExportObj(rend, false, false)));
+                            _fieldCache.Add(new CallbackCacheEntry("Export mesh to .obj (Baked)", "Bakes current pose into the exported mesh", () => MeshExport.ExportObj(rend, true, false)));
+                            _fieldCache.Add(new CallbackCacheEntry("Export mesh to .obj (World)", "Bakes pose while keeping world position", () => MeshExport.ExportObj(rend, true, true)));
+                        }
                     }
                     else if (objectToOpen is GameObject castedObj)
                     {
