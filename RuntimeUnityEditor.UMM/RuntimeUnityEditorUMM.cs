@@ -86,6 +86,7 @@ namespace RuntimeUnityEditor.UMM
                     setting = new RuntimeUnityEditorSettings.Setting<T>(defaultValue);
                     _settings.Add(category, name, setting);
                 }
+                setting.OnChanged = onValueUpdated;
                 onValueUpdated(setting.Value);
      
                 return (newValue) => { setting.Value = newValue; onValueUpdated(newValue); };

@@ -10,15 +10,13 @@ using static RuntimeUnityEditor.UMM.RuntimeUnityEditorSettings;
 namespace RuntimeUnityEditor.UMM
 {
     [XmlInclude(typeof(XmlRect))]
-    public class RuntimeUnityEditorSettings : UnityModManager.ModSettings, IDrawable
+    public class RuntimeUnityEditorSettings : UnityModManager.ModSettings
     {
         static Type[] intTypes = new[] { typeof(int), typeof(long), typeof(int[]), typeof(long[]) };
         static Type[] floatTypes = new[] { typeof(float), typeof(double), typeof(float[]), typeof(double[]) };
         static Type[] vectorTtype = new[] { typeof(Vector2), typeof(Vector3), typeof(Vector4) };
         static Type[] specialTypes = new[] { typeof(string), typeof(Color), typeof(KeyCode), typeof(Rect) };
 
-        public void OnChange() { }
-        [Draw]
         private Dictionary<string, Dictionary<string, SettingBase>> Categories = new Dictionary<string, Dictionary<string, SettingBase>>();
 
         public void Add(string category, string settingName, SettingBase setting)
@@ -98,36 +96,58 @@ namespace RuntimeUnityEditor.UMM
 
         public void Draw(UnityModManager.ModEntry entry)
         {
-            //UnityModManager.UI.DrawFields(ref RuntimeUnityEditorUMM.Settings, entry, DrawFieldMask.OnlyDrawAttr);
             foreach (string categoryName in Categories.Keys)
             {
                 if (categoryName == "Windows") continue;
-                GUILayout.Label(categoryName);
+                
+                GUILayout.Label(categoryName, UnityModManager.UI.bold);
+                GUILayout.BeginVertical("box");
+
                 foreach (string settingName in Categories[categoryName].Keys)
                 {
-                    var setting = Categories[categoryName];
-                    var value = Categories[categoryName][settingName];
-                    var type = value.GetType();
+                    var setting = Categories[categoryName][settingName];
 
                     GUILayout.BeginHorizontal();
-                    GUILayout.Label(settingName);
 
-                    if (Array.Exists<Type>(intTypes, (x) => x == type))
+                    if (setting is Setting<int> intSetting)
                     {
-                        if (type.IsArray)
-                        {
-                            /*foreach (var item in value as object[])
-                            {
+                        var value = intSetting.Value;
+                        if (UnityModManager.UI.DrawIntField(ref value, settingName)) intSetting.Value = value;
+                    }
+                    else if (setting is Setting<float> floatSetting)
+                    {
+                        var value = floatSetting.Value;
+                        if (UnityModManager.UI.DrawFloatField(ref value, settingName)) floatSetting.Value = value;
+                    }
+                    else if (setting is Setting<bool> boolSetting)
+                    {
+                        var value = GUILayout.Toggle(boolSetting.Value, settingName);
+                        if (value != boolSetting.Value) boolSetting.Value = value;
+                    }
+                    else if (setting is Setting<UnityEngine.KeyCode> keycodeSetting)
+                    {
+                        GUILayout.Label(settingName, GUILayout.ExpandWidth(false));
 
-                            }*/
-                        } else
-                        {
-                            float newValue = (float)Convert.ToDouble(value);
-                            if (UnityModManager.UI.DrawFloatField(ref newValue, settingName)) setting[settingName].BoxedValue = newValue;
-                        }
+                        var value = new KeyBinding() { keyCode = keycodeSetting.Value };
+                        if (UnityModManager.UI.DrawKeybinding(ref value, settingName)) keycodeSetting.Value = value.keyCode;
+                        GUILayout.FlexibleSpace();
+                    }
+                    else if (setting is Setting<string> stringSetting)
+                    {
+                        GUILayout.BeginVertical();
+                        GUILayout.Label(settingName, GUILayout.ExpandWidth(false));
+
+                        var value = GUILayout.TextField(stringSetting.Value, GUILayout.ExpandWidth(true));
+                        if (value != stringSetting.Value) stringSetting.Value = value;
+                        GUILayout.EndVertical();
+                    }
+                    else
+                    {
+                        GUILayout.Label($"Unknown config entry type: {setting.type.ToString()}");
                     }
                     GUILayout.EndHorizontal();
                 }
+                GUILayout.EndVertical();
             }
         }
 
@@ -136,7 +156,7 @@ namespace RuntimeUnityEditor.UMM
             [XmlIgnore]
             public abstract object BoxedValue { get; set; }
             [XmlIgnore]
-            Type type;
+            public abstract Type type { get; }
         }
 
         public class Setting<T> : SettingBase
@@ -148,11 +168,19 @@ namespace RuntimeUnityEditor.UMM
             public T Value
             {
                 get => _value;
-                set { _value = value; }
+                set 
+                {
+                    if (Equals(_value, value)) return;
+
+                    _value = value;
+                    OnChanged?.Invoke(value);
+                }
 
             }
             [XmlIgnore]
             public override object BoxedValue { get => Value; set => Value = (T) value; }
+            [XmlIgnore]
+            public override Type type { get { return typeof(T); } }
             [XmlIgnore]
             public Action<T> OnChanged;
         }
