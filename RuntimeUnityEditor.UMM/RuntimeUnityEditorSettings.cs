@@ -51,7 +51,6 @@ namespace RuntimeUnityEditor.UMM
                     {
                         settings.Add(new SerializableSetting() { Key = setting, Value = Categories[key][setting] });
                     }
-
                 }
                 SerializableSettings.Add(new SerializableCategory() { Name = key, Settings = settings });
             }
@@ -169,8 +168,8 @@ namespace RuntimeUnityEditor.UMM
                     _value = value;
                     OnChanged?.Invoke(value);
                 }
-
             }
+
             [XmlIgnore]
             public override object BoxedValue { get => Value; set => Value = (T) value; }
             [XmlIgnore]
@@ -187,18 +186,7 @@ namespace RuntimeUnityEditor.UMM
             [XmlElement("Setting")]
             public List<SerializableSetting> Settings;
         }
-        public class SerializableValueBase { }
-        public class SerializableValue<T> : SerializableValueBase
-        {
-            T Value;
-        }
-        //[XmlInclude(typeof(Setting<XmlRect>))]
-        //[XmlInclude(typeof(Setting<UnityEngine.KeyCode>))]
-        //[XmlInclude(typeof(Setting<bool>))]
-        //[XmlInclude(typeof(Setting<int>))]
-        //[XmlInclude(typeof(Setting<float>))]
-        //[XmlInclude(typeof(Setting<string>))]
-        //[XmlInclude(typeof(Setting<UnityEngine.Rect>))]
+
         public class SerializableSetting
         {
             [XmlAttribute("Name")]
