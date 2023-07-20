@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityModManagerNet;
-using UnityEngine;
-using System.Xml.Serialization;
 using System.IO;
 using System.Xml;
-using static RuntimeUnityEditor.UMM.RuntimeUnityEditorSettings;
+using System.Xml.Serialization;
+using UnityEngine;
+using UnityModManagerNet;
 
 namespace RuntimeUnityEditor.UMM
 {

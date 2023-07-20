@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using RuntimeUnityEditor.Core;
+﻿using RuntimeUnityEditor.Core;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using System;
 using UnityEngine;
