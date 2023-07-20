@@ -11,12 +11,7 @@ namespace RuntimeUnityEditor.UMM
     [XmlInclude(typeof(XmlRect))]
     public class RuntimeUnityEditorSettings : UnityModManager.ModSettings
     {
-        static Type[] intTypes = new[] { typeof(int), typeof(long), typeof(int[]), typeof(long[]) };
-        static Type[] floatTypes = new[] { typeof(float), typeof(double), typeof(float[]), typeof(double[]) };
-        static Type[] vectorTtype = new[] { typeof(Vector2), typeof(Vector3), typeof(Vector4) };
-        static Type[] specialTypes = new[] { typeof(string), typeof(Color), typeof(KeyCode), typeof(Rect) };
-
-        private Dictionary<string, Dictionary<string, SettingBase>> Categories = new Dictionary<string, Dictionary<string, SettingBase>>();
+        private readonly Dictionary<string, Dictionary<string, SettingBase>> Categories = new Dictionary<string, Dictionary<string, SettingBase>>();
 
         public void Add(string category, string settingName, SettingBase setting)
         {
