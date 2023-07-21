@@ -17,14 +17,19 @@ In-game inspector, editor and interactive console for applications made with Uni
 
 ![preview](https://user-images.githubusercontent.com/39247311/208912018-014154e1-7ad8-4df0-a4a3-662c334ccedc.jpg)
 
-### How to use
-1. Install BepInEx v4.x or v5.x if you don't have it already. You can download it [here](https://github.com/BepInEx/BepInEx
-).
-2. Download the latest build from the [Releases](https://github.com/ManlyMarco/RuntimeUnityEditor/releases) page. Make sure to get the correct version for your BepInEx.
+### How to use (BepInEx)
+1. Install BepInEx v4.x or v5.x if you don't have it already. You can download it [here](https://github.com/BepInEx/BepInEx).
+2. Download the latest BepInEx build (RuntimeUnityEditor_BepInEx5_vX.X.zip) from the [Releases](https://github.com/ManlyMarco/RuntimeUnityEditor/releases) page. Make sure to get the correct version for your BepInEx.
 3. Extract the BepInEx folder from the archive directly into your game directory (you should already have a BepInEx folder there from previous step). Replace files if asked.
 4. To turn on press the F12 key when in-game. A window should appear on top of the game. If it doesn't appear, check logs for errors.
 
 Note: If the plugin fails to load under BepInEx 4 with a type load exception, move RuntimeUnityEditor.Core.dll to BepInEx/core folder.
+
+### How to use (Unity Mod Manager)
+1. Install Unity Mod Manager if you don't have it already. You can download it [here](https://www.nexusmods.com/site/mods/21). Select your game from the the dropdown list and then click the Install button.
+2. Download the latest UMM build (RuntimeUnityEditor_UMM_vX.X.zip) from the [Releases](https://github.com/ManlyMarco/RuntimeUnityEditor/releases) page.
+3. Goto the Mods tab in Unity Mod Manager and drag the RuntimeUnityEditor zip file into the Unity Mod Manager GUI at the bottom where it says drop zip file here.
+4. To turn on press the F12 key when in-game. A window should appear on top of the game. If it doesn't appear, check logs for errors.
 
 ### How to build
 1. Get Visual Studio 2019 (or later).
