@@ -1,7 +1,7 @@
 {
   "Id": "RuntimeUnityEditor",
   "DisplayName": "Runtime Unity Editor",
-  "Author": "Vanguard",
+  "Author": "Vanguard, ManlyMarco",
   "Version": "0.0.0.0",
   "ManagerVersion": "0.27.2",
   "AssemblyName": "RuntimeUnityEditor.UMM.dll",
