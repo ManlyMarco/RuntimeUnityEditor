@@ -35,6 +35,7 @@
     <CodeAnalysisRuleSet>
     </CodeAnalysisRuleSet>
     <DebugSymbols>true</DebugSymbols>
+    <DocumentationFile>..\bin\Core\RuntimeUnityEditor.Core.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony, Version=2.6.0.0, Culture=neutral, processorArchitecture=MSIL">
