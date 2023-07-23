@@ -1,5 +1,5 @@
 # Runtime Unity Editor / Debugging Tools
-In-game inspector, editor and interactive console for applications made with Unity3D game engine. It's designed for debugging and modding Unity games, but can also be used as a universal trainer. Runs under [BepInEx](https://github.com/BepInEx/BepInEx).
+In-game inspector, editor and interactive console for applications made with Unity3D game engine. It's designed for debugging and modding Unity games, but can also be used as a universal trainer. Runs under [BepInEx5](https://github.com/BepInEx/BepInEx) and [UMM](https://github.com/newman55/unity-mod-manager).
 
 ### Features
 - Works on most games made in Unity 4.x or newer that use the mono runtime (IL2CPP is not supported at the moment)
@@ -13,6 +13,7 @@ In-game inspector, editor and interactive console for applications made with Uni
 - Mouse inspect (find objects or UI elements by clicking with mouse)
 - Gizmos (Transform origin, Renderer bounds, Collider area, etc.)
 - All parts are integrated together (e.g. REPL console can access inspected object, inspector can focus objects on GameObject list, etc.)
+- Right click on most objects to bring up a context menu with more options
 - and many other...
 
 ![preview](https://user-images.githubusercontent.com/39247311/208912018-014154e1-7ad8-4df0-a4a3-662c334ccedc.jpg)
