@@ -156,7 +156,7 @@ namespace RuntimeUnityEditor.Core.Utils
         private static Vector3 _clickedPosition;
         private static Rect _originalWindow;
         private static int _currentWindowId;
-        
+
         /// <summary>
         /// Handle dragging and resizing of ongui windows, and preventing inptus from going through. Use instead of GUI.DragWindow()
         /// How to use: _winRect = Utils.DragResizeEat(id, _winRect);
@@ -231,5 +231,21 @@ namespace RuntimeUnityEditor.Core.Utils
         }
 
         #endregion
+
+        /// <summary>
+        /// For use inside OnGUI to check if a GUI.Button was clicked with middle mouse button.
+        /// </summary>
+        public static bool IsMouseWheelClick()
+        {
+            return Event.current.button == 2;
+        }
+        
+        /// <summary>
+        /// For use inside OnGUI to check if a GUI.Button was clicked with right mouse button.
+        /// </summary>
+        public static bool IsMouseRightClick()
+        {
+            return Event.current.button == 1;
+        }
     }
 }

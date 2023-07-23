@@ -86,6 +86,9 @@ namespace RuntimeUnityEditor.Core.Utils
                            "Invoke: " + (raiser != null ? ((raiser.IsPublic ? "(public) " : "(non-public) ") + raiser.FullDescription()) : "No invoke") + "\n" +
                            "Event handler type: " + eventInfo.EventHandlerType.FullDescription() + "\n\n" +
                            "Declared in: " + eventInfo.DeclaringType.FullDescription();
+                case Type type:
+                    return type.FullDescription();
+
                 case null:
                     return null;
 

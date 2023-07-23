@@ -104,6 +104,7 @@
     <Compile Include="Utils\ObjectDumper\ObjectDumperExtensions.cs" />
     <Compile Include="WindowBase.cs" />
     <Compile Include="Features\WireframeFeature.cs" />
+    <Compile Include="Features\ContextMenu.cs" />
     <Compile Include="Windows\Clipboard\ClipboardWindow.cs" />
     <Compile Include="Windows\Inspector\Entries\Contents\EventCacheEntry.cs" />
     <Compile Include="Utils\OrderedSet.cs" />
