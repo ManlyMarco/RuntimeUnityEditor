@@ -1,4 +1,8 @@
-﻿using RuntimeUnityEditor.Core.Utils;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using HarmonyLib;
+using RuntimeUnityEditor.Core.Utils;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
 
@@ -7,17 +11,56 @@ namespace RuntimeUnityEditor.Core.ObjectView
     public sealed class ObjectViewWindow : Window<ObjectViewWindow>
     {
         private object _objToDisplay;
+        private Action<object> _objDrawer;
+
         private Vector2 _scrollPos;
+
+        private static Dictionary<Type, Action<object>> _objectDrawers = new Dictionary<Type, Action<object>>
+        {
+            {typeof(Texture), o => GUILayout.Label((Texture)o, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true))},
+            {typeof(GUIContent), o => GUILayout.Label((GUIContent)o, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true))},
+            {typeof(string), o => GUILayout.TextArea((string)o, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true))},
+        };
+
+        private static bool GetDrawer(object objToDisplay, out Action<object> drawer)
+        {
+            if (objToDisplay == null)
+            {
+                drawer = o => GUILayout.Label("No object selected.\n\nYou can send objects here from other windows by clicking the \"Preview\" or \"V\" buttons.");
+                return false;
+            }
+
+            if (objToDisplay is UnityEngine.Object uo && !uo)
+            {
+                drawer = o => GUILayout.Label($"Selected Unity Object of type [{uo.GetType().GetFancyDescription()}] has been destroyed.");
+                return false;
+            }
+
+            var objType = objToDisplay.GetType();
+            if (_objectDrawers.TryGetValue(objType, out drawer))
+                return true;
+                
+            drawer = _objectDrawers.FirstOrDefault(x => x.Key.IsAssignableFrom(objType)).Value;
+            if (drawer != null)
+                return true;
+
+            drawer = o => GUILayout.Label($"Unsupported object type: {objToDisplay?.GetType()}");
+            return false;
+        }
+
+        public bool CanPreview(object obj)
+        {
+            return GetDrawer(obj, out _);
+        }
 
         public void SetShownObject(object objToDisplay, string objName)
         {
-            // todo make more generic and support more types
-            if (objToDisplay == null || objToDisplay is Texture || objToDisplay is string)
-                _objToDisplay = objToDisplay;
-            else
-                _objToDisplay = $"Unsupported object type: {objToDisplay.GetType()}\n{new System.Diagnostics.StackTrace()}";
+            _objToDisplay = objToDisplay;
+            GetDrawer(objToDisplay, out _objDrawer);
 
-            Title = "Object viewer - " + (objName ?? "NULL");
+            _scrollPos = Vector2.zero;
+
+            Title = "Object viewer - " + (objName ?? objToDisplay?.GetType().FullDescription() ?? "NULL");
 
             Enabled = true;
         }
@@ -29,36 +72,23 @@ namespace RuntimeUnityEditor.Core.ObjectView
 
         protected override void DrawContents()
         {
+            if (_objDrawer == null) GetDrawer(_objToDisplay, out _objDrawer);
+
             GUILayout.BeginVertical();
             {
-                if (_objToDisplay == null)
+                GUILayout.BeginHorizontal();
                 {
-                    GUILayout.FlexibleSpace();
-                    GUILayout.Label("No object selected or the object has been destroyed.\n\nYou can send objects here from other windows by clicking the \"View\" or \"V\" buttons.");
-                    GUILayout.FlexibleSpace();
+                    ContextMenu.Instance.DrawContextButton(_objToDisplay, null);
                 }
-                else
-                {
-                    _scrollPos = GUILayout.BeginScrollView(_scrollPos, true, true, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
-                    // todo make more generic and support more types
-                    {
-                        if (_objToDisplay is Texture tex)
-                        {
-                            if (GUILayout.Button("Save"))
-                                tex.SaveTextureToFileWithDialog();
+                GUILayout.EndHorizontal();
 
-                            GUILayout.Label(tex, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
-                        }
-                        else if (_objToDisplay is string str)
-                        {
-                            GUILayout.TextArea(str, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
-                        }
-                    }
-                    GUILayout.EndScrollView();
+                _scrollPos = GUILayout.BeginScrollView(_scrollPos, true, true, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+                {
+                    _objDrawer(_objToDisplay);
                 }
+                GUILayout.EndScrollView();
             }
             GUILayout.EndVertical();
-
         }
 
         protected override void Initialize(InitSettings initSettings)
