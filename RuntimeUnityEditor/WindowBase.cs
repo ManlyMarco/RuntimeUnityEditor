@@ -6,15 +6,38 @@ using UnityEngine;
 
 namespace RuntimeUnityEditor.Core
 {
+    /// <summary>
+    /// Feature for use with RuntimeUnityEditor that has a GUILayout window. Custom windows can be added with <see cref="RuntimeUnityEditorCore.AddFeature"/>.
+    /// Consider using <see cref="Window{T}"/> instead of the bare interface.
+    /// </summary>
     public interface IWindow : IFeature
     {
+        /// <summary>
+        /// Title of the window shown in the title bar and messages related to the window.
+        /// </summary>
         string Title { get; set; }
+        /// <summary>
+        /// ID of the GUILayout window. Set to a unique value automatically during initialization.
+        /// </summary>
         int WindowId { get; set; }
+        /// <summary>
+        /// Size and position of the window, including borders and title bar.
+        /// </summary>
         Rect WindowRect { get; set; }
+        /// <summary>
+        /// Minimum size of the window (width, height).
+        /// </summary>
         Vector2 MinimumSize { get; set; }
+        /// <summary>
+        /// Discard current window size and position, and set the default ones for this window.
+        /// </summary>
         void ResetWindowRect();
     }
-
+    
+    /// <summary>
+    /// Base implementation of <see cref="IWindow"/>.
+    /// <typeparamref name="T"/> should be your derived class's Type, e.g. <code>public class MyWindow : Window&lt;MyWindow&gt;</code>.
+    /// </summary>
     public abstract class Window<T> : FeatureBase<T>, IWindow where T : Window<T>
     {
         protected const int ScreenOffset = 10;
@@ -37,6 +60,7 @@ namespace RuntimeUnityEditor.Core
             SettingCategory = "Windows";
         }
 
+        /// <inheritdoc cref="FeatureBase{T}.AfterInitialized"/>
         protected override void AfterInitialized(InitSettings initSettings)
         {
             base.AfterInitialized(initSettings);
@@ -44,12 +68,14 @@ namespace RuntimeUnityEditor.Core
             _confRect = initSettings.RegisterSetting(SettingCategory, DisplayName + " window size", WindowRect, string.Empty, b => WindowRect = b);
         }
 
+        /// <inheritdoc cref="FeatureBase{T}.DisplayName"/>
         public override string DisplayName
         {
             get => _displayName ?? (_displayName = Title ?? base.DisplayName);
             set => _displayName = value;
         }
 
+        /// <inheritdoc cref="FeatureBase{T}.OnGUI"/>
         protected override void OnGUI()
         {
             if (!_canShow) return;
@@ -134,6 +160,7 @@ namespace RuntimeUnityEditor.Core
             }
         }
 
+        /// <inheritdoc cref="FeatureBase{T}.OnVisibleChanged"/>
         protected override void OnVisibleChanged(bool visible)
         {
             // If the taskbar didn't have a chance to initialize yet, wait for a frame. Necessary to calculate free screen space.
@@ -153,6 +180,7 @@ namespace RuntimeUnityEditor.Core
             }
         }
 
+        /// <inheritdoc cref="FeatureBase{T}.VisibleChanged"/>
         protected override void VisibleChanged(bool visible)
         {
             if (visible)
@@ -164,6 +192,7 @@ namespace RuntimeUnityEditor.Core
             }
         }
 
+        /// <inheritdoc cref="IWindow.ResetWindowRect"/>
         public void ResetWindowRect()
         {
             var screenRect = new Rect(
@@ -184,8 +213,14 @@ namespace RuntimeUnityEditor.Core
                    WindowRect.y >= -WindowRect.height + ScreenOffset;
         }
 
+        /// <summary>
+        /// Get default size of this window (including border and title bar) for the given screen size.
+        /// </summary>
         protected abstract Rect GetDefaultWindowRect(Rect screenRect);
 
+        /// <summary>
+        /// Get default size of a window for a given resolution and side of the screen. Center is wider than the sides.
+        /// </summary>
         public static Rect MakeDefaultWindowRect(Rect screenRect, TextAlignment side)
         {
             switch (side)
@@ -207,12 +242,20 @@ namespace RuntimeUnityEditor.Core
                     throw new ArgumentOutOfRangeException(nameof(side), side, null);
             }
         }
-        
+
+        /// <summary>
+        /// Draw contents of the window.
+        /// This runs inside of <see cref="GUILayout.Window(int,UnityEngine.Rect,UnityEngine.GUI.WindowFunction,string,UnityEngine.GUILayoutOption[])"/>
+        /// so all <see cref="GUILayout"/> methods can be used to construct the interface.
+        /// </summary>
         protected abstract void DrawContents();
 
+        /// <inheritdoc cref="IWindow.Title"/>
         public virtual string Title { get; set; }
+        /// <inheritdoc cref="IWindow.WindowId"/>
         public int WindowId { get; set; }
 
+        /// <inheritdoc cref="IWindow.WindowRect"/>
         public virtual Rect WindowRect
         {
             get => _windowRect;
@@ -226,6 +269,7 @@ namespace RuntimeUnityEditor.Core
             }
         }
 
+        /// <inheritdoc cref="IWindow.MinimumSize"/>
         public Vector2 MinimumSize { get; set; } = new Vector2(100, 100);
     }
 }

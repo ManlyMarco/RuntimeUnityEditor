@@ -16,7 +16,9 @@ namespace RuntimeUnityEditor.Core
 
         public static WindowManager Instance { get; private set; }
 
+#pragma warning disable CS0618
         protected string GetTitle() => RuntimeUnityEditorCore.Instance.ShowHotkey == KeyCode.None ? _title : _title + $" / Press {RuntimeUnityEditorCore.Instance.ShowHotkey} to show/hide";
+#pragma warning restore CS0618
         public int Height => (int)_windowRect.height;
 
         public WindowManager()
@@ -32,8 +34,6 @@ namespace RuntimeUnityEditor.Core
 
         public void SetFeatures(List<IFeature> initializedFeatures)
         {
-            //var groups = initializedFeatures.ToLookup(x => x.DisplayType);
-            //groups[FeatureDisplayType.Window]
             _orderedFeatures = initializedFeatures.OrderByDescending(x => x.DisplayType).ThenBy(x => x.DisplayName).ToList();
         }
 

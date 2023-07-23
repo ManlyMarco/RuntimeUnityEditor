@@ -4,30 +4,77 @@ using RuntimeUnityEditor.Core.Utils.Abstractions;
 
 namespace RuntimeUnityEditor.Core
 {
+    /// <summary>
+    /// Feature for use with RuntimeUnityEditor. Custom features can be added with <see cref="RuntimeUnityEditorCore.AddFeature"/>.
+    /// Consider using <see cref="FeatureBase{T}"/> or <see cref="Window{T}"/> instead of the bare interface.
+    /// </summary>
     public interface IFeature
     {
+        /// <summary>
+        /// Turn on this feature's functionality.
+        /// </summary>
         bool Enabled { get; set; }
+        /// <summary>
+        /// Initialize this feature. If this throws, the feature will be skipped.
+        /// </summary>
         void OnInitialize(InitSettings initSettings);
+        /// <summary>
+        /// Unity Update callback.
+        /// </summary>
         void OnUpdate();
+        /// <summary>
+        /// Unity LateUpdate callback.
+        /// </summary>
         void OnLateUpdate();
+        /// <summary>
+        /// Unity OnGUI callback.
+        /// </summary>
         void OnOnGUI();
+        /// <summary>
+        /// Callback for RuntimeUnityEditor being toggled shown/hidden. If not visible, Unity callbacks are not called.
+        /// </summary>
         void OnEditorShownChanged(bool visible);
+        /// <summary>
+        /// How this feature appears in the UI.
+        /// </summary>
         FeatureDisplayType DisplayType { get; }
         string DisplayName { get; }
     }
 
+    /// <summary>
+    /// Controls how a feature appears in the RuntimeUnityEditor interface.
+    /// </summary>
     public enum FeatureDisplayType
     {
+        /// <summary>
+        /// Do not show on the taskbar, <see cref="IFeature.Enabled"/> has to be manually set in that case.
+        /// </summary>
         Hidden,
+        /// <summary>
+        /// Show as a taskbar toggle together with other features.
+        /// </summary>
         Feature,
+        /// <summary>
+        /// Show as a taskbar button together with other windows.
+        /// </summary>
         Window
     }
 
+    /// <summary>
+    /// Base implementation of <see cref="IFeature"/>.
+    /// <typeparamref name="T"/> should be your derived class's Type, e.g. <code>public class MyFeature : FeatureBase&lt;MyFeature&gt;</code>.
+    /// </summary>
     public abstract class FeatureBase<T> : IFeature where T : FeatureBase<T>
     {
         // ReSharper disable once StaticMemberInGenericType
         private static bool _initialized;
+        /// <summary>
+        /// True if this feature was successfully initialized.
+        /// </summary>
         public static bool Initialized => _initialized;
+        /// <summary>
+        /// Instance of this feature (null if not initialized).
+        /// </summary>
         public static T Instance { get; private set; }
 
         protected FeatureBase()
@@ -93,6 +140,9 @@ namespace RuntimeUnityEditor.Core
             _initialized = true;
         }
 
+        /// <summary>
+        /// Runs after <see cref="Initialize"/> has successfully finished. Must succeed for the feature to be considered initialized.
+        /// </summary>
         protected virtual void AfterInitialized(InitSettings initSettings)
         {
             _confEnabled = initSettings.RegisterSetting(SettingCategory, DisplayName + " enabled", Enabled, string.Empty, b => Enabled = b);
@@ -162,10 +212,15 @@ namespace RuntimeUnityEditor.Core
             }
         }
 
+        /// <inheritdoc cref="IFeature.OnInitialize"/>
         protected abstract void Initialize(InitSettings initSettings);
+        /// <inheritdoc cref="IFeature.OnUpdate"/>
         protected virtual void Update() { }
+        /// <inheritdoc cref="IFeature.OnLateUpdate"/>
         protected virtual void LateUpdate() { }
+        /// <inheritdoc cref="IFeature.OnOnGUI"/>
         protected virtual void OnGUI() { }
+        /// <inheritdoc cref="IFeature.OnEditorShownChanged"/>
         protected virtual void VisibleChanged(bool visible) { }
     }
 }

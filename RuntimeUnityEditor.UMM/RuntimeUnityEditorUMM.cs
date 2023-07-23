@@ -6,6 +6,12 @@ using UnityModManagerNet;
 
 namespace RuntimeUnityEditor.UMM
 {
+    /// <summary>
+    /// This is a loader plugin for UnityModManager.
+    /// When referencing RuntimeUnityEditor from other code it's recommended to not reference this assembly and instead reference RuntimeUnityEditorCore directly.
+    /// You can see if RuntimeUnityEditor has finished loading with <code>RuntimeUnityEditorCore.IsInitialized()</code>.
+    /// </summary>
+    [Obsolete("It's recommended to reference RuntimeUnityEditorCore directly")]
     public static class RuntimeUnityEditorUMM
     {
         public static bool Enabled { get; private set; }
