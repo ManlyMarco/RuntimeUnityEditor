@@ -18,15 +18,21 @@ namespace RuntimeUnityEditor.Core
         public const string Version = "5.0";
         public const string GUID = "RuntimeUnityEditor";
 
-        [Obsolete("Use window Instance instead")] public Inspector.Inspector Inspector => Core.Inspector.Inspector.Initialized ? Core.Inspector.Inspector.Instance : null;
-        [Obsolete("Use window Instance instead")] public ObjectTreeViewer TreeViewer => ObjectTreeViewer.Initialized ? ObjectTreeViewer.Instance : null;
-        [Obsolete("Use window Instance instead")] public ObjectViewWindow PreviewWindow => ObjectViewWindow.Initialized ? ObjectViewWindow.Instance : null;
-        [Obsolete("Use window Instance instead")] public ProfilerWindow ProfilerWindow => ProfilerWindow.Initialized ? ProfilerWindow.Instance : null;
-        [Obsolete("Use window Instance instead")] public ReplWindow Repl => ReplWindow.Initialized ? ReplWindow.Instance : null;
-        [Obsolete("Use window Instance instead")] public WindowManager WindowManager => WindowManager.Instance;
+        #region Obsolete
+
+        [Obsolete("Use window Instance instead", true)] public Inspector.Inspector Inspector => Core.Inspector.Inspector.Initialized ? Core.Inspector.Inspector.Instance : null;
+        [Obsolete("Use window Instance instead", true)] public ObjectTreeViewer TreeViewer => ObjectTreeViewer.Initialized ? ObjectTreeViewer.Instance : null;
+        [Obsolete("Use window Instance instead", true)] public ObjectViewWindow PreviewWindow => ObjectViewWindow.Initialized ? ObjectViewWindow.Instance : null;
+        [Obsolete("Use window Instance instead", true)] public ProfilerWindow ProfilerWindow => ProfilerWindow.Initialized ? ProfilerWindow.Instance : null;
+        [Obsolete("Use window Instance instead", true)] public ReplWindow Repl => ReplWindow.Initialized ? ReplWindow.Instance : null;
+        [Obsolete("Use window Instance instead", true)] public WindowManager WindowManager => WindowManager.Instance;
 
         [Obsolete("No longer works", true)] public event EventHandler SettingsChanged;
 
+        /// <summary>
+        /// Hotkey used to show/hide RuntimeUnityEditor. Changing this at runtime also updates the config file, so the value will be set on the next start.
+        /// </summary>
+        [Obsolete("Avoid changing the hotkey through code since it will overwrite user setting. Set the Show property instead if you need to show/hide RUE at specific times.")]
         public KeyCode ShowHotkey
         {
             get => _showHotkey;
@@ -42,79 +48,141 @@ namespace RuntimeUnityEditor.Core
 
         private readonly Action<KeyCode> _onHotkeyChanged;
 
+        [Obsolete("Use window Instance instead", true)]
         public bool ShowRepl
         {
-            get => Repl != null && Repl.Enabled;
-            set { if (Repl != null) Repl.Enabled = value; }
+            get => ReplWindow.Initialized && ReplWindow.Instance.Enabled;
+            set { if (ReplWindow.Initialized) ReplWindow.Instance.Enabled = value; }
         }
 
+        [Obsolete("Use window Instance instead", true)]
         public bool EnableMouseInspect
         {
             get => MouseInspect.Initialized && MouseInspect.Instance.Enabled;
-            set => MouseInspect.Instance.Enabled = value;
+            set { if (MouseInspect.Initialized) MouseInspect.Instance.Enabled = value; }
         }
 
+        [Obsolete("Use window Instance instead", true)]
         public bool ShowInspector
         {
-            get => Inspector != null && Inspector.Enabled;
-            set => Inspector.Enabled = value;
+            get => Core.Inspector.Inspector.Initialized && Core.Inspector.Inspector.Instance.Enabled;
+            set { if (Core.Inspector.Inspector.Initialized) Core.Inspector.Inspector.Instance.Enabled = value; }
         }
 
+        #endregion
+
+        #region Public API
+
+        /// <summary>
+        /// Current instance of RuntimeUnityEditor.
+        /// Use <see cref="IsInitialized"/> to check if initialization has been finished.
+        /// </summary>
         public static RuntimeUnityEditorCore Instance { get; private set; }
 
-        internal static MonoBehaviour PluginObject => _initSettings.PluginMonoBehaviour;
-        internal static ILoggerWrapper Logger => _initSettings.LoggerWrapper;
-        private static InitSettings _initSettings;
-
-        private readonly List<IFeature> _initializedFeatures = new List<IFeature>();
         /// <summary>
-        /// All features that have been successfully initialized so far
+        /// Check if RuntimeUnityEditor has finished initializing.
+        /// If this method is called from a background thread and the initialization is currently
+        /// in progress, it will block until initialization finishes (or fails).
         /// </summary>
-        public IEnumerable<IFeature> InitializedFeatures => _initializedFeatures;
-        private KeyCode _showHotkey = KeyCode.F12;
-
-        //private readonly List<IWindow> _initializedWindows = new List<IWindow>();
-
-        public RuntimeUnityEditorCore(InitSettings initSettings)
+        public static bool IsInitialized()
         {
-            if (Instance != null)
-                throw new InvalidOperationException("Can only create one instance of the Core object");
-
-            _initSettings = initSettings;
-
-            Instance = this;
-
-            _onHotkeyChanged = initSettings.RegisterSetting("General", "Open/close runtime editor", KeyCode.F12, "", x => ShowHotkey = x);
-
-            var iFeatureType = typeof(IFeature);
-            // Create all instances first so they are accessible in Initialize methods in case there's crosslinking spaghetti
-            var allFeatures = typeof(RuntimeUnityEditorCore).Assembly.GetTypesSafe().Where(t => !t.IsAbstract && iFeatureType.IsAssignableFrom(t)).Select(Activator.CreateInstance).Cast<IFeature>().ToList();
-
-            foreach (var feature in allFeatures)
+            lock (GUID)
             {
-                try
-                {
-                    AddFeatureInt(feature);
-                }
-                catch (Exception e)
-                {
-                    Logger.Log(LogLevel.Warning, $"Failed to initialize {feature.GetType().Name} - " + e);
-                }
+                return Instance != null;
             }
-
-            WindowManager.SetFeatures(_initializedFeatures);
-
-            Logger.Log(LogLevel.Info, $"Successfully initialized {_initializedFeatures.Count}/{allFeatures.Count} features: {string.Join(", ", _initializedFeatures.Select(x => x.GetType().Name).ToArray())}");
         }
 
         /// <summary>
-        /// Add a new feature to runtime editor.
-        /// Will throw if feature fails to initialize.
+        /// Show RuntimeUnityEditor interface (global toggle controlled by the hotkey).
+        /// When hidden, most of the features are disabled/paused to minimize performance penalty.
+        /// </summary>
+        public bool Show
+        {
+            get => WindowManager.Instance.Enabled;
+            set
+            {
+                if (WindowManager.Instance.Enabled == value) return;
+                WindowManager.Instance.Enabled = value;
+
+                for (var index = 0; index < _initializedFeatures.Count; index++)
+                    _initializedFeatures[index].OnEditorShownChanged(value);
+            }
+        }
+
+        /// <summary>
+        /// Features that have been successfully initialized so far and are available to the user.
+        /// </summary>
+        public IEnumerable<IFeature> InitializedFeatures => _initializedFeatures;
+        
+        /// <summary>
+        /// Add a new feature to RuntimeUnityEditor.
+        /// Will throw if the feature fails to initialize.
         /// </summary>
         public void AddFeature(IFeature feature)
         {
             AddFeatureInt(feature);
-            WindowManager.SetFeatures(_initializedFeatures);
+            WindowManager.Instance.SetFeatures(_initializedFeatures);
+        }
+
+        #endregion
+        
+        internal static MonoBehaviour PluginObject => _initSettings.PluginMonoBehaviour;
+        internal static ILoggerWrapper Logger => _initSettings.LoggerWrapper;
+
+        private static InitSettings _initSettings;
+        private readonly List<IFeature> _initializedFeatures = new List<IFeature>();
+        private KeyCode _showHotkey = KeyCode.F12;
+
+        /// <summary>
+        /// Initialize RuntimeUnityEditor. Can only be ran once. Must run on the main Unity thread.
+        /// Must complete before accessing any of RuntimeUnityEditor's features or they may not be initialized.
+        /// </summary>
+        internal RuntimeUnityEditorCore(InitSettings initSettings)
+        {
+            lock (GUID)
+            {
+                if (Instance != null)
+                    throw new InvalidOperationException("Can create only one instance of the Core object");
+
+                _initSettings = initSettings;
+
+                Instance = this;
+
+                try
+                {
+                    _onHotkeyChanged = initSettings.RegisterSetting("General", "Open/close runtime editor", KeyCode.F12, "", x => ShowHotkey = x);
+
+                    var iFeatureType = typeof(IFeature);
+                    // Create all instances first so they are accessible in Initialize methods in case there's crosslinking spaghetti
+                    var allFeatures = typeof(RuntimeUnityEditorCore).Assembly.GetTypesSafe().Where(t => !t.IsAbstract && iFeatureType.IsAssignableFrom(t)).Select(Activator.CreateInstance).Cast<IFeature>()
+                                                                    .ToList();
+
+                    foreach (var feature in allFeatures)
+                    {
+                        try
+                        {
+                            AddFeatureInt(feature);
+                        }
+                        catch (Exception e)
+                        {
+                            if (feature is WindowManager)
+                                throw new InvalidOperationException("WindowManager somehow failed to initialize! I am die, thank you forever.", e);
+
+                            Logger.Log(LogLevel.Warning, $"Failed to initialize {feature.GetType().Name} - " + e);
+                        }
+                    }
+
+                    WindowManager.Instance.SetFeatures(_initializedFeatures);
+
+                    Logger.Log(LogLevel.Info,
+                               $"Successfully initialized {_initializedFeatures.Count}/{allFeatures.Count} features: {string.Join(", ", _initializedFeatures.Select(x => x.GetType().Name).ToArray())}");
+                }
+                catch
+                {
+                    Instance = null;
+                    throw;
+                }
+            }
         }
 
         private void AddFeatureInt(IFeature feature)
@@ -122,27 +190,9 @@ namespace RuntimeUnityEditor.Core
             feature.OnInitialize(_initSettings);
 
             _initializedFeatures.Add(feature);
-            //if (feature is IWindow window)
-            //    _initializedWindows.Add(window);
         }
 
-        public bool Show
-        {
-            get => WindowManager.Enabled;
-            set
-            {
-                if (WindowManager.Enabled == value) return;
-                WindowManager.Enabled = value;
-
-                for (var index = 0; index < _initializedFeatures.Count; index++)
-                    _initializedFeatures[index].OnEditorShownChanged(value);
-
-                // todo safe invoke
-                //ShowChanged?.Invoke(this, EventArgs.Empty);
-            }
-        }
-
-        //public event EventHandler ShowChanged;
+        #region Unity callbacks (called by the modloader-specific part of this plugin)
 
         internal void OnGUI()
         {
@@ -179,5 +229,7 @@ namespace RuntimeUnityEditor.Core
                     _initializedFeatures[index].OnLateUpdate();
             }
         }
+
+        #endregion
     }
 }
