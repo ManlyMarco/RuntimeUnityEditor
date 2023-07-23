@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using RuntimeUnityEditor.Core.REPL.MCS;
 using RuntimeUnityEditor.Core.Utils;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
@@ -69,7 +70,7 @@ namespace RuntimeUnityEditor.Core.REPL
 
             var disable = false;
             initSettings.RegisterSetting("General", "Disable REPL function", false, "Completely turn off REPL even if it's supported. Useful if mcs is causing compatibility issues (e.g. in rare cases it can crash the game when used together with some versions of RuntimeDetours in some Unity versions).", x => disable = x);
-            if(disable) throw new InvalidOperationException("REPL is disabled in config");
+            if (disable) throw new InvalidOperationException("REPL is disabled in config");
 
             var configPath = initSettings.ConfigPath;
             _autostartFilename = Path.Combine(configPath, "RuntimeUnityEditor.Autostart.cs");
@@ -559,5 +560,37 @@ namespace RuntimeUnityEditor.Core.REPL
             }
         }
         private Action<bool> _onEnabledChanged;
+
+        public void IngestObject(object obj)
+        {
+            if (obj == null)
+            {
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "obj is null in: " + new StackTrace());
+                return;
+            }
+
+            REPL.InteropTempVar = obj;
+            _prevInput = _inputField = $"var {GetUniqueVarName("q")} = ({obj.GetType().GetSourceCodeRepresentation()}){nameof(REPL.InteropTempVar)}";
+            ClearSuggestions();
+        }
+
+        private string GetUniqueVarName(string baseName)
+        {
+            var lastVarName = _evaluator.fields.Keys.Where(x => Regex.IsMatch(x, @"^q\d*$", RegexOptions.Singleline)).OrderBy(x => x.Length).ThenBy(x => x).LastOrDefault();
+            if (lastVarName != null)
+            {
+                if (lastVarName.Length > 1)
+                {
+                    var i = int.Parse(lastVarName.Substring(1));
+                    baseName += i + 1;
+                }
+                else
+                {
+                    baseName += "1";
+                }
+            }
+
+            return baseName;
+        }
     }
 }

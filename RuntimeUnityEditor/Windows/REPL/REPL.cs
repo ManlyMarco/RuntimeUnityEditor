@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text;
 using Mono.CSharp;
 using RuntimeUnityEditor.Core.Inspector.Entries;
-using RuntimeUnityEditor.Core.Utils;
+using RuntimeUnityEditor.Core.ObjectTree;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using RuntimeUnityEditor.Core.Utils.ObjectDumper;
 using UnityEngine;
@@ -56,6 +56,7 @@ namespace RuntimeUnityEditor.Core.REPL
             }
         }
 
+        public static object InteropTempVar { get; set; }
 
         [Documentation("MB - A dummy MonoBehaviour for accessing Unity.")]
         public static ReplHelper MB { get; }
@@ -156,7 +157,7 @@ namespace RuntimeUnityEditor.Core.REPL
         [Documentation("geti() - get object currently opened in inspector. Will get expanded upon accepting. Best to use like this: var x = geti()")]
         public static object geti()
         {
-            return RuntimeUnityEditorCore.Instance.Inspector.GetInspectedObject()
+            return Inspector.Inspector.Instance.GetInspectedObject()
                 ?? throw new InvalidOperationException("No object is opened in inspector or a static type is opened");
         }
 
@@ -170,34 +171,34 @@ namespace RuntimeUnityEditor.Core.REPL
         public static void seti(object obj)
         {
             if (obj == null) throw new ArgumentNullException(nameof(obj));
-            RuntimeUnityEditorCore.Instance.Inspector.Push(new InstanceStackEntry(obj, "REPL > " + obj.GetType().Name), true);
+            Inspector.Inspector.Instance.Push(new InstanceStackEntry(obj, "REPL > " + obj.GetType().Name), true);
         }
 
         [Documentation("setis(type) - send the static class to the inspector.")]
         public static void setis(Type type)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
-            RuntimeUnityEditorCore.Instance.Inspector.Push(new StaticStackEntry(type, "REPL > " + type.Name), true);
+            Inspector.Inspector.Instance.Push(new StaticStackEntry(type, "REPL > " + type.Name), true);
         }
 
         [Documentation("getTree() - get the transform currently selected in tree view.")]
         public static Transform getTree()
         {
-            return RuntimeUnityEditorCore.Instance.TreeViewer.SelectedTransform;
+            return ObjectTreeViewer.Instance.SelectedTransform;
         }
 
         [Documentation("findTree(Transform) - find and select the transform in the tree view.")]
         public static void findTree(Transform tr)
         {
             if (tr == null) throw new ArgumentNullException(nameof(tr));
-            RuntimeUnityEditorCore.Instance.TreeViewer.SelectAndShowObject(tr);
+            ObjectTreeViewer.Instance.SelectAndShowObject(tr);
         }
 
         [Documentation("findTree(GameObject) - find and select the object in the tree view.")]
         public static void findTree(GameObject go)
         {
             if (go == null) throw new ArgumentNullException(nameof(go));
-            RuntimeUnityEditorCore.Instance.TreeViewer.SelectAndShowObject(go.transform);
+            ObjectTreeViewer.Instance.SelectAndShowObject(go.transform);
         }
 
         [Documentation("dnspy(type) - open the type in dnSpy if dnSpy path is configured.")]
@@ -217,7 +218,7 @@ namespace RuntimeUnityEditor.Core.REPL
         [Documentation("echo(string) - write a string to REPL output.")]
         public static void echo(string message)
         {
-            RuntimeUnityEditorCore.Instance.Repl.AppendLogLine(message);
+            ReplWindow.Instance.AppendLogLine(message);
         }
 
         [Documentation("message(string) - write a string to log.")]
