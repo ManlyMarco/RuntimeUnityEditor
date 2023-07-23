@@ -13,7 +13,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         {
             Owner = owner;
             _name = name;
-            _nameContent = new GUIContent(_name, description + "\n\nLeft click to inspect in current tab, Right/Middle click to inspect in a new tab.");
+            _nameContent = new GUIContent(_name, description + "\n\nLeft click to inspect in current tab\nMiddle click to inspect in a new tab\nRight click to open a menu with more options");
         }
 
         public GUIContent GetNameContent() => _nameContent;

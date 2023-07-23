@@ -3,9 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using RuntimeUnityEditor.Core.Gizmos;
 using RuntimeUnityEditor.Core.Inspector;
 using RuntimeUnityEditor.Core.Inspector.Entries;
+using RuntimeUnityEditor.Core.ObjectView;
 using RuntimeUnityEditor.Core.Utils;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
@@ -147,15 +147,22 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
                         if (GUILayout.Button(go.name, GUI.skin.label, GUILayout.ExpandWidth(true), GUILayout.MinWidth(200)))
                         {
-                            if (SelectedTransform == go.transform)
+                            if (IMGUIUtils.IsMouseRightClick())
                             {
-                                // Toggle on/off
-                                if (!_openedObjects.Add(go))
-                                    _openedObjects.Remove(go);
+                                ContextMenu.Instance.Show(go, null);
                             }
                             else
                             {
-                                SelectedTransform = go.transform;
+                                if (SelectedTransform == go.transform)
+                                {
+                                    // Toggle on/off
+                                    if (!_openedObjects.Add(go))
+                                        _openedObjects.Remove(go);
+                                }
+                                else
+                                {
+                                    SelectedTransform = go.transform;
+                                }
                             }
                         }
 
@@ -315,16 +322,25 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 if (component is Behaviour bh)
                     bh.enabled = GUILayout.Toggle(bh.enabled, "", GUILayout.ExpandWidth(false));
 
-                if (GUILayout.Button(component.GetType().Name, GUI.skin.label))
+                var type = component.GetType();
+                if (GUILayout.Button(new GUIContent(type.Name, $"{component}\n\nFull type: {type.GetFancyDescription()}\n\nLeft click to open in Inspector\nRight click to for more options"), GUI.skin.label))
                 {
-                    var transform = component.transform;
-                    OnInspectorOpen(new InstanceStackEntry(transform, transform.name),
-                                    new InstanceStackEntry(component, component.GetType().FullName));
+                    if (IMGUIUtils.IsMouseRightClick())
+                    {
+                        ContextMenu.Instance.Show(component, null);
+                    }
+                    else
+                    {
+                        var transform = component.transform;
+                        OnInspectorOpen(new InstanceStackEntry(transform, transform.name),
+                                        new InstanceStackEntry(component, type.FullName));
+                    }
                 }
 
                 switch (component)
                 {
                     case Image img:
+                        var texShown = false;
                         var imgSprite = img.sprite;
                         if (imgSprite != null)
                         {
@@ -349,14 +365,23 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
                                 if (tex != null)
                                 {
-                                    if (GUILayout.Button(tex, GUI.skin.box)) ObjectView.ObjectViewWindow.Instance.SetShownObject(tex, imgSprite.name);
-                                }
-                                else
-                                {
-                                    GUILayout.Label("Can't display texture");
+                                    if (GUILayout.Button(tex, GUI.skin.box))
+                                        ObjectViewWindow.Instance.SetShownObject(tex, imgSprite.name);
+                                    texShown = true;
                                 }
                             }
                         }
+
+                        if (!texShown && img.mainTexture != null)
+                        {
+                            if (GUILayout.Button(img.mainTexture, GUI.skin.box))
+                                ObjectViewWindow.Instance.SetShownObject(img.mainTexture, img.ToString());
+                            texShown = true;
+                        }
+
+                        if (!texShown)
+                            GUILayout.Label("Can't display texture");
+
                         GUILayout.FlexibleSpace();
                         break;
                     case Slider b:
@@ -366,49 +391,36 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
                             GUILayout.FlexibleSpace();
                             if (GUILayout.Button("?"))
-                                ReflectionUtils.OutputEventDetails(b.onValueChanged);
+                                ObjectViewWindow.Instance.SetShownObject(ReflectionUtils.GetEventDetails(b.onValueChanged), $"{b} / {b.onValueChanged} - Event details");
                             break;
                         }
                     case Text text:
-                        GUILayout.Label(
-                            $"{text.text} {text.font} {text.fontStyle} {text.fontSize} {text.alignment} {text.resizeTextForBestFit} {text.color}");
+                        GUILayout.Label($"{text.text} {text.font} {text.fontStyle} {text.fontSize} {text.alignment} {text.resizeTextForBestFit} {text.color}");
                         GUILayout.FlexibleSpace();
                         break;
                     case RawImage r:
                         var rMainTexture = r.mainTexture;
-                        if (!ReferenceEquals(rMainTexture, null))
+                        if (rMainTexture != null)
                         {
-                            GUILayout.Label(rMainTexture);
-                            GUILayout.FlexibleSpace();
-                            if (GUILayout.Button("L"))
-                            {
-                                var newTex = TextureUtils.LoadTextureFromFileWithDialog();
-                                if (newTex != null) r.texture = newTex;
-                            }
-                            if (GUILayout.Button("S")) rMainTexture.SaveTextureToFileWithDialog();
+                            if (GUILayout.Button(rMainTexture, GUI.skin.box))
+                                ObjectViewWindow.Instance.SetShownObject(rMainTexture, r.ToString());
                         }
                         else
                         {
                             GUILayout.Label("Can't display texture");
-                            GUILayout.FlexibleSpace();
                         }
+
+                        GUILayout.FlexibleSpace();
                         break;
                     case Renderer re:
                         var reMaterial = re.material;
                         GUILayout.Label(reMaterial != null ? reMaterial.shader.name : "[No material]");
-                        GUILayout.FlexibleSpace();
                         if (reMaterial != null && reMaterial.mainTexture != null)
                         {
-                            var rendTex = reMaterial.mainTexture;
-                            GUILayout.Label(rendTex);
-                            GUILayout.FlexibleSpace();
-                            if (GUILayout.Button("L"))
-                            {
-                                var newTex = TextureUtils.LoadTextureFromFileWithDialog();
-                                if (newTex != null) reMaterial.mainTexture = newTex;
-                            }
-                            if (GUILayout.Button("S")) rendTex.SaveTextureToFileWithDialog();
+                            if (GUILayout.Button(reMaterial.mainTexture, GUI.skin.box))
+                                ObjectViewWindow.Instance.SetShownObject(reMaterial.mainTexture, re.ToString());
                         }
+                        GUILayout.FlexibleSpace();
                         break;
                     case Button b:
                         {
@@ -422,7 +434,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
                             GUILayout.FlexibleSpace();
                             if (GUILayout.Button("?"))
-                                ReflectionUtils.OutputEventDetails(b.onClick);
+                                ObjectViewWindow.Instance.SetShownObject(ReflectionUtils.GetEventDetails(b.onClick), $"{b} / {b.onClick} - Event details");
                             break;
                         }
                     case Toggle b:
@@ -437,7 +449,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
                             GUILayout.FlexibleSpace();
                             if (GUILayout.Button("?"))
-                                ReflectionUtils.OutputEventDetails(b.onValueChanged);
+                                ObjectViewWindow.Instance.SetShownObject(ReflectionUtils.GetEventDetails(b.onValueChanged), $"{b} / {b.onValueChanged} - Event details");
                             break;
                         }
                     case RectTransform rt:
@@ -455,29 +467,6 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                     default:
                         GUILayout.FlexibleSpace();
                         break;
-                }
-
-                if (!(component is Transform))
-                {
-                    /*if (GUILayout.Button("R"))
-                    {
-                        var t = component.GetType();
-                        var g = component.gameObject;
-
-                        IEnumerator RecreateCo()
-                        {
-                            Object.Destroy(component);
-                            yield return null;
-                            g.AddComponent(t);
-                        }
-
-                        Object.FindObjectOfType<CheatTools>().StartCoroutine(RecreateCo());
-                    }*/
-
-                    if (GUILayout.Button("X"))
-                    {
-                        Object.Destroy(component);
-                    }
                 }
             }
             GUILayout.EndHorizontal();
@@ -566,15 +555,25 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                         var stackEntries = matchedTypes.Select(t => new StaticStackEntry(t, t.FullName)).ToList();
 
                         if (stackEntries.Count == 0)
+                        {
                             RuntimeUnityEditorCore.Logger.Log(LogLevel.Message | LogLevel.Warning, "No static type names contained the search string");
-                        else if (stackEntries.Count == 1)
-                            RuntimeUnityEditorCore.Instance.Inspector.Push(stackEntries.Single(), true);
+                        }
                         else
-                            RuntimeUnityEditorCore.Instance.Inspector.Push(new InstanceStackEntry(stackEntries, "Static type search"), true);
+                        {
+                            Inspector.Inspector.Instance.Push(new InstanceStackEntry(stackEntries, "Static type search"), true);
+                            if (stackEntries.Count == 1)
+                                Inspector.Inspector.Instance.Push(stackEntries.Single(), false);
+                        }
                     }
                 }
             }
             GUILayout.EndHorizontal();
+        }
+
+        public void FindReferencesInScene(object obj)
+        {
+            if (_gameObjectSearcher.SearchReferences(obj))
+                _searchText = "Search for object references...";
         }
 
         protected override void Update()

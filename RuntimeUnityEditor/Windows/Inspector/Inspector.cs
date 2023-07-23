@@ -4,7 +4,6 @@ using System.Linq;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.Utils;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
-using RuntimeUnityEditor.Core.Utils.ObjectDumper;
 using UnityEngine;
 
 namespace RuntimeUnityEditor.Core.Inspector
@@ -15,11 +14,6 @@ namespace RuntimeUnityEditor.Core.Inspector
         private readonly GUILayoutOption[] _inspectorTypeWidth = { GUILayout.Width(170), GUILayout.MaxWidth(170) };
         private readonly GUILayoutOption[] _inspectorNameWidth = { GUILayout.Width(240), GUILayout.MaxWidth(240) };
         private readonly GUILayoutOption _inspectorRecordHeight = GUILayout.Height(InspectorRecordHeight);
-
-        private readonly GUILayoutOption _buttonDnspyOptions = GUILayout.Width(19);
-        private readonly GUIContent _buttonDnspyContent = new GUIContent("^", "Open in DnSpy (launches DnSpy, loads assembly containing this member, and opens a new tab focused on this member)");
-        private readonly GUIContent _buttonCopyContent = new GUIContent("C", "Copy the object to clipboard (adds it to the list in the clipboard window).");
-        private readonly GUIContent _buttonDumpContent = new GUIContent("D", "Dump the object to a temporary file and view it in notepad.");
 
         private readonly List<InspectorTab> _tabs = new List<InspectorTab>();
         private InspectorTab _currentTab;
@@ -78,13 +72,24 @@ namespace RuntimeUnityEditor.Core.Inspector
                 };
             }
 
-            if (GUILayout.Button(field.GetNameContent(), _alignedButtonStyle, _inspectorNameWidth))
+            var canEnterValue = field.CanEnterValue();
+            var val = field.GetValue();
+            if (GUILayout.Button(field.GetNameContent(), canEnterValue ? _alignedButtonStyle : GUI.skin.label, _inspectorNameWidth))
             {
-                var val = field.EnterValue();
-                if (val != null)
+                if (IMGUIUtils.IsMouseRightClick())
                 {
-                    var entry = val as InspectorStackEntryBase ?? new InstanceStackEntry(val, field.Name(), field);
-                    Push(entry, IsContextClick());
+                    if (val != null)
+                        ContextMenu.Instance.Show(val, field.GetMemberInfo(false));
+                }
+                else if (canEnterValue || val is Exception)
+                {
+                    var enterValue = field.EnterValue();
+                    if (enterValue != null)
+                    {
+                        var entry = enterValue as InspectorStackEntryBase ?? new InstanceStackEntry(enterValue, field.Name(), field);
+
+                        Push(entry, IMGUIUtils.IsMouseWheelClick());
+                    }
                 }
             }
         }
@@ -237,7 +242,8 @@ namespace RuntimeUnityEditor.Core.Inspector
 
                             if (GUILayout.Button($"Tab {index + 1}: {LimitStringLengthForPreview(tab?.CurrentStackItem?.Name, 18)}", GUILayout.ExpandWidth(false)))
                             {
-                                if (IsContextClick())
+                                // todo custom context menu for the tab bar? IMGUIUtils.IsMouseRightClick()
+                                if (IMGUIUtils.IsMouseWheelClick())
                                     RemoveTab(tab);
                                 else
                                     _currentTab = tab;
@@ -272,7 +278,11 @@ namespace RuntimeUnityEditor.Core.Inspector
 
                             if (GUILayout.Button(LimitStringLengthForPreview(stackEntry.Name, 90), GUILayout.ExpandWidth(false)))
                             {
-                                currentTab.CurrentStackItem = stackEntry;
+                                if (IMGUIUtils.IsMouseRightClick())
+                                    stackEntry.ShowContextMenu();
+                                else
+                                    currentTab.CurrentStackItem = stackEntry;
+
                                 GUI.backgroundColor = defaultGuiColor;
                                 return;
                             }
@@ -336,11 +346,6 @@ namespace RuntimeUnityEditor.Core.Inspector
             if (name == null) name = "NULL";
             if (name.Length >= maxLetters) name = name.Substring(0, maxLetters - 2) + "...";
             return name;
-        }
-
-        private static bool IsContextClick()
-        {
-            return Event.current.button >= 1;
         }
 
         private void DrawContentScrollView(InspectorTab tab)
@@ -422,30 +427,9 @@ namespace RuntimeUnityEditor.Core.Inspector
 
                     var value = entry.GetValue();
 
-                    if (entry.CanEnterValue() || value is Exception)
-                        DrawVariableNameEnterButton(entry);
-                    else
-                        GUILayout.Label(entry.GetNameContent(), _inspectorNameWidth);
+                    DrawVariableNameEnterButton(entry);
 
                     VariableFieldDrawer.DrawSettingValue(entry, value);
-
-                    var hasValue = value != null && entry.Type() != typeof(void);
-
-                    if (Clipboard.ClipboardWindow.Initialized && hasValue && GUILayout.Button(_buttonCopyContent, _buttonDnspyOptions))
-                    {
-                        Clipboard.ClipboardWindow.Contents.Add(value);
-                        Clipboard.ClipboardWindow.Instance.Enabled = true;
-                    }
-
-                    if (hasValue && GUILayout.Button(_buttonDumpContent, _buttonDnspyOptions))
-                        Dumper.DumpToTempFile(value, entry.Name());
-
-                    if (DnSpyHelper.IsAvailable)
-                    {
-                        var memberInfo = entry.GetMemberInfo(false);
-                        if (memberInfo != null && GUILayout.Button(_buttonDnspyContent, _buttonDnspyOptions))
-                            DnSpyHelper.OpenInDnSpy(memberInfo);
-                    }
                 }
                 catch (Exception ex)
                 {

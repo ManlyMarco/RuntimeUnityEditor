@@ -190,8 +190,7 @@ namespace RuntimeUnityEditor.Core.Profiler
 
                                 GUILayout.FlexibleSpace();
 
-                                if (GUILayout.Button("Inspect")) Inspector.Inspector.Instance.Push(new InstanceStackEntry(pd.Owner, pd.Owner.name), true);
-                                if (GUILayout.Button("Tree")) ObjectTreeViewer.Instance.SelectAndShowObject(pd.Owner.transform);
+                                ContextMenu.Instance.DrawContextButton(pd.Owner, pd.Method);
                                 if (DnSpyHelper.IsAvailable && GUILayout.Button("^")) DnSpyHelper.OpenInDnSpy(pd.Method);
                             }
                             GUILayout.EndHorizontal();

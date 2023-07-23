@@ -1,4 +1,6 @@
-﻿namespace RuntimeUnityEditor.Core.Inspector.Entries {
+﻿using RuntimeUnityEditor.Core.Utils;
+
+namespace RuntimeUnityEditor.Core.Inspector.Entries {
     public class InstanceStackEntry : InspectorStackEntryBase
     {
         public InstanceStackEntry(object instance, string name) : this(instance, name, null) { }
@@ -14,6 +16,11 @@
         public override bool EntryIsValid()
         {
             return Instance != null;
+        }
+
+        public override void ShowContextMenu()
+        {
+            ContextMenu.Instance.Show(Instance, Parent?.GetMemberInfo(false));
         }
     }
 }

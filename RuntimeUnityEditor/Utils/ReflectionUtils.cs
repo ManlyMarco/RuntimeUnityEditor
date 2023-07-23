@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine.Events;
 
@@ -36,7 +37,7 @@ namespace RuntimeUnityEditor.Core.Utils
             }
         }
 
-        public static void OutputEventDetails(UnityEventBase eventObj)
+        public static string GetEventDetails(UnityEventBase eventObj)
         {
             var mList = new List<KeyValuePair<object, MethodInfo>>();
             for (var i = 0; i < eventObj.GetPersistentEventCount(); ++i)
@@ -57,14 +58,18 @@ namespace RuntimeUnityEditor.Core.Utils
                     mList.Add(new KeyValuePair<object, MethodInfo>(d.Target, d.Method));
             }
 
+            var sb = new StringBuilder();
+
             foreach (var kvp in mList)
             {
-                var name = kvp.Key.GetType().FullName;
+                sb.Append(kvp.Key.GetType().FullName);
                 // todo make this more powerful somehow, still doesn't show much, maybe with cecil?
                 var locals = kvp.Value.GetMethodBody()?.LocalVariables.Select(x => x.ToString());
-                if (locals != null) name += " - " + string.Join("; ", locals.ToArray());
-                RuntimeUnityEditorCore.Logger.Log(LogLevel.Message, name);
+                if (locals != null) sb.Append(" - " + string.Join("; ", locals.ToArray()));
+                sb.AppendLine();
             }
+
+            return sb.ToString();
         }
     }
 }
