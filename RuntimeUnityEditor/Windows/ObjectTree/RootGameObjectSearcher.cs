@@ -177,6 +177,80 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             return false;
         }
 
+        public bool SearchReferences(object objInstance)
+        {
+            if (objInstance == null || !objInstance.GetType().IsClass) return false;
+
+            var sw = Stopwatch.StartNew();
+            RuntimeUnityEditorCore.Logger.Log(LogLevel.Info, "Deep searching for references, this can take a while...");
+
+            var results = GetRootObjects()
+                             .SelectMany(x => x.GetComponentsInChildren<Component>(true))
+                             .Where(x => SearchReferencesInComponent(objInstance, x))
+                             .OrderBy(x => x.name, StringComparer.InvariantCultureIgnoreCase)
+                             .Select(x => x.gameObject)
+                             .ToList();
+
+            if (results.Count > 0)
+                _searchResults = results;
+            else
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Message, "No references were found");
+
+            RuntimeUnityEditorCore.Logger.Log(LogLevel.Info, $"SearchReferences finished in {sw.ElapsedMilliseconds}ms");
+
+            return results.Count > 0;
+        }
+
+        public static bool SearchReferencesInComponent(object objInstance, Component c)
+        {
+            if (c == null) return false;
+
+            var type = c.GetType();
+
+            var nameBlacklist = new HashSet<string>
+                {
+                    "parent", "parentInternal", "root", "transform", "gameObject",
+                    // Animator properties inaccessible outside of OnAnimatorIK
+                    "bodyPosition", "bodyRotation",
+                    // AudioSource obsolete properties
+                    "minVolume", "maxVolume", "rolloffFactor",
+                    // NavMeshAgent properties often spewing errors
+                    "destination", "remainingDistance"
+                };
+
+            foreach (var prop in type
+                .GetProperties(HarmonyLib.AccessTools.all)
+                .Where(x => x.CanRead && x.PropertyType.IsClass && !nameBlacklist.Contains(x.Name)))
+            {
+                try
+                {
+                    if (prop.GetValue(c, null) == objInstance)
+                        return true;
+                }
+                catch
+                {
+                    // Skip invalid values
+                }
+            }
+
+            foreach (var field in type
+                .GetFields(HarmonyLib.AccessTools.all)
+                .Where(x => x.FieldType.IsClass && !nameBlacklist.Contains(x.Name)))
+            {
+                try
+                {
+                    if (field.GetValue(c) == objInstance)
+                        return true;
+                }
+                catch
+                {
+                    // Skip invalid values
+                }
+            }
+
+            return false;
+        }
+
         private static bool IsGameObjectNull(GameObject o)
         {
             // This is around 25% faster than o == null
