@@ -128,6 +128,10 @@ namespace RuntimeUnityEditor.Core
                                   }
                               }),
 
+                new MenuEntry("Export mesh to .obj", o => o is Renderer r && MeshExport.CanExport(r), o => MeshExport.ExportObj((Renderer)o, false, false)),
+                new MenuEntry("Export mesh to .obj (Baked)", o => o is Renderer r && MeshExport.CanExport(r), o => MeshExport.ExportObj((Renderer)o, true, false)),
+                new MenuEntry("Export mesh to .obj (World)", o => o is Renderer r && MeshExport.CanExport(r), o => MeshExport.ExportObj((Renderer)o, true, true)),
+
                 new MenuEntry("Dump object to file...", o => true, o => Dumper.DumpToTempFile(o, _objName)),
 
                 new MenuEntry("Destroy", o => o is UnityEngine.Object uo && uo, o => UnityEngine.Object.Destroy(o is Transform t ? t.gameObject : (UnityEngine.Object)o)),
