@@ -75,6 +75,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
+    <None Include="Repository.json" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RuntimeUnityEditor\RuntimeUnityEditor.Core.csproj">

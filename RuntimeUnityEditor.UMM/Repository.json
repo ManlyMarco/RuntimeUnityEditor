@@ -1,0 +1,9 @@
+{
+  "Releases": [
+    {
+      "Id": "RuntimeUnityEditor",
+      "Version": "5.0.0",
+      "DownloadUrl": "https://github.com/ManlyMarco/RuntimeUnityEditor/releases/download/v5.0/RuntimeUnityEditor_UMM_v5.0.zip"
+    }
+  ]
+}
