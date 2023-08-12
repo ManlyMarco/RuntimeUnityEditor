@@ -160,9 +160,22 @@ namespace RuntimeUnityEditor.Core.Inspector
                         .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
                         .Select(f => new FieldCacheEntry(objectToOpen, f, type, parent)).Cast<ICacheEntry>());
 
+                    var isRenderer = objectToOpen is Renderer;
+
                     _fieldCache.AddRange(type.GetAllProperties(false)
-                        .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
-                        .Select(p => new PropertyCacheEntry(objectToOpen, p, type, parent)).Cast<ICacheEntry>());
+                                             .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
+                                             .Select(p =>
+                                             {
+                                                 if (isRenderer)
+                                                 {
+                                                     // Prevent unintentionally creating local material instances when viewing renderers in inspector
+                                                     if (p.Name == "material")
+                                                         return new CallbackCacheEntry<Material>("material", "Local instance of sharedMaterial (create on entry)", () => ((Renderer)objectToOpen).material);
+                                                     if (p.Name == "materials")
+                                                         return new CallbackCacheEntry<Material[]>("materials", "Local instance of sharedMaterials (create on entry)", () => ((Renderer)objectToOpen).materials);
+                                                 }
+                                                 return (ICacheEntry)new PropertyCacheEntry(objectToOpen, p, type, parent);
+                                             }));
 
                     _fieldCache.AddRange(type.GetAllEvents(false)
                         .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
