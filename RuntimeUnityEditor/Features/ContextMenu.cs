@@ -78,7 +78,7 @@ namespace RuntimeUnityEditor.Core
                                    (o is Material m && m.mainTexture != null) ||
                                    (o is Image i && i.mainTexture != null) ||
                                    (o is RawImage ri && ri.mainTexture != null) ||
-                                   (o is Renderer r && r.material != null && r.material.mainTexture != null),
+                                   (o is Renderer r && (r.sharedMaterial ?? r.material) != null && (r.sharedMaterial ?? r.material).mainTexture != null),
                               o =>
                               {
                                   if (o is Texture t)
@@ -92,14 +92,14 @@ namespace RuntimeUnityEditor.Core
                                   else if (o is RawImage ri)
                                       ri.mainTexture.SaveTextureToFileWithDialog();
                                   else if (o is Renderer r)
-                                      r.material.mainTexture.SaveTextureToFileWithDialog();
+                                      (r.sharedMaterial ?? r.material).mainTexture.SaveTextureToFileWithDialog();
                               }),
 
                 new MenuEntry("Replace texture...",
                               o => o is Texture2D ||
                                    (o is Material m && m.mainTexture != null) ||
                                    (o is RawImage i && i.mainTexture != null) ||
-                                   (o is Renderer r && r.material != null && r.material.mainTexture != null),
+                                   (o is Renderer r && (r.sharedMaterial ?? r.material) != null && (r.sharedMaterial ?? r.material).mainTexture != null),
                               o =>
                               {
                                   var newTex = TextureUtils.LoadTextureFromFileWithDialog();
@@ -124,7 +124,7 @@ namespace RuntimeUnityEditor.Core
                                   }
                                   else if (o is Renderer r)
                                   {
-                                      r.material.mainTexture = newTex;
+                                      (r.sharedMaterial ?? r.material).mainTexture = newTex;
                                   }
                               }),
 

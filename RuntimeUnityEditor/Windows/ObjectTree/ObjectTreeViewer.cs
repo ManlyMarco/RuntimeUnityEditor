@@ -413,7 +413,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                         GUILayout.FlexibleSpace();
                         break;
                     case Renderer re:
-                        var reMaterial = re.material;
+                        var reMaterial = re.sharedMaterial ?? re.material;
                         GUILayout.Label(reMaterial != null ? reMaterial.shader.name : "[No material]");
                         if (reMaterial != null && reMaterial.mainTexture != null)
                         {
