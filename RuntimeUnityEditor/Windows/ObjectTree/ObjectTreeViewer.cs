@@ -23,10 +23,11 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         private Vector2 _propertiesScrollPosition;
         private Vector2 _treeScrollPosition;
         private float _objectTreeHeight;
-        private int _singleObjectTreeItemHeight;
+        private float _singleObjectTreeItemHeight;
+        private float _singleObjectTreeItemMargin;
 
         private bool _scrollTreeToSelected;
-        private int _scrollTarget;
+        private float _scrollTarget = -1f;
 
         private RootGameObjectSearcher _gameObjectSearcher;
         private readonly Dictionary<Image, Texture2D> _imagePreviewCache = new Dictionary<Image, Texture2D>();
@@ -102,16 +103,16 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         {
             currentCount++;
 
-            var needsHeightMeasure = _singleObjectTreeItemHeight == 0;
+            var needsHeightMeasure = _singleObjectTreeItemHeight == 0f;
 
-            var isVisible = currentCount * _singleObjectTreeItemHeight >= _treeScrollPosition.y &&
-                            (currentCount - 1) * _singleObjectTreeItemHeight <= _treeScrollPosition.y + _objectTreeHeight;
+            var isVisible = currentCount * _singleObjectTreeItemHeight + _singleObjectTreeItemMargin >= _treeScrollPosition.y &&
+                            (currentCount - 1) * _singleObjectTreeItemHeight + _singleObjectTreeItemMargin <= _treeScrollPosition.y + _objectTreeHeight;
 
             if (isVisible || needsHeightMeasure || _scrollTreeToSelected)
             {
                 if (notVisibleCount > 0)
                 {
-                    GUILayout.Space(_singleObjectTreeItemHeight * notVisibleCount);
+                    GUILayout.Space(_singleObjectTreeItemHeight * notVisibleCount + _singleObjectTreeItemMargin);
                     notVisibleCount = 0;
                 }
 
@@ -119,8 +120,6 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 if (SelectedTransform == go.transform)
                 {
                     GUI.color = Color.cyan;
-                    if (_scrollTreeToSelected && Event.current.type == EventType.Repaint)
-                        _scrollTarget = (int)(GUILayoutUtility.GetLastRect().y - 250);
                 }
                 else if (!go.activeSelf)
                 {
@@ -172,8 +171,18 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 }
                 GUILayout.EndHorizontal();
 
-                if (needsHeightMeasure && Event.current.type == EventType.repaint)
-                    _singleObjectTreeItemHeight = Mathf.CeilToInt(GUILayoutUtility.GetLastRect().height);
+                if (Event.current.type == EventType.repaint)
+                {
+                    if (needsHeightMeasure)
+                    {
+                        _singleObjectTreeItemMargin = GUI.skin.label.margin.top;
+                        _singleObjectTreeItemHeight = GUILayoutUtility.GetLastRect().height + _singleObjectTreeItemMargin;
+                    }
+                    if (SelectedTransform == go.transform && _scrollTreeToSelected)
+                    {
+                        _scrollTarget = GUILayoutUtility.GetLastRect().y - _singleObjectTreeItemMargin;
+                    }
+                }
             }
             else
             {
@@ -490,6 +499,8 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
                     if (notVisibleCount > 0)
                         GUILayout.Space(_singleObjectTreeItemHeight * notVisibleCount);
+                    if (_scrollTreeToSelected && Event.current.type == EventType.Repaint)
+                        _scrollTarget = Mathf.Min(_scrollTarget, _singleObjectTreeItemHeight * currentCount + _singleObjectTreeItemMargin - _objectTreeHeight);
                 }
                 GUILayout.EndScrollView();
             }
@@ -524,18 +535,21 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 if (GUILayout.Button("Search scene"))
                 {
                     _gameObjectSearcher.Search(_searchText, false);
+                    _treeScrollPosition = Vector2.zero;
                     //_searchTextComponents = _searchText;
                 }
 
                 if (Event.current.isKey && (Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter) && GUI.GetNameOfFocusedControl() == "searchbox")
                 {
                     _gameObjectSearcher.Search(_searchText, false);
+                    _treeScrollPosition = Vector2.zero;
                     //_searchTextComponents = _searchText;
                     Event.current.Use();
                 }
 
                 if (GUILayout.Button("Deep scene"))
                 {
+                    _treeScrollPosition = Vector2.zero;
                     _gameObjectSearcher.Search(_searchText, true);
                     //_searchTextComponents = _searchText;
                 }
