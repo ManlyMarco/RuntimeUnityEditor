@@ -517,7 +517,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 if (GUILayout.Button("Clear", GUILayout.ExpandWidth(false)))
                 {
                     _searchText = string.Empty;
-                    _gameObjectSearcher.Search(_searchText, false);
+                    _gameObjectSearcher.Search(_searchText, false, false);
                     SelectAndShowObject(SelectedTransform);
                 }
 
@@ -532,29 +532,37 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
             GUILayout.BeginHorizontal();
             {
-                if (GUILayout.Button("Search scene"))
+                GUILayout.Label("Search");
+                if (GUILayout.Button("Names"))
                 {
-                    _gameObjectSearcher.Search(_searchText, false);
+                    _gameObjectSearcher.Search(_searchText, false, false);
                     _treeScrollPosition = Vector2.zero;
                     //_searchTextComponents = _searchText;
                 }
 
                 if (Event.current.isKey && (Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter) && GUI.GetNameOfFocusedControl() == "searchbox")
                 {
-                    _gameObjectSearcher.Search(_searchText, false);
+                    _gameObjectSearcher.Search(_searchText, false, false);
                     _treeScrollPosition = Vector2.zero;
                     //_searchTextComponents = _searchText;
                     Event.current.Use();
                 }
 
-                if (GUILayout.Button("Deep scene"))
+                if (GUILayout.Button("Components"))
                 {
+                    _gameObjectSearcher.Search(_searchText, true, false);
                     _treeScrollPosition = Vector2.zero;
-                    _gameObjectSearcher.Search(_searchText, true);
                     //_searchTextComponents = _searchText;
                 }
 
-                if (GUILayout.Button("Search static"))
+                if (GUILayout.Button("Properties"))
+                {
+                    _treeScrollPosition = Vector2.zero;
+                    _gameObjectSearcher.Search(_searchText, true, true);
+                    //_searchTextComponents = _searchText;
+                }
+
+                if (GUILayout.Button("Statics"))
                 {
                     if (string.IsNullOrEmpty(_searchText))
                     {
