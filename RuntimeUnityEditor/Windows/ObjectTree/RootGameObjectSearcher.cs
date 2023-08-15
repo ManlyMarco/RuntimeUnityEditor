@@ -20,6 +20,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         private Predicate<GameObject> _lastObjectFilter;
         private string _lastSearchString;
         private bool _lastSearchProperties;
+        private bool _lastSearchComponents;
 
         public bool IsSearching() => _searchResults != null;
 
@@ -83,14 +84,15 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, $"Full GameObject list refresh finished in {sw.ElapsedMilliseconds}ms");
 
                 // _lastSearchProperties==true takes too long to open the editor
-                if (_searchResults != null && !_lastSearchProperties && _lastSearchString != null)
-                    Search(_lastSearchString, _lastSearchProperties, false);
+                if (_searchResults != null && !!_lastSearchComponents && !_lastSearchProperties && _lastSearchString != null)
+                    Search(_lastSearchString, _lastSearchComponents, _lastSearchProperties, false);
             }
         }
 
-        public void Search(string searchString, bool searchProperties, bool refreshObjects = true)
+        public void Search(string searchString, bool searchComponents, bool searchProperties, bool refreshObjects = true)
         {
             _lastSearchProperties = searchProperties;
+            _lastSearchComponents = searchComponents;
             _lastSearchString = null;
             _searchResults = null;
             if (!string.IsNullOrEmpty(searchString))
@@ -99,12 +101,14 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
                 _lastSearchString = searchString;
 
-                RuntimeUnityEditorCore.Logger.Log(LogLevel.Info, searchProperties ? $"Deep searching for [{searchString}], this can take a while..." : $"Searching for [{searchString}]");
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Info, searchProperties ? $"Deep searching for [{searchString}], this can take a while..." :
+                                                                 searchComponents ? $"Searching components for [{searchString}]" :
+                                                                                    $"Searching for [{searchString}]");
                 var sw = Stopwatch.StartNew();
 
                 _searchResults = GetRootObjects()
                     .SelectMany(x => x.GetComponentsInChildren<Transform>(true))
-                    .Where(x => x.name.Contains(searchString, StringComparison.InvariantCultureIgnoreCase) ||
+                    .Where(x => x.name.Contains(searchString, StringComparison.InvariantCultureIgnoreCase) || searchComponents &&
                                 x.GetComponents<Component>()
                                     .Any(c => SearchInComponent(searchString, c, searchProperties)))
                     .OrderBy(x => x.name, StringComparer.InvariantCultureIgnoreCase)
@@ -118,9 +122,6 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         public static bool SearchInComponent(string searchString, Component c, bool searchProperties)
         {
             if (c == null) return false;
-
-            if (c.ToString().Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
-                return true;
 
             var type = c.GetType();
             if (type.Name.Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
