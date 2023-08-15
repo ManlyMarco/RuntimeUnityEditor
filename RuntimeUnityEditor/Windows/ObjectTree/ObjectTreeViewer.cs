@@ -108,7 +108,12 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             var isVisible = currentCount * _singleObjectTreeItemHeight + _singleObjectTreeItemMargin >= _treeScrollPosition.y &&
                             (currentCount - 1) * _singleObjectTreeItemHeight + _singleObjectTreeItemMargin <= _treeScrollPosition.y + _objectTreeHeight;
 
-            if (isVisible || needsHeightMeasure || _scrollTreeToSelected)
+            if (SelectedTransform == go.transform && _scrollTreeToSelected)
+            {
+                _scrollTarget = currentCount == 1 ? 0 : _singleObjectTreeItemHeight * (currentCount - 1);
+            }
+
+            if (isVisible || needsHeightMeasure)
             {
                 if (notVisibleCount > 0)
                 {
@@ -181,10 +186,6 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                     {
                         _singleObjectTreeItemMargin = GUI.skin.label.margin.top;
                         _singleObjectTreeItemHeight = GUILayoutUtility.GetLastRect().height + _singleObjectTreeItemMargin;
-                    }
-                    if (SelectedTransform == go.transform && _scrollTreeToSelected)
-                    {
-                        _scrollTarget = GUILayoutUtility.GetLastRect().y - _singleObjectTreeItemMargin;
                     }
                 }
             }
@@ -503,7 +504,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
                     if (notVisibleCount > 0)
                         GUILayout.Space(_singleObjectTreeItemHeight * notVisibleCount);
-                    if (_scrollTreeToSelected && Event.current.type == EventType.Repaint)
+                    if (_scrollTreeToSelected)
                         _scrollTarget = Mathf.Min(_scrollTarget, _singleObjectTreeItemHeight * currentCount + _singleObjectTreeItemMargin - _objectTreeHeight);
                 }
                 GUILayout.EndScrollView();
@@ -604,11 +605,11 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
         protected override void Update()
         {
-            if (_scrollTreeToSelected && _scrollTarget > 0)
+            if (_scrollTreeToSelected && _scrollTarget >= 0)
             {
                 _scrollTreeToSelected = false;
                 _treeScrollPosition.y = _scrollTarget;
-                _scrollTarget = 0;
+                _scrollTarget = -1f;
             }
 
             _gameObjectSearcher.Refresh(false, null);
