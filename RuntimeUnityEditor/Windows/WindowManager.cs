@@ -34,7 +34,7 @@ namespace RuntimeUnityEditor.Core
         /// </summary>
         public int Height => (int)_windowRect.height;
 
-        public WindowManager()
+        internal WindowManager()
         {
             Instance = this;
         }

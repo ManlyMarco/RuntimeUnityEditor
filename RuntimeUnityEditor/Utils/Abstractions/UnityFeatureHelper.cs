@@ -79,7 +79,7 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
             }
         }
 
-        public static GameObject[] GetSceneGameObjectsInternal()
+        private static GameObject[] GetSceneGameObjectsInternal()
         {
             // Reflection for compatibility with Unity 4.x
             var activeScene = _sceneManager.GetMethod("GetActiveScene", BindingFlags.Static | BindingFlags.Public);
