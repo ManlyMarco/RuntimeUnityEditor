@@ -101,7 +101,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, $"Full GameObject list refresh finished in {sw.ElapsedMilliseconds}ms");
 
                 // _lastSearchProperties==true takes too long to open the editor
-                if (_searchResults != null && !!_lastSearchComponents && !_lastSearchProperties && _lastSearchString != null)
+                if (_searchResults != null && !_lastSearchProperties && _lastSearchString != null)
                     Search(_lastSearchString, _lastSearchComponents, _lastSearchProperties, false);
             }
         }
