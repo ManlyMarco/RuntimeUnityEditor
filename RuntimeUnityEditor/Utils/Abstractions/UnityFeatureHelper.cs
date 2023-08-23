@@ -8,11 +8,13 @@ using UnityEngine;
 
 namespace RuntimeUnityEditor.Core.Utils.Abstractions
 {
+    /// <summary>
+    /// Abstractions for Unity engine features that got changed in some way across different engine version.
+    /// </summary>
     public static class UnityFeatureHelper
     {
         private static readonly Type _sceneManager = Type.GetType("UnityEngine.SceneManagement.SceneManager, UnityEngine", false);
         private static readonly Type _scene = Type.GetType("UnityEngine.SceneManagement.Scene, UnityEngine", false);
-        private static readonly Type _vectrosity = Type.GetType("Vectrosity.VectorObject2D, Vectrosity", false);
 
         static UnityFeatureHelper()
         {
@@ -46,10 +48,24 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
             }
         }
 
+        /// <summary>
+        /// UnityEngine.SceneManagement.SceneManager is available, used by <see cref="GetSceneGameObjects"/>.
+        /// </summary>
         public static bool SupportsScenes { get; private set; }
+
+        /// <summary>
+        /// TextEditor.cursorIndex is available.
+        /// </summary>
         public static bool SupportsCursorIndex { get; }
+
+        /// <summary>
+        /// C# REPL SHOULD be able to run in this environment (mcs might still be unhappy).
+        /// </summary>
         public static bool SupportsRepl { get; }
 
+        /// <summary>
+        /// Get root game objects in active scene, or nothing if game doesn't support this.
+        /// </summary>
         public static GameObject[] GetSceneGameObjects()
         {
             try
@@ -67,14 +83,19 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
         {
             // Reflection for compatibility with Unity 4.x
             var activeScene = _sceneManager.GetMethod("GetActiveScene", BindingFlags.Static | BindingFlags.Public);
+            if (activeScene == null) throw new ArgumentNullException(nameof(activeScene));
             var scene = activeScene.Invoke(null, null);
             
             var rootGameObjects = scene.GetType().GetMethod("GetRootGameObjects", BindingFlags.Instance | BindingFlags.Public, null, new Type[]{}, null);
+            if (rootGameObjects == null) throw new ArgumentNullException(nameof(rootGameObjects));
             var objects = rootGameObjects.Invoke(scene, null);
 
             return (GameObject[])objects;
         }
         
+        /// <summary>
+        /// Figure out where the log file is written to and open it.
+        /// </summary>
         public static void OpenLog()
         {
             bool TryOpen(string path)
@@ -128,6 +149,9 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
             throw new FileNotFoundException("No log files were found");
         }
 
+        /// <summary>
+        /// Abstraction for Texture2D.LoadImage. In later Unity versions it was moved into an extension method.
+        /// </summary>
         public static Texture2D LoadTexture(byte[] texData)
         {
             var tex = new Texture2D(1, 1, TextureFormat.ARGB32, false);

@@ -8,6 +8,9 @@ using UnityEngine;
 
 namespace RuntimeUnityEditor.Core.Inspector
 {
+    /// <summary>
+    /// Window that allows browsing and editing of the contents of types and their instances.
+    /// </summary>
     public sealed partial class Inspector : Window<Inspector>
     {
         private const int InspectorRecordHeight = 25;
@@ -24,12 +27,14 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         internal static int MaxWindowY => (int)Instance.WindowRect.height;
 
+        /// <inheritdoc />
         protected override void VisibleChanged(bool visible)
         {
             base.VisibleChanged(visible);
             VariableFieldDrawer.ClearCache();
         }
 
+        /// <inheritdoc />
         protected override void Initialize(InitSettings initSettings)
         {
             Title = "Inspector";
@@ -40,6 +45,10 @@ namespace RuntimeUnityEditor.Core.Inspector
         private bool _focusSearchBox;
         private const string SearchBoxName = "InspectorFilterBox";
 
+        /// <summary>
+        /// Only show members that match the search string.
+        /// Each stack item holds its own search string. This property shows the search string of the current tab item's visible stack entry.
+        /// </summary>
         public string SearchString
         {
             get
@@ -94,15 +103,22 @@ namespace RuntimeUnityEditor.Core.Inspector
             }
         }
 
+        /// <summary> Obsolete, will be removed soon. </summary>
         [Obsolete("Use push and Show instead")]
         public void InspectorClear() { }
 
+        /// <summary> Obsolete, will be removed soon. </summary>
         [Obsolete("Use push instead")]
         public void InspectorPush(InspectorStackEntryBase stackEntry)
         {
             Push(stackEntry, true);
         }
 
+        /// <summary>
+        /// Show an object inside inspector.
+        /// </summary>
+        /// <param name="stackEntry">Object to show, wrapped in an appropriate stack entry.</param>
+        /// <param name="newTab">Should the object be shown in a new tab, or at the top of current tab.</param>
         public void Push(InspectorStackEntryBase stackEntry, bool newTab)
         {
             var tab = GetCurrentTab();
@@ -127,6 +143,9 @@ namespace RuntimeUnityEditor.Core.Inspector
                 _currentTab = null;
         }
 
+        /// <summary>
+        /// Get instance of currently visible object. If something other than an object instance is shown, null is returned.
+        /// </summary>
         public object GetInspectedObject()
         {
             if (GetCurrentTab()?.CurrentStackItem is InstanceStackEntry se)
@@ -134,11 +153,13 @@ namespace RuntimeUnityEditor.Core.Inspector
             return null;
         }
 
+        /// <inheritdoc />
         protected override Rect GetDefaultWindowRect(Rect screenRect)
         {
             return MakeDefaultWindowRect(screenRect, TextAlignment.Center);
         }
 
+        /// <inheritdoc />
         protected override void OnGUI()
         {
             base.OnGUI();
@@ -146,6 +167,7 @@ namespace RuntimeUnityEditor.Core.Inspector
             VariableFieldDrawer.DrawInvokeWindow();
         }
 
+        /// <inheritdoc />
         protected override void DrawContents()
         {
             // Close the invoke window if the main inspector window was clicked (event check needs to be inside of the clicked window func)

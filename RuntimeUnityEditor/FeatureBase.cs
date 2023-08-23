@@ -1,5 +1,4 @@
 ﻿using System;
-using RuntimeUnityEditor.Core.Utils;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 
 namespace RuntimeUnityEditor.Core
@@ -38,6 +37,9 @@ namespace RuntimeUnityEditor.Core
         /// How this feature appears in the UI.
         /// </summary>
         FeatureDisplayType DisplayType { get; }
+        /// <summary>
+        /// How this feature is called in the UI.
+        /// </summary>
         string DisplayName { get; }
     }
 
@@ -61,9 +63,11 @@ namespace RuntimeUnityEditor.Core
     }
 
     /// <summary>
-    /// Base implementation of <see cref="IFeature"/>.
-    /// <typeparamref name="T"/> should be your derived class's Type, e.g. <code>public class MyFeature : FeatureBase&lt;MyFeature&gt;</code>.
+    /// Base implementation of <see cref="T:RuntimeUnityEditor.Core.IFeature" />.
+    /// <typeparamref name="T" /> should be your derived class's Type, e.g. <code>public class MyFeature : FeatureBase&lt;MyFeature&gt;</code>
+    /// If you want to make a window, use <see cref="Window{T}"/> instead.
     /// </summary>
+    /// <inheritdoc />
     public abstract class FeatureBase<T> : IFeature where T : FeatureBase<T>
     {
         // ReSharper disable once StaticMemberInGenericType
@@ -77,20 +81,24 @@ namespace RuntimeUnityEditor.Core
         /// </summary>
         public static T Instance { get; private set; }
 
+        /// <summary>
+        /// Create a new instance of the feature. Should only ever be called once since it sets the Instance.
+        /// </summary>
         protected FeatureBase()
         {
             DisplayType = FeatureDisplayType.Feature;
             FeatureBase<T>.Instance = (T)this;
         }
 
+        /// <summary>
+        /// Category name, it's "Features" by default. If you want to make a window, use <see cref="Window{T}"/> instead.
+        /// </summary>
         protected string SettingCategory = "Features";
         private protected string _displayName;
         private bool _enabled;
         private Action<bool> _confEnabled;
 
-        /// <summary>
-        /// Name shown in taskbar
-        /// </summary>
+        /// <inheritdoc />
         public virtual string DisplayName
         {
             get => _displayName ?? (_displayName = GetType().Name);
@@ -98,7 +106,7 @@ namespace RuntimeUnityEditor.Core
         }
 
         /// <summary>
-        /// If this instance is enabled and can be shown (if RUE is shown as a whole).
+        /// If this instance is enabled and can be shown (when RUE interface is enabled as a whole).
         /// </summary>
         public virtual bool Enabled
         {
@@ -126,9 +134,7 @@ namespace RuntimeUnityEditor.Core
         /// </summary>
         public bool Visible => Enabled && RuntimeUnityEditorCore.Instance.Show;
 
-        /// <summary>
-        /// How this Feature is shown in taskbar
-        /// </summary>
+        /// <inheritdoc />
         public FeatureDisplayType DisplayType { get; protected set; }
 
         void IFeature.OnInitialize(InitSettings initSettings)
@@ -200,6 +206,9 @@ namespace RuntimeUnityEditor.Core
             }
         }
 
+        /// <summary>
+        /// Fired whenever the <see cref="Visible"/> state is changed, either by <see cref="Enabled"/> being changed or the entire RUE interface being hidden/shown.
+        /// </summary>
         protected virtual void OnVisibleChanged(bool visible)
         {
             try

@@ -6,11 +6,18 @@ using RuntimeUnityEditor.Core.Utils;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using RuntimeUnityEditor.Core.Utils.ObjectDumper;
 using UnityEngine;
+#pragma warning disable CS1591
 
 namespace RuntimeUnityEditor.Core.Clipboard
 {
+    /// <summary>
+    /// Window that allows copying references to objects and using them later when invoking methods or setting fields/props.
+    /// </summary>
     public class ClipboardWindow : Window<ClipboardWindow>
     {
+        /// <summary>
+        /// Contents of the clipboard.
+        /// </summary>
         public static readonly List<object> Contents = new List<object>();
         private Vector2 _scrollPos;
 

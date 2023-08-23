@@ -5,10 +5,14 @@ using RuntimeUnityEditor.Core.Gizmos.lib;
 using RuntimeUnityEditor.Core.ObjectTree;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
+#pragma warning disable CS1591
 
 namespace RuntimeUnityEditor.Core.Gizmos
 {
     //todo ShowGizmosOutsideEditor
+    /// <summary>
+    /// Feature that shows gizmos for selected GameObjects.
+    /// </summary>
     public sealed class GizmoDrawer : FeatureBase<GizmoDrawer>
     {
         private readonly List<KeyValuePair<Action<Component>, Component>> _drawList = new List<KeyValuePair<Action<Component>, Component>>();
@@ -48,7 +52,7 @@ namespace RuntimeUnityEditor.Core.Gizmos
         public void UpdateState(Transform rootTransform)
         {
             if (!Visible || rootTransform == null) return;
-            
+
             _drawList.Clear();
 
             if (!_dbcTypeAttempted)

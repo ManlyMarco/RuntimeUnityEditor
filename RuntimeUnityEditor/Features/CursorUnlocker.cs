@@ -2,9 +2,13 @@
 using System.Reflection;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
+#pragma warning disable CS1591
 
 namespace RuntimeUnityEditor.Core
 {
+    /// <summary>
+    /// Feature that forces the mouse cursor to stay unlocked/visible. Might cause issues with some games, especially FPSes.
+    /// </summary>
     public sealed class CursorUnlocker : FeatureBase<CursorUnlocker>
     {
         private bool _obsoleteCursor;

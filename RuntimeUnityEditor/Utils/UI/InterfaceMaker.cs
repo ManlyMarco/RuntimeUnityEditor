@@ -7,6 +7,9 @@ using Object = UnityEngine.Object;
 
 namespace RuntimeUnityEditor.Core.UI
 {
+    /// <summary>
+    /// Handles the IMGUI skin and such.
+    /// </summary>
     public static class InterfaceMaker
     {
         // These all need to be held as static properties, including textures, to prevent UnloadUnusedAssets from destroying them
@@ -14,6 +17,9 @@ namespace RuntimeUnityEditor.Core.UI
         private static Texture2D _winBackground;
         private static GUISkin _customSkin;
 
+        /// <summary>
+        /// If mouse is inside of a given IMGUI screen rect, eat the input.
+        /// </summary>
         public static void EatInputInRect(Rect eatRect)
         {
             var mousePos = UnityInput.Current.mousePosition;
@@ -21,6 +27,9 @@ namespace RuntimeUnityEditor.Core.UI
                 UnityInput.Current.ResetInputAxes();
         }
 
+        /// <summary>
+        /// IMGUI skin used by RUE. Can be used by other plugins to get the same look and feel, just don't modify its contents.
+        /// </summary>
         public static GUISkin CustomSkin
         {
             get

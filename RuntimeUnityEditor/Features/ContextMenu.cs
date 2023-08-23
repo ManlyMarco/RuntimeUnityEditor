@@ -15,6 +15,9 @@ using UnityEngine.UI;
 
 namespace RuntimeUnityEditor.Core
 {
+    /// <summary>
+    /// Context menu invoked by right clicking on many things.
+    /// </summary>
     public class ContextMenu : FeatureBase<ContextMenu>
     {
         private object _obj;
@@ -24,6 +27,9 @@ namespace RuntimeUnityEditor.Core
         private Rect _windowRect;
         private int _windowId;
 
+        /// <summary>
+        /// Is the menu currently visible. A valid object must be set first or it will always be false.
+        /// </summary>
         public override bool Enabled
         {
             get => base.Enabled && _obj != null;
@@ -35,9 +41,13 @@ namespace RuntimeUnityEditor.Core
             }
         }
 
+        /// <summary>
+        /// Contents of the context menu.
+        /// </summary>
         public List<MenuEntry> MenuContents { get; } = new List<MenuEntry>();
         private List<MenuEntry> _currentContents;
 
+        /// <inheritdoc />
         protected override void Initialize(InitSettings initSettings)
         {
             MenuContents.AddRange(new[]
@@ -149,12 +159,23 @@ namespace RuntimeUnityEditor.Core
             DisplayType = FeatureDisplayType.Hidden;
         }
 
+        /// <summary>
+        /// Show the context menu at current cursor position.
+        /// </summary>
+        /// <param name="obj">Object to show the menu for. Set to null to hide the menu.</param>
+        /// <param name="objMemberInfo">MemberInfo of wherever the object came from. Can be null.</param>
         public void Show(object obj, MemberInfo objMemberInfo)
         {
             var m = UnityInput.Current.mousePosition;
             Show(obj, objMemberInfo, new Vector2(m.x, Screen.height - m.y));
         }
 
+        /// <summary>
+        /// Show the context menu at a specific screen position.
+        /// </summary>
+        /// <param name="obj">Object to show the menu for. Set to null to hide the menu.</param>
+        /// <param name="objMemberInfo">MemberInfo of wherever the object came from. Can be null.</param>
+        /// <param name="clickPoint">Screen position to show the menu at.</param>
         public void Show(object obj, MemberInfo objMemberInfo, Vector2 clickPoint)
         {
             _windowRect = new Rect(clickPoint, new Vector2(100, 100));
@@ -179,12 +200,16 @@ namespace RuntimeUnityEditor.Core
             }
         }
 
+        /// <summary>
+        /// Draw a GUILayout button that opens the context menu when clicked. It's only shown if the object is not null.
+        /// </summary>
         public void DrawContextButton(object obj, MemberInfo objMemberInfo)
         {
             if (obj != null && GUILayout.Button("...", GUILayout.ExpandWidth(false)))
                 Show(obj, objMemberInfo);
         }
 
+        /// <inheritdoc />
         protected override void OnGUI()
         {
             // Make an invisible window in the back to reliably capture mouse clicks outside of the context menu.
@@ -233,10 +258,20 @@ namespace RuntimeUnityEditor.Core
             GUILayout.EndVertical();
         }
 
+        /// <summary>
+        /// A single entry in the context menu.
+        /// </summary>
         public readonly struct MenuEntry
         {
+            /// <summary>
+            /// Create a new context menu entry.
+            /// </summary>
+            /// <param name="name">Name of the enry.</param>
+            /// <param name="onCheckVisible">Callback that checks if this item is visible for a given object.</param>
+            /// <param name="onClick">Callback invoked when user clicks on this menu entry with the object as argument.</param>
             public MenuEntry(string name, Func<object, bool> onCheckVisible, Action<object> onClick) : this(new GUIContent(name), onCheckVisible, onClick) { }
 
+            /// <inheritdoc cref="MenuEntry(string,Func&lt;object, bool&gt;, Action&lt;object&gt;)"/>
             public MenuEntry(GUIContent name, Func<object, bool> onCheckVisible, Action<object> onClick)
             {
                 _name = name;
@@ -248,11 +283,17 @@ namespace RuntimeUnityEditor.Core
             private readonly Func<object, bool> _onCheckVisible;
             private readonly Action<object> _onClick;
 
+            /// <summary>
+            /// Check if this menu entry should be visible for a given object.
+            /// </summary>
             public bool IsVisible(object obj)
             {
                 return _onCheckVisible == null || _onCheckVisible(obj);
             }
 
+            /// <summary>
+            /// Draw this menu entry. Handles user clicking on the entry too.
+            /// </summary>
             public bool Draw(object obj)
             {
                 if (_onClick != null)

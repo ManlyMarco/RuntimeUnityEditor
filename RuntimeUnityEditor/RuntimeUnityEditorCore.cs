@@ -13,20 +13,39 @@ using UnityEngine;
 
 namespace RuntimeUnityEditor.Core
 {
+    /// <summary>
+    /// Main class of RUE. It initializes and manages all of the features, and propagates events to them.
+    /// To access individual features, reference them directly by using <see cref="FeatureBase{T}.Initialized"/> and <see cref="FeatureBase{T}.Instance"/>.
+    /// </summary>
     public class RuntimeUnityEditorCore
     {
+        /// <summary>
+        /// Version constant for use in version checks.
+        /// Beware that this is a const and it will be burned as a string into your assembly at build time.
+        /// </summary>
         public const string Version = "5.0";
+
+        /// <summary>
+        /// GUID for use in version and dependency checks.
+        /// Beware that this is a const and it will be burned as a string into your assembly. This shouldn't be an issue since this should never change.
+        /// </summary>
         public const string GUID = "RuntimeUnityEditor";
 
         #region Obsolete
 
+        /// <summary> Obsolete, do not use. Will be removed soon. </summary>
         [Obsolete("Use window Instance instead", true)] public Inspector.Inspector Inspector => Core.Inspector.Inspector.Initialized ? Core.Inspector.Inspector.Instance : null;
+        /// <summary> Obsolete, do not use. Will be removed soon. </summary>
         [Obsolete("Use window Instance instead", true)] public ObjectTreeViewer TreeViewer => ObjectTreeViewer.Initialized ? ObjectTreeViewer.Instance : null;
+        /// <summary> Obsolete, do not use. Will be removed soon. </summary>
         [Obsolete("Use window Instance instead", true)] public ObjectViewWindow PreviewWindow => ObjectViewWindow.Initialized ? ObjectViewWindow.Instance : null;
+        /// <summary> Obsolete, do not use. Will be removed soon. </summary>
         [Obsolete("Use window Instance instead", true)] public ProfilerWindow ProfilerWindow => ProfilerWindow.Initialized ? ProfilerWindow.Instance : null;
+        /// <summary> Obsolete, do not use. Will be removed soon. </summary>
         [Obsolete("Use window Instance instead", true)] public ReplWindow Repl => ReplWindow.Initialized ? ReplWindow.Instance : null;
+        /// <summary> Obsolete, do not use. Will be removed soon. </summary>
         [Obsolete("Use window Instance instead", true)] public WindowManager WindowManager => WindowManager.Instance;
-
+        /// <summary> Obsolete, do not use. Will be removed soon. </summary>
         [Obsolete("No longer works", true)] public event EventHandler SettingsChanged;
 
         /// <summary>
@@ -48,6 +67,7 @@ namespace RuntimeUnityEditor.Core
 
         private readonly Action<KeyCode> _onHotkeyChanged;
 
+        /// <summary> Obsolete, do not use. Will be removed soon. </summary>
         [Obsolete("Use window Instance instead", true)]
         public bool ShowRepl
         {
@@ -55,6 +75,7 @@ namespace RuntimeUnityEditor.Core
             set { if (ReplWindow.Initialized) ReplWindow.Instance.Enabled = value; }
         }
 
+        /// <summary> Obsolete, do not use. Will be removed soon. </summary>
         [Obsolete("Use window Instance instead", true)]
         public bool EnableMouseInspect
         {
@@ -62,6 +83,7 @@ namespace RuntimeUnityEditor.Core
             set { if (MouseInspect.Initialized) MouseInspect.Instance.Enabled = value; }
         }
 
+        /// <summary> Obsolete, do not use. Will be removed soon. </summary>
         [Obsolete("Use window Instance instead", true)]
         public bool ShowInspector
         {

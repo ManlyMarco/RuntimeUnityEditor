@@ -5,9 +5,13 @@ using RuntimeUnityEditor.Core.ObjectTree;
 using RuntimeUnityEditor.Core.Utils;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
+#pragma warning disable CS1591
 
 namespace RuntimeUnityEditor.Core
 {
+    /// <summary>
+    /// Feature that shows information about GameObjects and Canvas elements located directly under the mouse cursor.
+    /// </summary>
     public class MouseInspect : FeatureBase<MouseInspect>
     {
         private static readonly StringBuilder _hoverTextSb = new StringBuilder(100);

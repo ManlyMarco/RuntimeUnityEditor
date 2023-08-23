@@ -9,6 +9,7 @@ using Object = UnityEngine.Object;
 
 namespace RuntimeUnityEditor.Core.Utils
 {
+    [Obsolete("No longer used")]
     public static class EditorUtilities
     {
         public static IEnumerable<ReadonlyCacheEntry> GetTransformScanner()

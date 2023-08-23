@@ -22,8 +22,14 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         private bool _lastSearchProperties;
         private bool _lastSearchComponents;
 
+        /// <summary>
+        /// A filtered list is currently being shown instead of all items.
+        /// </summary>
         public bool IsSearching() => _searchResults != null;
 
+        /// <summary>
+        /// Find all currently existing root Transforms. Slow.
+        /// </summary>
         public static IEnumerable<GameObject> FindAllRootGameObjects()
         {
             return Resources.FindObjectsOfTypeAll<Transform>()
@@ -31,6 +37,9 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 .Select(x => x.gameObject);
         }
 
+        /// <summary>
+        /// Get a mostly up-to-date list of all root Transforms. Fast.
+        /// </summary>
         public IEnumerable<GameObject> GetRootObjects()
         {
             if (_cachedRootGameObjects != null)
@@ -41,6 +50,9 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             return Enumerable.Empty<GameObject>();
         }
 
+        /// <summary>
+        /// Get a list of what should be displayed.
+        /// </summary>
         public IEnumerable<GameObject> GetSearchedOrAllObjects()
         {
             if (_searchResults != null)
@@ -51,6 +63,11 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             return GetRootObjects();
         }
 
+        /// <summary>
+        /// Refresh the list of GameObjects currently in the scene.
+        /// </summary>
+        /// <param name="full">Gather root Transforms again, slow. Otherwise use tricks to approximate the same result but much faster.</param>
+        /// <param name="objectFilter">Optional filter to exclude some GameObjects from the results.</param>
         public void Refresh(bool full, Predicate<GameObject> objectFilter)
         {
             if (_cachedRootGameObjects == null)
@@ -89,6 +106,13 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             }
         }
 
+        /// <summary>
+        /// Perform a search in all current GameObjects. GameOjbect names are always searched.
+        /// </summary>
+        /// <param name="searchString">What to search for. Checks if the string is contained while ignoring case.</param>
+        /// <param name="searchComponents">Search component names.</param>
+        /// <param name="searchProperties">Search values of component properties. Very slow.</param>
+        /// <param name="refreshObjects">Perform a full refresh if necessary.</param>
         public void Search(string searchString, bool searchComponents, bool searchProperties, bool refreshObjects = true)
         {
             _lastSearchProperties = searchProperties;
@@ -119,6 +143,12 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             }
         }
 
+        /// <summary>
+        /// Search for a string inside a given component. Component name is always searched.
+        /// </summary>
+        /// <param name="searchString">What to search for. Checks if the string is contained while ignoring case.</param>
+        /// <param name="c">Component to search in.</param>
+        /// <param name="searchProperties">Search values of component's properties. Very slow.</param>
         public static bool SearchInComponent(string searchString, Component c, bool searchProperties)
         {
             if (c == null) return false;
@@ -178,6 +208,11 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             return false;
         }
 
+        /// <summary>
+        /// Search for references to an object inside of all components currently instantiated.
+        /// Only top-level properties and fields are searched inside the component.
+        /// </summary>
+        /// <param name="objInstance">Instance to search for.</param>
         public bool SearchReferences(object objInstance)
         {
             if (objInstance == null || !objInstance.GetType().IsClass) return false;
@@ -201,7 +236,13 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
             return results.Count > 0;
         }
-
+        
+        /// <summary>
+        /// Search for references to an object inside of all components currently instantiated.
+        /// Only top-level properties and fields are searched inside the component.
+        /// </summary>
+        /// <param name="c">Component to search in.</param>
+        /// <param name="objInstance">Instance to search for.</param>
         public static bool SearchReferencesInComponent(object objInstance, Component c)
         {
             if (c == null) return false;

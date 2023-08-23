@@ -8,6 +8,9 @@ using UnityEngine;
 
 namespace RuntimeUnityEditor.Core.ObjectView
 {
+    /// <summary>
+    /// Displays a friendly representation of objects, e.g. textures.
+    /// </summary>
     public sealed class ObjectViewWindow : Window<ObjectViewWindow>
     {
         private object _objToDisplay;
@@ -48,11 +51,17 @@ namespace RuntimeUnityEditor.Core.ObjectView
             return false;
         }
 
+        /// <summary>
+        /// Can a given object be displayed.
+        /// </summary>
         public bool CanPreview(object obj)
         {
             return GetDrawer(obj, out _);
         }
 
+        /// <summary>
+        /// Set object to display and its name to show in the title bar.
+        /// </summary>
         public void SetShownObject(object objToDisplay, string objName)
         {
             _objToDisplay = objToDisplay;
@@ -65,11 +74,13 @@ namespace RuntimeUnityEditor.Core.ObjectView
             Enabled = true;
         }
 
+        /// <inheritdoc />
         protected override Rect GetDefaultWindowRect(Rect screenRect)
         {
             return MakeDefaultWindowRect(screenRect, TextAlignment.Left);
         }
 
+        /// <inheritdoc />
         protected override void DrawContents()
         {
             if (_objDrawer == null) GetDrawer(_objToDisplay, out _objDrawer);
@@ -91,6 +102,7 @@ namespace RuntimeUnityEditor.Core.ObjectView
             GUILayout.EndVertical();
         }
 
+        /// <inheritdoc />
         protected override void Initialize(InitSettings initSettings)
         {
             Title = "Object viewer - Empty";

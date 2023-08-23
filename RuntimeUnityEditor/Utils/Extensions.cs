@@ -8,6 +8,9 @@ using UnityEngine;
 
 namespace RuntimeUnityEditor.Core.Utils
 {
+    /// <summary>
+    /// Useful stuff.
+    /// </summary>
     public static class Extensions
     {
         public static bool Contains(this string s, string searchText, StringComparison sc)
@@ -32,18 +35,22 @@ namespace RuntimeUnityEditor.Core.Utils
         {
             return self.GetType().GetField(name, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy).GetValue(self);
         }
+        [Obsolete("Obsoleted by AccessTools")]
         public static void SetPrivateExplicit<T>(this T self, string name, object value)
         {
             typeof(T).GetField(name, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy).SetValue(self, value);
         }
+        [Obsolete("Obsoleted by AccessTools")]
         public static void SetPrivate(this object self, string name, object value)
         {
             self.GetType().GetField(name, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy).SetValue(self, value);
         }
+        [Obsolete("Obsoleted by AccessTools")]
         public static object CallPrivateExplicit<T>(this T self, string name, params object[] p)
         {
             return typeof(T).GetMethod(name, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy).Invoke(self, p);
         }
+        [Obsolete("Obsoleted by AccessTools")]
         public static object CallPrivate(this object self, string name, params object[] p)
         {
             return self.GetType().GetMethod(name, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy).Invoke(self, p);

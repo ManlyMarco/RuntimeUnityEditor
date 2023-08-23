@@ -15,6 +15,9 @@ using Object = UnityEngine.Object;
 
 namespace RuntimeUnityEditor.Core.ObjectTree
 {
+    /// <summary>
+    /// Shows a tree of GameObjects/Transforms currently loaded. Also lists components attached to GOs and simple edit controls. Similar to Unity Editor interface.
+    /// </summary>
     public sealed class ObjectTreeViewer : Window<ObjectTreeViewer>
     {
         private readonly HashSet<GameObject> _openedObjects = new HashSet<GameObject>();
@@ -36,8 +39,14 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         private readonly GUILayoutOption _drawVector3SliderHeight = GUILayout.Height(10);
         private readonly GUILayoutOption _drawVector3SliderWidth = GUILayout.Width(33);
 
+        /// <summary>
+        /// Invoked whenever a new Transform is selected in the tree.
+        /// </summary>
         public event Action<Transform> TreeSelectionChanged;
 
+        /// <summary>
+        /// Select the transform in the tree list, expand the tree to make sure it's visible, and scroll the view to make sure user can see it.
+        /// </summary>
         public void SelectAndShowObject(Transform target)
         {
             SelectedTransform = target;
@@ -55,12 +64,16 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             Enabled = true;
         }
 
+        /// <inheritdoc />
         protected override void Initialize(InitSettings initSettings)
         {
             Title = "Object Browser";
             _gameObjectSearcher = new RootGameObjectSearcher();
         }
 
+        /// <summary>
+        /// Transform currently selected in the tree.
+        /// </summary>
         public Transform SelectedTransform
         {
             get => _selectedTransform;
@@ -75,6 +88,9 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             }
         }
 
+        /// <summary>
+        /// Clear any display caches that might hold no longer existing data, e.g. destroyed sprites or textures.
+        /// </summary>
         public void ClearCaches()
         {
             _imagePreviewCache.Clear();
@@ -89,6 +105,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             }
         }
 
+        /// <inheritdoc />
         public override Rect WindowRect
         {
             get => base.WindowRect;
@@ -201,6 +218,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             }
         }
 
+        /// <inheritdoc />
         protected override void DrawContents()
         {
             GUILayout.BeginVertical();
@@ -597,12 +615,16 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             GUILayout.EndHorizontal();
         }
 
+        /// <summary>
+        /// Switch the tree into reference search mode.
+        /// </summary>
         public void FindReferencesInScene(object obj)
         {
             if (_gameObjectSearcher.SearchReferences(obj))
                 _searchText = "Search for object references...";
         }
 
+        /// <inheritdoc />
         protected override void Update()
         {
             if (_scrollTreeToSelected && _scrollTarget >= 0)
@@ -615,11 +637,13 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             _gameObjectSearcher.Refresh(false, null);
         }
 
+        /// <inheritdoc />
         protected override Rect GetDefaultWindowRect(Rect screenRect)
         {
             return MakeDefaultWindowRect(screenRect, TextAlignment.Right);
         }
 
+        /// <inheritdoc />
         protected override void VisibleChanged(bool visible)
         {
             base.VisibleChanged(visible);

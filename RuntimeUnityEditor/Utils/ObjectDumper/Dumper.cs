@@ -15,6 +15,9 @@ using RuntimeUnityEditor.Core.Utils.Abstractions;
 
 namespace RuntimeUnityEditor.Core.Utils.ObjectDumper
 {
+    /// <summary>
+    /// Tries to dump contents of objects into a text form.
+    /// </summary>
     public static class Dumper
     {
         public static string DumpToTempFile(object value, string name)

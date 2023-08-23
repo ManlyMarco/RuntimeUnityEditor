@@ -98,6 +98,9 @@ namespace RuntimeUnityEditor.Core.Utils
                 RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, e.StackTrace);
             }
         }
+        /// <summary>
+        /// Show a file open dialog for .png files and load the selected png file into a new Texture2D.
+        /// </summary>
         public static Texture2D LoadTextureFromFileWithDialog()
         {
             const OpenFileDialog.OpenSaveFileDialgueFlags loadFileFlags = OpenFileDialog.OpenSaveFileDialgueFlags.OFN_LONGNAMES |

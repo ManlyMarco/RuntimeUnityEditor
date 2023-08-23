@@ -7,6 +7,10 @@ using UnityEngine;
 
 namespace RuntimeUnityEditor.Core
 {
+    /// <summary>
+    /// Taskbar with controls for all of the RUE features.
+    /// Avoid using this class directly, new features can be added with <see cref="RuntimeUnityEditorCore.AddFeature"/> instead.
+    /// </summary>
     public class WindowManager : IFeature
     {
         private int _windowId;
@@ -14,11 +18,20 @@ namespace RuntimeUnityEditor.Core
         private List<IFeature> _orderedFeatures;
         private string _title;
 
+        /// <summary>
+        /// Current instance.
+        /// </summary>
         public static WindowManager Instance { get; private set; }
 
 #pragma warning disable CS0618
+        /// <summary>
+        /// Text shown in the title bar of the taskbar.
+        /// </summary>
         protected string GetTitle() => RuntimeUnityEditorCore.Instance.ShowHotkey == KeyCode.None ? _title : _title + $" / Press {RuntimeUnityEditorCore.Instance.ShowHotkey} to show/hide";
 #pragma warning restore CS0618
+        /// <summary>
+        /// Height of the taskbar.
+        /// </summary>
         public int Height => (int)_windowRect.height;
 
         public WindowManager()
@@ -32,6 +45,9 @@ namespace RuntimeUnityEditor.Core
             _title = $"{RuntimeUnityEditorCore.GUID} v{RuntimeUnityEditorCore.Version}";
         }
 
+        /// <summary>
+        /// Set features shown in the taskbar.
+        /// </summary>
         public void SetFeatures(List<IFeature> initializedFeatures)
         {
             _orderedFeatures = initializedFeatures.OrderByDescending(x => x.DisplayType).ThenBy(x => x.DisplayName).ToList();
@@ -102,6 +118,9 @@ namespace RuntimeUnityEditor.Core
             GUILayout.EndHorizontal();
         }
 
+        /// <summary>
+        /// Show the taskbar, and by extension entire RUE interface. Use <see cref="RuntimeUnityEditorCore.Show"/> instead.
+        /// </summary>
         public bool Enabled { get; set; }
         void IFeature.OnUpdate() { }
         void IFeature.OnLateUpdate() { }

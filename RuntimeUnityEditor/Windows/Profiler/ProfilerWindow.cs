@@ -5,14 +5,16 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
-using RuntimeUnityEditor.Core.Inspector.Entries;
-using RuntimeUnityEditor.Core.ObjectTree;
 using RuntimeUnityEditor.Core.Utils;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
+#pragma warning disable CS1591
 
 namespace RuntimeUnityEditor.Core.Profiler
 {
+    /// <summary>
+    /// Simple profiler that tracks common Unity messages like Update or OnGUI.
+    /// </summary>
     public sealed class ProfilerWindow : Window<ProfilerWindow>
     {
         private const string OnGuiMethodName = "OnGUI";

@@ -18,6 +18,8 @@ namespace RuntimeUnityEditor.Bepin5
     [BepInPlugin(RuntimeUnityEditorCore.GUID, "Runtime Unity Editor", RuntimeUnityEditorCore.Version)]
     public class RuntimeUnityEditor5 : BaseUnityPlugin
     {
+        /// <summary> Obsolete, do not use. Will be removed soon. </summary>
+        [Obsolete("Use RuntimeUnityEditorCore.Instance instead", true)]
         public static RuntimeUnityEditorCore Instance { get; private set; }
 
         private void Start()

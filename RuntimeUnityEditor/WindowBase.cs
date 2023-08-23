@@ -33,17 +33,28 @@ namespace RuntimeUnityEditor.Core
         /// </summary>
         void ResetWindowRect();
     }
-    
+
     /// <summary>
-    /// Base implementation of <see cref="IWindow"/>.
-    /// <typeparamref name="T"/> should be your derived class's Type, e.g. <code>public class MyWindow : Window&lt;MyWindow&gt;</code>.
+    /// Base implementation of <see cref="T:RuntimeUnityEditor.Core.IWindow" />.
+    /// <typeparamref name="T" /> should be your derived class's Type, e.g. <code>public class MyWindow : Window&lt;MyWindow&gt;</code>
     /// </summary>
+    /// <inheritdoc cref="IWindow" />
     public abstract class Window<T> : FeatureBase<T>, IWindow where T : Window<T>
     {
+        /// <summary>
+        /// Default distance of windows from screen corners and other windows.
+        /// </summary>
         protected const int ScreenOffset = 10;
+        /// <summary>
+        /// Default width of windows shown on left and right sides.
+        /// </summary>
         protected const int SideWidth = 350;
 
+        /// <summary>
+        /// Width of tooltips shown inside windows.
+        /// </summary>
         private const int TooltipWidth = 400;
+
         // ReSharper disable StaticMemberInGenericType
         private static GUIStyle _tooltipStyle;
         private static GUIContent _tooltipContent;
@@ -54,6 +65,9 @@ namespace RuntimeUnityEditor.Core
         private Rect _windowRect;
         private Action<Rect> _confRect;
 
+        /// <summary>
+        /// Create a new window instance, should only ever be called once.
+        /// </summary>
         protected Window()
         {
             DisplayType = FeatureDisplayType.Window;

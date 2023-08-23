@@ -5,6 +5,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using UnityEngine;
 using UnityModManagerNet;
+#pragma warning disable CS0618
 
 namespace RuntimeUnityEditor.UMM
 {
@@ -34,7 +35,7 @@ namespace RuntimeUnityEditor.UMM
         [XmlElement("Category")]
         public List<SerializableCategory> SerializableSettings { get; set; }
 
-        override public void Save(UnityModManager.ModEntry entry)
+        public override void Save(UnityModManager.ModEntry entry)
         {
             SerializableSettings = new List<SerializableCategory>();
             var filepath = GetPath(RuntimeUnityEditorUMM.Instance);

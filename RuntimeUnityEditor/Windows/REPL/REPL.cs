@@ -12,9 +12,13 @@ using RuntimeUnityEditor.Core.Utils.ObjectDumper;
 using UnityEngine;
 using Attribute = System.Attribute;
 using Object = UnityEngine.Object;
+#pragma warning disable CS1591
 
 namespace RuntimeUnityEditor.Core.REPL
 {
+    /// <summary>
+    /// C# REPL environment. Everything in here can be called directly in the REPL console.
+    /// </summary>
     public class REPL : InteractiveBase
     {
         static REPL()

@@ -5,6 +5,9 @@ using UnityEngine;
 
 namespace RuntimeUnityEditor.Core.Utils.Abstractions
 {
+    /// <summary>
+    /// Utilities related to the <see cref="Color"/> and <see cref="Color32"/> classes.
+    /// </summary>
     public static class ColorUtility
     {
         private static bool DoTryParseHtmlColor(string htmlString, out Color32 result)
@@ -51,6 +54,9 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
         }
     }
     
+    /// <summary>
+    /// Utilities for turning things into readable strings.
+    /// </summary>
     public static class ToStringUtility
     {
         public static string ObjectToString(Vector2 obj) => $"{obj.x} {obj.y}";

@@ -14,6 +14,9 @@ using UnityEngine;
 
 namespace RuntimeUnityEditor.Core.REPL
 {
+    /// <summary>
+    /// C# REPL console window.
+    /// </summary>
     public sealed class ReplWindow : Window<ReplWindow>
     {
         private string _autostartFilename;
@@ -64,6 +67,7 @@ namespace RuntimeUnityEditor.Core.REPL
         private bool _snippletsShown;
 
 
+        /// <inheritdoc />
         protected override void Initialize(InitSettings initSettings)
         {
             if (!UnityFeatureHelper.SupportsRepl) throw new InvalidOperationException("mcs is not supported on this Unity version");
@@ -104,6 +108,9 @@ namespace RuntimeUnityEditor.Core.REPL
             }
         }
 
+        /// <summary>
+        /// Set up the REPL environment. Sometimes needs to be delayed to some time after plugin instantiation or things fail.
+        /// </summary>
         public void RunEnvSetup()
         {
             var envSetup = "using System;" +
@@ -137,6 +144,7 @@ namespace RuntimeUnityEditor.Core.REPL
         private int _refocusCursorIndex = -1;
         private int _refocusSelectIndex;
 
+        /// <inheritdoc />
         protected override Rect GetDefaultWindowRect(Rect screenRect)
         {
             // todo make a central window size manager thing with zones
@@ -149,6 +157,7 @@ namespace RuntimeUnityEditor.Core.REPL
             return new Rect(centerX, screenRect.yMin + inspectorHeight + replPadding, centerWidth, screenRect.height - inspectorHeight - replPadding);
         }
 
+        /// <inheritdoc />
         protected override void DrawContents()
         {
             if (_completionsListingStyle == null)
@@ -319,6 +328,9 @@ namespace RuntimeUnityEditor.Core.REPL
             _refocusCursorIndex = cursorIndex + suggestion.Length;
         }
 
+        /// <summary>
+        /// Evaluate string as C# code and run it in the REPL environment. Write resulting log into the console.
+        /// </summary>
         public object Evaluate(string str)
         {
             object ret = VoidType.Value;
@@ -542,11 +554,15 @@ namespace RuntimeUnityEditor.Core.REPL
             _sb.AppendLine(message);
         }
 
+        /// <summary>
+        /// Clear the log.
+        /// </summary>
         public void Clear()
         {
             _sb.Length = 0;
         }
 
+        /// <inheritdoc />
         public override bool Enabled
         {
             get => base.Enabled;
@@ -561,6 +577,9 @@ namespace RuntimeUnityEditor.Core.REPL
         }
         private Action<bool> _onEnabledChanged;
 
+        /// <summary>
+        /// Use to send an object into the REPL environment. User is given code to load the object in the input field.
+        /// </summary>
         public void IngestObject(object obj)
         {
             if (obj == null)

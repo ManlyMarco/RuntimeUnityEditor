@@ -7,6 +7,9 @@ using RuntimeUnityEditor.Core.Inspector.Entries;
 
 namespace RuntimeUnityEditor.Core.Utils.Abstractions
 {
+    /// <summary>
+    /// Feature that makes it possible to quicly jump to a given element inside decompiled assembly in dnSpy.
+    /// </summary>
     public class DnSpyHelper : IFeature
     {
         private static Action<string> _confPath;
@@ -18,6 +21,9 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
         }
 
         private static string _dnSpyPath = string.Empty;
+        /// <summary>
+        /// Path to dnSpy.exe
+        /// </summary>
         public static string DnSpyPath
         {
             get => _dnSpyPath;
@@ -44,6 +50,9 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
         }
 
         private static string _dnSpyArgs = string.Empty;
+        /// <summary>
+        /// Arguments to use when launching dnSpy.
+        /// </summary>
         public static string DnSpyArgs
         {
             get => _dnSpyArgs;
@@ -57,9 +66,14 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
                 }
             }
         }
-
+        /// <summary>
+        /// Is dnSpy configured correctly and actually present on disk.
+        /// </summary>
         public static bool IsAvailable { get; private set; }
 
+        /// <summary>
+        /// Open object contained in a given entry in dnSpy.
+        /// </summary>
         public static void OpenInDnSpy(ICacheEntry entry)
         {
             try
@@ -72,6 +86,9 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
             }
         }
 
+        /// <summary>
+        /// Navigate to a given type in dnSpy.
+        /// </summary>
         public static void OpenInDnSpy(Type type)
         {
             try
@@ -94,6 +111,9 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
             return refString;
         }
 
+        /// <summary>
+        /// Navigate to a given method in dnSpy.
+        /// </summary>
         public static void OpenInDnSpy(MemberInfo entry)
         {
             try
