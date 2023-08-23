@@ -22,8 +22,15 @@ namespace RuntimeUnityEditor.Core
         /// <summary>
         /// Version constant for use in version checks.
         /// Beware that this is a const and it will be burned as a string into your assembly at build time.
+        /// To see the version that is currently installed use <see cref="InstalledVersion"/>.
         /// </summary>
         public const string Version = "5.0";
+
+        /// <summary>
+        /// Get the currently installed version at runtime.
+        /// For use whenever the running instance version number is needed, instead of the version of the RUE assembly your plugin was compiled against.
+        /// </summary>
+        public static string InstalledVersion => Version;
 
         /// <summary>
         /// GUID for use in version and dependency checks.
