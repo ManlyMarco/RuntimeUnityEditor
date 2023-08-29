@@ -25,11 +25,7 @@ namespace RuntimeUnityEditor.Core.Clipboard
         {
             Title = "Clipboard";
             MinimumSize = new Vector2(250, 100);
-        }
-
-        protected override Rect GetDefaultWindowRect(Rect screenRect)
-        {
-            return MakeDefaultWindowRect(screenRect, TextAlignment.Left);
+            DefaultScreenPosition = ScreenPartition.LeftUpper;
         }
 
         protected override void DrawContents()

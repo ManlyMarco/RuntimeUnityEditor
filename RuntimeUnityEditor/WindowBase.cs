@@ -29,9 +29,9 @@ namespace RuntimeUnityEditor.Core
         /// </summary>
         Vector2 MinimumSize { get; set; }
         /// <summary>
-        /// Discard current window size and position, and set the default ones for this window.
+        /// Default position of this window.
         /// </summary>
-        void ResetWindowRect();
+        ScreenPartition DefaultScreenPosition { get; }
     }
 
     /// <summary>
@@ -41,15 +41,6 @@ namespace RuntimeUnityEditor.Core
     /// <inheritdoc cref="IWindow" />
     public abstract class Window<T> : FeatureBase<T>, IWindow where T : Window<T>
     {
-        /// <summary>
-        /// Default distance of windows from screen corners and other windows.
-        /// </summary>
-        protected const int ScreenOffset = 10;
-        /// <summary>
-        /// Default width of windows shown on left and right sides.
-        /// </summary>
-        protected const int SideWidth = 350;
-
         /// <summary>
         /// Width of tooltips shown inside windows.
         /// </summary>
@@ -80,6 +71,12 @@ namespace RuntimeUnityEditor.Core
             base.AfterInitialized(initSettings);
             WindowId = base.GetHashCode();
             _confRect = initSettings.RegisterSetting(SettingCategory, DisplayName + " window size", WindowRect, string.Empty, b => WindowRect = b);
+            
+#pragma warning disable CS0618
+            // Backwards compat with CheatTools
+            if (DefaultScreenPosition == ScreenPartition.Default && GetDefaultWindowRect(new Rect(0, 0, 1600, 900)) != default)
+                DefaultScreenPosition = ScreenPartition.LeftLower;
+#pragma warning restore CS0618
         }
 
         /// <inheritdoc cref="FeatureBase{T}.DisplayName"/>
@@ -178,7 +175,7 @@ namespace RuntimeUnityEditor.Core
         protected override void OnVisibleChanged(bool visible)
         {
             // If the taskbar didn't have a chance to initialize yet, wait for a frame. Necessary to calculate free screen space.
-            if (visible && WindowManager.Instance.Height == 0)
+            if (visible && Taskbar.Instance.Height == 0)
             {
                 // todo more efficient way?
                 IEnumerator DelayedVisible()
@@ -199,58 +196,47 @@ namespace RuntimeUnityEditor.Core
         {
             if (visible)
             {
-                if (!IsWindowRectValid())
+                if (!WindowManager.IsWindowRectValid(this))
                     ResetWindowRect();
 
                 _canShow = true;
             }
         }
 
-        /// <inheritdoc cref="IWindow.ResetWindowRect"/>
+        /// <summary>
+        /// Discard current window size and position, and set the default ones for this window.
+        /// </summary>
         public void ResetWindowRect()
         {
-            var screenRect = new Rect(
-                x: ScreenOffset,
-                y: ScreenOffset,
-                width: Screen.width - ScreenOffset * 2,
-                height: Screen.height - ScreenOffset * 2 - WindowManager.Instance.Height);
-            WindowRect = GetDefaultWindowRect(screenRect);
-        }
-
-        private bool IsWindowRectValid()
-        {
-            return WindowRect.width >= MinimumSize.x &&
-                   WindowRect.height >= MinimumSize.y &&
-                   WindowRect.x < Screen.width - ScreenOffset &&
-                   WindowRect.y < Screen.height - ScreenOffset &&
-                   WindowRect.x >= -WindowRect.width + ScreenOffset &&
-                   WindowRect.y >= -WindowRect.height + ScreenOffset;
+            WindowManager.ResetWindowRect(this);
         }
 
         /// <summary>
-        /// Get default size of this window (including border and title bar) for the given screen size.
+        /// Get default size of this window (including border and title bar) for the given screen rect.
+        /// The screen rect includes only useful work area (i.e. it excludes any margins and taskbar).
         /// </summary>
-        protected abstract Rect GetDefaultWindowRect(Rect screenRect);
+        [Obsolete("No longer used, set DefaultScreenPosition instead", false)]
+        protected virtual Rect GetDefaultWindowRect(Rect screenClientRect)
+        {
+            return default;
+        }
 
         /// <summary>
         /// Get default size of a window for a given resolution and side of the screen. Center is wider than the sides.
         /// </summary>
-        public static Rect MakeDefaultWindowRect(Rect screenRect, TextAlignment side)
+        [Obsolete("Use set DefaultScreenPosition or use WindowManager.MakeDefaultWindowRect instead", true)]
+        public static Rect MakeDefaultWindowRect(Rect screenClientRect, TextAlignment side)
         {
             switch (side)
             {
                 case TextAlignment.Left:
-                    return new Rect(screenRect.xMin, screenRect.yMin, SideWidth, screenRect.height / 2);
+                    return WindowManager.MakeDefaultWindowRect(screenClientRect, ScreenPartition.LeftUpper);
 
                 case TextAlignment.Center:
-                    var centerWidth = (int)Mathf.Min(850, screenRect.width);
-                    var centerX = (int)(screenRect.xMin + screenRect.width / 2 - Mathf.RoundToInt((float)centerWidth / 2));
-
-                    var inspectorHeight = (int)(screenRect.height / 4) * 3;
-                    return new Rect(centerX, screenRect.yMin, centerWidth, inspectorHeight);
+                    return WindowManager.MakeDefaultWindowRect(screenClientRect, ScreenPartition.CenterUpper);
 
                 case TextAlignment.Right:
-                    return new Rect(screenRect.xMax - SideWidth, screenRect.yMin, SideWidth, screenRect.height);
+                    return WindowManager.MakeDefaultWindowRect(screenClientRect, ScreenPartition.Right);
 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(side), side, null);
@@ -285,5 +271,8 @@ namespace RuntimeUnityEditor.Core
 
         /// <inheritdoc cref="IWindow.MinimumSize"/>
         public Vector2 MinimumSize { get; set; } = new Vector2(100, 100);
+
+        /// <inheritdoc cref="IWindow.DefaultScreenPosition" />
+        public ScreenPartition DefaultScreenPosition { get; protected set; } = ScreenPartition.Default;
     }
 }

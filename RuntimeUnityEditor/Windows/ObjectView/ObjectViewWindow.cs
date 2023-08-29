@@ -75,12 +75,6 @@ namespace RuntimeUnityEditor.Core.ObjectView
         }
 
         /// <inheritdoc />
-        protected override Rect GetDefaultWindowRect(Rect screenRect)
-        {
-            return MakeDefaultWindowRect(screenRect, TextAlignment.Left);
-        }
-
-        /// <inheritdoc />
         protected override void DrawContents()
         {
             if (_objDrawer == null) GetDrawer(_objToDisplay, out _objDrawer);
@@ -107,6 +101,7 @@ namespace RuntimeUnityEditor.Core.ObjectView
         {
             Title = "Object viewer - Empty";
             DisplayName = "Viewer";
+            DefaultScreenPosition = ScreenPartition.LeftUpper;
         }
     }
 }

@@ -93,6 +93,7 @@ namespace RuntimeUnityEditor.Core.REPL
             DisplayName = "REPL console";
             MinimumSize = new Vector2(280, 130);
             Enabled = false;
+            DefaultScreenPosition = ScreenPartition.CenterLower;
         }
 
         private IEnumerator DelayedReplSetup()
@@ -143,19 +144,6 @@ namespace RuntimeUnityEditor.Core.REPL
         private bool _refocus;
         private int _refocusCursorIndex = -1;
         private int _refocusSelectIndex;
-
-        /// <inheritdoc />
-        protected override Rect GetDefaultWindowRect(Rect screenRect)
-        {
-            // todo make a central window size manager thing with zones
-            var centerWidth = (int)Mathf.Min(850, screenRect.width);
-            var centerX = (int)(screenRect.xMin + screenRect.width / 2 - Mathf.RoundToInt((float)centerWidth / 2));
-            var inspectorHeight = (int)(screenRect.height / 4) * 3;
-
-            const int replPadding = 8;
-
-            return new Rect(centerX, screenRect.yMin + inspectorHeight + replPadding, centerWidth, screenRect.height - inspectorHeight - replPadding);
-        }
 
         /// <inheritdoc />
         protected override void DrawContents()

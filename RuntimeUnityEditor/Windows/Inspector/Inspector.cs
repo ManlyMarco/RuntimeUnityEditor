@@ -40,6 +40,7 @@ namespace RuntimeUnityEditor.Core.Inspector
             Title = "Inspector";
             MinimumSize = new Vector2(570, 170);
             Enabled = false;
+            DefaultScreenPosition = ScreenPartition.CenterUpper;
         }
 
         private bool _focusSearchBox;
@@ -151,12 +152,6 @@ namespace RuntimeUnityEditor.Core.Inspector
             if (GetCurrentTab()?.CurrentStackItem is InstanceStackEntry se)
                 return se.Instance;
             return null;
-        }
-
-        /// <inheritdoc />
-        protected override Rect GetDefaultWindowRect(Rect screenRect)
-        {
-            return MakeDefaultWindowRect(screenRect, TextAlignment.Center);
         }
 
         /// <inheritdoc />

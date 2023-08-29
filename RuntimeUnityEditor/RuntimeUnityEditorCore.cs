@@ -51,8 +51,6 @@ namespace RuntimeUnityEditor.Core
         /// <summary> Obsolete, do not use. Will be removed soon. </summary>
         [Obsolete("Use window Instance instead", true)] public ReplWindow Repl => ReplWindow.Initialized ? ReplWindow.Instance : null;
         /// <summary> Obsolete, do not use. Will be removed soon. </summary>
-        [Obsolete("Use window Instance instead", true)] public WindowManager WindowManager => WindowManager.Instance;
-        /// <summary> Obsolete, do not use. Will be removed soon. </summary>
         [Obsolete("No longer works", true)] public event EventHandler SettingsChanged;
 
         /// <summary>
@@ -127,11 +125,11 @@ namespace RuntimeUnityEditor.Core
         /// </summary>
         public bool Show
         {
-            get => WindowManager.Instance.Enabled;
+            get => Taskbar.Instance.Enabled;
             set
             {
-                if (WindowManager.Instance.Enabled == value) return;
-                WindowManager.Instance.Enabled = value;
+                if (Taskbar.Instance.Enabled == value) return;
+                Taskbar.Instance.Enabled = value;
 
                 for (var index = 0; index < _initializedFeatures.Count; index++)
                     _initializedFeatures[index].OnEditorShownChanged(value);
@@ -150,7 +148,7 @@ namespace RuntimeUnityEditor.Core
         public void AddFeature(IFeature feature)
         {
             AddFeatureInt(feature);
-            WindowManager.Instance.SetFeatures(_initializedFeatures);
+            Taskbar.Instance.SetFeatures(_initializedFeatures);
         }
 
         #endregion
@@ -183,8 +181,10 @@ namespace RuntimeUnityEditor.Core
 
                     var iFeatureType = typeof(IFeature);
                     // Create all instances first so they are accessible in Initialize methods in case there's crosslinking spaghetti
-                    var allFeatures = typeof(RuntimeUnityEditorCore).Assembly.GetTypesSafe().Where(t => !t.IsAbstract && iFeatureType.IsAssignableFrom(t)).Select(Activator.CreateInstance).Cast<IFeature>()
-                                                                    .ToList();
+                    var allFeatures = typeof(RuntimeUnityEditorCore).Assembly.GetTypesSafe()
+                                                                    .Where(t => !t.IsAbstract && iFeatureType.IsAssignableFrom(t))
+                                                                    .Select(Activator.CreateInstance)
+                                                                    .Cast<IFeature>().ToList();
 
                     foreach (var feature in allFeatures)
                     {
@@ -194,17 +194,16 @@ namespace RuntimeUnityEditor.Core
                         }
                         catch (Exception e)
                         {
-                            if (feature is WindowManager)
+                            if (feature is Taskbar)
                                 throw new InvalidOperationException("WindowManager somehow failed to initialize! I am die, thank you forever.", e);
 
                             Logger.Log(LogLevel.Warning, $"Failed to initialize {feature.GetType().Name} - " + e);
                         }
                     }
 
-                    WindowManager.Instance.SetFeatures(_initializedFeatures);
+                    Taskbar.Instance.SetFeatures(_initializedFeatures);
 
-                    Logger.Log(LogLevel.Info,
-                               $"Successfully initialized {_initializedFeatures.Count}/{allFeatures.Count} features: {string.Join(", ", _initializedFeatures.Select(x => x.GetType().Name).ToArray())}");
+                    Logger.Log(LogLevel.Info, $"Successfully initialized {_initializedFeatures.Count}/{allFeatures.Count} features: {string.Join(", ", _initializedFeatures.Select(x => x.GetType().Name).ToArray())}");
                 }
                 catch
                 {

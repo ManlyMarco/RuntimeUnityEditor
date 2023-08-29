@@ -69,6 +69,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         {
             Title = "Object Browser";
             _gameObjectSearcher = new RootGameObjectSearcher();
+            DefaultScreenPosition = ScreenPartition.Right;
         }
 
         /// <summary>
@@ -635,12 +636,6 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             }
 
             _gameObjectSearcher.Refresh(false, null);
-        }
-
-        /// <inheritdoc />
-        protected override Rect GetDefaultWindowRect(Rect screenRect)
-        {
-            return MakeDefaultWindowRect(screenRect, TextAlignment.Right);
         }
 
         /// <inheritdoc />

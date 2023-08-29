@@ -109,7 +109,9 @@
     <Compile Include="Windows\Clipboard\ClipboardWindow.cs" />
     <Compile Include="Windows\Inspector\Entries\Contents\EventCacheEntry.cs" />
     <Compile Include="Utils\OrderedSet.cs" />
-    <Compile Include="Windows\WindowManager.cs" />
+    <Compile Include="ScreenPartition.cs" />
+    <Compile Include="Windows\Taskbar.cs" />
+    <Compile Include="WindowManager.cs" />
     <Compile Include="Windows\Profiler\ProfilerWindow.cs" />
     <Compile Include="Utils\Abstractions\UnityInput.cs" />
     <Compile Include="Utils\Abstractions\DnSpyHelper.cs" />

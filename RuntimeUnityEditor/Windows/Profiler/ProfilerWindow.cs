@@ -55,13 +55,9 @@ namespace RuntimeUnityEditor.Core.Profiler
             Title = "Profiler";
             MinimumSize = new Vector2(570, 170);
             Enabled = false;
+            DefaultScreenPosition = ScreenPartition.CenterUpper;
 
             RuntimeUnityEditorCore.PluginObject.StartCoroutine(FrameEndCo());
-        }
-
-        protected override Rect GetDefaultWindowRect(Rect screenRect)
-        {
-            return MakeDefaultWindowRect(screenRect, TextAlignment.Center);
         }
 
         protected override void DrawContents()

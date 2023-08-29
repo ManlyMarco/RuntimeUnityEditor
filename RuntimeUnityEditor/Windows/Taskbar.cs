@@ -11,7 +11,7 @@ namespace RuntimeUnityEditor.Core
     /// Taskbar with controls for all of the RUE features.
     /// Avoid using this class directly, new features can be added with <see cref="RuntimeUnityEditorCore.AddFeature"/> instead.
     /// </summary>
-    public class WindowManager : IFeature
+    public class Taskbar : IFeature
     {
         private int _windowId;
         private Rect _windowRect;
@@ -21,7 +21,7 @@ namespace RuntimeUnityEditor.Core
         /// <summary>
         /// Current instance.
         /// </summary>
-        public static WindowManager Instance { get; private set; }
+        public static Taskbar Instance { get; private set; }
 
 #pragma warning disable CS0618
         /// <summary>
@@ -38,7 +38,7 @@ namespace RuntimeUnityEditor.Core
         /// Do not create additional instances or things will break.
         /// This has to be public or things will break.
         /// </summary>
-        public WindowManager()
+        public Taskbar()
         {
             Instance = this;
         }
@@ -86,7 +86,7 @@ namespace RuntimeUnityEditor.Core
                         if (GUILayout.Button("Reset"))
                         {
                             foreach (var window in _orderedFeatures.OfType<IWindow>())
-                                window.ResetWindowRect();
+                                WindowManager.ResetWindowRect(window);
                         }
                         firstFeature = false;
                         GUI.color = Color.white;
