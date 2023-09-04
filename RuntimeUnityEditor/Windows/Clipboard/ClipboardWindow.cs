@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using RuntimeUnityEditor.Core.Inspector;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.Utils;
@@ -21,6 +22,11 @@ namespace RuntimeUnityEditor.Core.Clipboard
         public static readonly List<object> Contents = new List<object>();
         private Vector2 _scrollPos;
 
+        private string _pasteModeCurrentValueString;
+        private MemberInfo _pasteModeMemberInfo;
+        private object _pasteModeOwnerInstance;
+        public bool InPasteMode => _pasteModeMemberInfo != null;
+
         protected override void Initialize(InitSettings initSettings)
         {
             Title = "Clipboard";
@@ -32,8 +38,12 @@ namespace RuntimeUnityEditor.Core.Clipboard
         {
             _scrollPos = GUILayout.BeginScrollView(_scrollPos, false, true);
 
+            var inPasteMode = InPasteMode;
+
             if (Contents.Count == 0)
             {
+                if (inPasteMode) ExitPasteMode();
+
                 GUILayout.BeginVertical();
                 {
                     GUILayout.FlexibleSpace();
@@ -49,6 +59,14 @@ namespace RuntimeUnityEditor.Core.Clipboard
                 // Draw clipboard items
                 GUILayout.BeginVertical();
                 {
+                    if (inPasteMode)
+                    {
+                        GUILayout.BeginHorizontal();
+                        GUILayout.Label($"Select which value to paste into {_pasteModeMemberInfo.GetFancyDescription()}  (current value: {_pasteModeCurrentValueString ?? "NULL"})");
+                        if (GUILayout.Button("Cancel")) ExitPasteMode();
+                        GUILayout.EndHorizontal();
+                    }
+
                     const int widthIndex = 35;
                     const int widthName = 70;
 
@@ -66,13 +84,23 @@ namespace RuntimeUnityEditor.Core.Clipboard
                         {
                             var content = Contents[index];
 
-                            if (GUILayout.Button(index.ToString(), GUI.skin.label, GUILayout.Width(widthIndex), GUILayout.ExpandWidth(false)) && IMGUIUtils.IsMouseRightClick())
-                                ContextMenu.Instance.Show(content, null);
+                            if (inPasteMode)
+                            {
+                                if (GUILayout.Button("Paste", GUILayout.Width(widthIndex), GUILayout.ExpandWidth(false)))
+                                {
+                                    DoPaste(content);
+                                }
+                            }
+                            else
+                            {
+                                if (GUILayout.Button(index.ToString(), GUI.skin.label, GUILayout.Width(widthIndex), GUILayout.ExpandWidth(false)) && IMGUIUtils.IsMouseRightClick())
+                                    ContextMenu.Instance.Show(content, null, null);
+                            }
 
                             var type = content?.GetType();
 
                             if (GUILayout.Button(type?.Name ?? "NULL", GUI.skin.label, GUILayout.Width(widthName), GUILayout.ExpandWidth(false)) && IMGUIUtils.IsMouseRightClick())
-                                ContextMenu.Instance.Show(content, null);
+                                ContextMenu.Instance.Show(content, null, null);
 
                             var prevEnabled = GUI.enabled;
                             GUI.enabled = type != null && typeof(IConvertible).IsAssignableFrom(type);
@@ -102,6 +130,64 @@ namespace RuntimeUnityEditor.Core.Clipboard
             }
 
             GUILayout.EndScrollView();
+        }
+
+        private void DoPaste(object content)
+        {
+            switch (_pasteModeMemberInfo)
+            {
+                case PropertyInfo propertyInfo:
+                    propertyInfo.SetValue(_pasteModeOwnerInstance, content, null);
+                    break;
+                case FieldInfo fieldInfo:
+                    fieldInfo.SetValue(_pasteModeOwnerInstance, content);
+                    break;
+            }
+
+            ExitPasteMode();
+        }
+
+        public void EnterPasteMode(object currentValue, MemberInfo memberInfo, object ownerInstance)
+        {
+            if (Contents.Count == 0 || memberInfo == null)
+            {
+                ExitPasteMode();
+                return;
+            }
+
+            switch (memberInfo)
+            {
+                case PropertyInfo propertyInfo:
+                    if (!propertyInfo.CanWrite)
+                    {
+                        ExitPasteMode();
+                        return;
+                    }
+
+                    break;
+                case FieldInfo fieldInfo:
+                    if (fieldInfo.IsLiteral)
+                    {
+                        ExitPasteMode();
+                        return;
+                    }
+
+                    break;
+                default:
+                    ExitPasteMode();
+                    return;
+            }
+
+            _pasteModeCurrentValueString = currentValue?.ToString() ?? "NULL";
+            _pasteModeMemberInfo = memberInfo;
+            _pasteModeOwnerInstance = ownerInstance;
+        }
+
+        public void ExitPasteMode()
+        {
+            _pasteModeCurrentValueString = null;
+            _pasteModeMemberInfo = null;
+            _pasteModeOwnerInstance = null;
         }
     }
 }

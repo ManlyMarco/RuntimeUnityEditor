@@ -211,11 +211,11 @@ namespace RuntimeUnityEditor.Core.Inspector
             {
                 _fieldCache.AddRange(type.GetAllFields(true)
                     .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
-                    .Select(f => new FieldCacheEntry(null, f, type)).Cast<ICacheEntry>());
+                    .Select(f => new FieldCacheEntry(null, f, type, null)).Cast<ICacheEntry>());
 
                 _fieldCache.AddRange(type.GetAllProperties(true)
                     .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
-                    .Select(p => new PropertyCacheEntry(null, p, type)).Cast<ICacheEntry>());
+                    .Select(p => new PropertyCacheEntry(null, p, type, null)).Cast<ICacheEntry>());
 
                 _fieldCache.AddRange(type.GetAllEvents(true)
                     .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))

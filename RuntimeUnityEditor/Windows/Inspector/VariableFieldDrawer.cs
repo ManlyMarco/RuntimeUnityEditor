@@ -401,7 +401,7 @@ namespace RuntimeUnityEditor.Core.Inspector
         private static void DrawMethodInvokeField(MethodCacheEntry method)
         {
             if (GUILayout.Button(_buttonInvokeContent, GUILayout.ExpandWidth(false)))
-                ShowInvokeWindow(method.MethodInfo, method.Instance);
+                ShowInvokeWindow(method.MethodInfo, method.OwnerInstance);
 
             GUILayout.Label(method.ParameterString, GUILayout.ExpandWidth(true));
         }
@@ -411,15 +411,15 @@ namespace RuntimeUnityEditor.Core.Inspector
 
             GUILayout.Label("Invoke event method: ", GUILayout.ExpandWidth(false));
             if (GUILayout.Button("Add", GUILayout.ExpandWidth(false)))
-                ShowInvokeWindow(eventInfo.GetAddMethod(true), @event.Instance);
+                ShowInvokeWindow(eventInfo.GetAddMethod(true), @event.OwnerInstance);
 
             if (GUILayout.Button("Remove", GUILayout.ExpandWidth(false)))
-                ShowInvokeWindow(eventInfo.GetRemoveMethod(true), @event.Instance);
+                ShowInvokeWindow(eventInfo.GetRemoveMethod(true), @event.OwnerInstance);
 
             // Raise method is always null in C# assemblies, but exists if assembly was compiled from VB.NET, F# or C++/CLI
             var raiseMethod = eventInfo.GetRaiseMethod(true);
             if (raiseMethod != null && GUILayout.Button("Raise", GUILayout.ExpandWidth(false)))
-                ShowInvokeWindow(raiseMethod, @event.Instance);
+                ShowInvokeWindow(raiseMethod, @event.OwnerInstance);
 
             var backingDelegate = (Delegate)@event.GetValue();
             if (backingDelegate != null)

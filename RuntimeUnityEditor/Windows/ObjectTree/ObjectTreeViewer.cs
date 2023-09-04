@@ -175,7 +175,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                         {
                             if (IMGUIUtils.IsMouseRightClick())
                             {
-                                ContextMenu.Instance.Show(go, null);
+                                ContextMenu.Instance.Show(go, null, null);
                             }
                             else
                             {
@@ -360,7 +360,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 {
                     if (IMGUIUtils.IsMouseRightClick())
                     {
-                        ContextMenu.Instance.Show(component, null);
+                        ContextMenu.Instance.Show(component, null, null);
                     }
                     else
                     {

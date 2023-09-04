@@ -25,6 +25,10 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         /// </summary>
         Type Owner { get; }
         /// <summary>
+        /// Instance of type that owns this member.
+        /// </summary>
+        object OwnerInstance { get; }
+        /// <summary>
         /// Get object that is entered when variable name is clicked in inspector
         /// </summary>
         object EnterValue();

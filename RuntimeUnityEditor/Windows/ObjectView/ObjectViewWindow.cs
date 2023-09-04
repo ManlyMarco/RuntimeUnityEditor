@@ -83,7 +83,7 @@ namespace RuntimeUnityEditor.Core.ObjectView
             {
                 GUILayout.BeginHorizontal();
                 {
-                    ContextMenu.Instance.DrawContextButton(_objToDisplay, null);
+                    ContextMenu.Instance.DrawContextButton(_objToDisplay, null, null);
                 }
                 GUILayout.EndHorizontal();
 

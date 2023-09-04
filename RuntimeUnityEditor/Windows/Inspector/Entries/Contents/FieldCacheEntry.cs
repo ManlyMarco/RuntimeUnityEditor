@@ -6,8 +6,8 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
 {
     public class FieldCacheEntry : CacheEntryBase
     {
-        public FieldCacheEntry(object ins, FieldInfo f, Type owner) : this(ins, f, owner, null) { }
-        public FieldCacheEntry(object ins, FieldInfo f, Type owner, ICacheEntry parent) : base(GetMemberName(ins, f), f.GetFancyDescription(), owner)
+        public FieldCacheEntry(object ins, FieldInfo f, Type owner, object ownerInstance) : this(ins, f, owner, ownerInstance, null) { }
+        public FieldCacheEntry(object ins, FieldInfo f, Type owner, object ownerInstance, ICacheEntry parent) : base(GetMemberName(ins, f), f.GetFancyDescription(), owner, ownerInstance)
         {
             _instance = ins;
             FieldInfo = f ?? throw new ArgumentNullException(nameof(f));

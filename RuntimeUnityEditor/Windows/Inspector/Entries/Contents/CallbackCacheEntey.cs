@@ -7,7 +7,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         private readonly string _message;
         private readonly Action _callback;
 
-        public CallbackCacheEntry(string name, string message, Action callback) : base(name, "RUE Callback / Feature")
+        public CallbackCacheEntry(string name, string message, Action callback) : base(name, "RUE Callback / Feature", null, null)
         {
             _message = message;
             _callback = callback ?? throw new ArgumentNullException(nameof(callback));
@@ -50,7 +50,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         private readonly string _message;
         private readonly Func<T> _callback;
 
-        public CallbackCacheEntry(string name, string message, Func<T> callback) : base(name, "RUE Callback / Feature")
+        public CallbackCacheEntry(string name, string message, Func<T> callback) : base(name, "RUE Callback / Feature", null, null)
         {
             _message = message;
             _callback = callback ?? throw new ArgumentNullException(nameof(callback));

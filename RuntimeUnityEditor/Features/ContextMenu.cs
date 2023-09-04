@@ -22,6 +22,7 @@ namespace RuntimeUnityEditor.Core
     {
         private object _obj;
         private MemberInfo _objMemberInfo;
+        private object _objMemberInstance;
         private string _objName;
 
         private Rect _windowRect;
@@ -79,6 +80,10 @@ namespace RuntimeUnityEditor.Core
                 {
                     if (Clipboard.ClipboardWindow.Contents.LastOrDefault() != o)
                         Clipboard.ClipboardWindow.Contents.Add(o);
+                }),
+                new MenuEntry("Paste from clipboard", o => _objMemberInfo != null && Clipboard.ClipboardWindow.Initialized && Clipboard.ClipboardWindow.Contents.Any(), o =>
+                {
+                    Clipboard.ClipboardWindow.Instance.EnterPasteMode(o, _objMemberInfo, _objMemberInstance);
                 }),
                 //todo Paste from clipboard, kind of difficult
 
@@ -164,10 +169,11 @@ namespace RuntimeUnityEditor.Core
         /// </summary>
         /// <param name="obj">Object to show the menu for. Set to null to hide the menu.</param>
         /// <param name="objMemberInfo">MemberInfo of wherever the object came from. Can be null.</param>
-        public void Show(object obj, MemberInfo objMemberInfo)
+        /// <param name="objMemberInstance">Instance of wherever the object came from. Can be null for static.</param>
+        public void Show(object obj, MemberInfo objMemberInfo, object objMemberInstance)
         {
             var m = UnityInput.Current.mousePosition;
-            Show(obj, objMemberInfo, new Vector2(m.x, Screen.height - m.y));
+            Show(obj, objMemberInfo, objMemberInstance, new Vector2(m.x, Screen.height - m.y));
         }
 
         /// <summary>
@@ -175,8 +181,9 @@ namespace RuntimeUnityEditor.Core
         /// </summary>
         /// <param name="obj">Object to show the menu for. Set to null to hide the menu.</param>
         /// <param name="objMemberInfo">MemberInfo of wherever the object came from. Can be null.</param>
+        /// <param name="objMemberInstance">Instance of wherever the object came from. Can be null for static.</param>
         /// <param name="clickPoint">Screen position to show the menu at.</param>
-        public void Show(object obj, MemberInfo objMemberInfo, Vector2 clickPoint)
+        public void Show(object obj, MemberInfo objMemberInfo, object objMemberInstance, Vector2 clickPoint)
         {
             _windowRect = new Rect(clickPoint, new Vector2(100, 100));
 
@@ -184,6 +191,7 @@ namespace RuntimeUnityEditor.Core
             {
                 _obj = obj;
                 _objMemberInfo = objMemberInfo;
+                _objMemberInstance = objMemberInstance;
                 _objName = objMemberInfo != null ? $"{objMemberInfo.DeclaringType?.Name}.{objMemberInfo.Name}" : obj.GetType().FullDescription();
 
                 _currentContents = MenuContents.Where(x => x.IsVisible(_obj)).ToList();
@@ -203,10 +211,10 @@ namespace RuntimeUnityEditor.Core
         /// <summary>
         /// Draw a GUILayout button that opens the context menu when clicked. It's only shown if the object is not null.
         /// </summary>
-        public void DrawContextButton(object obj, MemberInfo objMemberInfo)
+        public void DrawContextButton(object obj, MemberInfo objMemberInfo, object objMemberInstance)
         {
             if (obj != null && GUILayout.Button("...", GUILayout.ExpandWidth(false)))
-                Show(obj, objMemberInfo);
+                Show(obj, objMemberInfo, objMemberInstance);
         }
 
         /// <inheritdoc />
