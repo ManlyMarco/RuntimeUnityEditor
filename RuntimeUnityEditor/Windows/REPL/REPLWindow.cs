@@ -106,6 +106,15 @@ namespace RuntimeUnityEditor.Core.REPL
             catch (Exception ex)
             {
                 RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "Failed to initialize REPL environment - " + ex.Message);
+                try
+                {
+                    RuntimeUnityEditorCore.Instance.RemoveFeature(this);
+                    _evaluator.Dispose();
+                }
+                catch (Exception e)
+                {
+                    RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, e);
+                }
             }
         }
 
