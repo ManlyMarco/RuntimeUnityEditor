@@ -127,7 +127,7 @@ namespace RuntimeUnityEditor.Core.Utils
             return name;
         }
 
-        internal static string IsNullOrDestroyed(this object value)
+        internal static string IsNullOrDestroyedStr(this object value)
         {
             if (ReferenceEquals(value, null)) return "NULL";
 
@@ -138,6 +138,19 @@ namespace RuntimeUnityEditor.Core.Utils
             }
 
             return null;
+        }
+
+        internal static bool IsNullOrDestroyed(this object value)
+        {
+            if (ReferenceEquals(value, null)) return true;
+
+            if (value is UnityEngine.Object uobj)
+            {
+                // This is necessary because the is operator ignores the == override that makes Objects look like null
+                if (uobj.Equals(null)) return true;
+            }
+
+            return false;
         }
 
         public static void FillTexture(this Texture2D tex, Color color)

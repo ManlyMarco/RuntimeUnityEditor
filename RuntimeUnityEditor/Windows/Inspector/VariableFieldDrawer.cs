@@ -352,7 +352,7 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         private static void DrawSprite(Sprite spr, string objectName)
         {
-            var isNullOrDestroyed = spr.IsNullOrDestroyed();
+            var isNullOrDestroyed = spr.IsNullOrDestroyedStr();
             if (isNullOrDestroyed != null)
             {
                 GUILayout.Label(isNullOrDestroyed);

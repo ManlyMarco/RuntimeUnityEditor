@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using RuntimeUnityEditor.Core.ChangeHistory;
 using RuntimeUnityEditor.Core.REPL.MCS;
 using RuntimeUnityEditor.Core.Utils;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
@@ -512,6 +513,8 @@ namespace RuntimeUnityEditor.Core.REPL
             if (_history.Count > HistoryLimit)
                 _history.RemoveRange(0, _history.Count - HistoryLimit);
             _historyPosition = 0;
+
+            Change.Report("(REPL)::" + _inputField);
 
             if (_inputField.Contains("geti()"))
             {

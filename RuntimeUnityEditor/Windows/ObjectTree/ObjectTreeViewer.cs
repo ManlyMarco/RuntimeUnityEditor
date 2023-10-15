@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using RuntimeUnityEditor.Core.ChangeHistory;
 using RuntimeUnityEditor.Core.Inspector;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.ObjectView;
@@ -34,10 +35,10 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
         private RootGameObjectSearcher _gameObjectSearcher;
         private readonly Dictionary<Image, Texture2D> _imagePreviewCache = new Dictionary<Image, Texture2D>();
-        private readonly GUILayoutOption _drawVector3FieldWidth = GUILayout.Width(38);
-        private readonly GUILayoutOption _drawVector3FieldHeight = GUILayout.Height(19);
-        private readonly GUILayoutOption _drawVector3SliderHeight = GUILayout.Height(10);
-        private readonly GUILayoutOption _drawVector3SliderWidth = GUILayout.Width(33);
+        private static readonly GUILayoutOption _drawVector3FieldWidth = GUILayout.Width(38);
+        private static readonly GUILayoutOption _drawVector3FieldHeight = GUILayout.Height(19);
+        private static readonly GUILayoutOption _drawVector3SliderHeight = GUILayout.Height(10);
+        private static readonly GUILayoutOption _drawVector3SliderWidth = GUILayout.Width(33);
 
         /// <summary>
         /// Invoked whenever a new Transform is selected in the tree.
@@ -273,20 +274,24 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         {
             GUILayout.BeginVertical(GUI.skin.box);
             {
-                var fullTransfromPath = SelectedTransform.GetFullTransfromPath();
+                var transform = SelectedTransform;
+                var fullTransfromPath = transform.GetFullTransfromPath();
 
                 GUILayout.TextArea(fullTransfromPath, GUI.skin.label);
 
                 GUILayout.BeginHorizontal();
                 {
-                    var selectedGameObject = SelectedTransform.gameObject;
+                    var selectedGameObject = transform.gameObject;
                     GUILayout.Label($"Layer {selectedGameObject.layer} ({LayerMask.LayerToName(selectedGameObject.layer)})");
 
                     GUILayout.Space(8);
 
                     GUILayout.Toggle(selectedGameObject.isStatic, "isStatic");
 
-                    selectedGameObject.SetActive(GUILayout.Toggle(selectedGameObject.activeSelf, "Active", GUILayout.ExpandWidth(false)));
+                    GUI.changed = false;
+                    var newVal = GUILayout.Toggle(selectedGameObject.activeSelf, "Active", GUILayout.ExpandWidth(false));
+                    if (GUI.changed)
+                        Change.Action($"{{0}}.SetActive({newVal});", selectedGameObject, o => o.SetActive(newVal), o => o.SetActive(!newVal));
 
                     GUILayout.FlexibleSpace();
 
@@ -294,29 +299,29 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                         OnInspectorOpen(new InstanceStackEntry(selectedGameObject, selectedGameObject.name));
 
                     if (GUILayout.Button("X"))
-                        Object.Destroy(selectedGameObject);
+                        Change.Action("Object.Destroy({0})", selectedGameObject, Object.Destroy);
                 }
                 GUILayout.EndHorizontal();
 
-                DrawVector3(nameof(Transform.position), vector3 => SelectedTransform.position = vector3, () => SelectedTransform.position, -5, 5);
-                DrawVector3(nameof(Transform.localPosition), vector3 => SelectedTransform.localPosition = vector3, () => SelectedTransform.localPosition, -5, 5);
-                DrawVector3(nameof(Transform.lossyScale), vector3 => SelectedTransform.SetLossyScale(vector3), () => SelectedTransform.lossyScale, 0.00001f, 5);
-                DrawVector3(nameof(Transform.localScale), vector3 => SelectedTransform.localScale = vector3, () => SelectedTransform.localScale, 0.00001f, 5);
-                DrawVector3(nameof(Transform.eulerAngles), vector3 => SelectedTransform.eulerAngles = vector3, () => SelectedTransform.eulerAngles, 0, 360);
-                DrawVector3(nameof(Transform.localEulerAngles), vector3 => SelectedTransform.localEulerAngles = vector3, () => SelectedTransform.localEulerAngles, 0, 360);
+                DrawVector3(nameof(Transform.position), transform, (t, v) => t.position = v, t => t.position, -5, 5);
+                DrawVector3(nameof(Transform.localPosition), transform, (t, v) => t.localPosition = v, t => t.localPosition, -5, 5);
+                DrawVector3(nameof(Transform.lossyScale), transform, (t, v) => t.SetLossyScale(v), t => t.lossyScale, 0.00001f, 5);
+                DrawVector3(nameof(Transform.localScale), transform, (t, v) => t.localScale = v, t => t.localScale, 0.00001f, 5);
+                DrawVector3(nameof(Transform.eulerAngles), transform, (t, v) => t.eulerAngles = v, t => t.eulerAngles, 0, 360);
+                DrawVector3(nameof(Transform.localEulerAngles), transform, (t, v) => t.localEulerAngles = v, t => t.localEulerAngles, 0, 360);
             }
             GUILayout.EndVertical();
         }
 
-        private void DrawVector3(string name, Action<Vector3> set, Func<Vector3> get, float minVal, float maxVal)
+        private static void DrawVector3(string memberName, Transform transform, Action<Transform, Vector3> set, Func<Transform, Vector3> get, float minVal, float maxVal)
         {
-            var v3 = get();
+            var v3 = get(transform);
             var v3New = v3;
 
             GUI.changed = false;
             GUILayout.BeginHorizontal();
             {
-                GUILayout.Label(name, GUILayout.ExpandWidth(true), _drawVector3FieldHeight);
+                GUILayout.Label(memberName, GUILayout.ExpandWidth(true), _drawVector3FieldHeight);
                 v3New.x = GUILayout.HorizontalSlider(v3.x, minVal, maxVal, _drawVector3SliderWidth, _drawVector3SliderHeight);
                 float.TryParse(GUILayout.TextField(v3New.x.ToString("F2", CultureInfo.InvariantCulture), _drawVector3FieldWidth, _drawVector3FieldHeight), NumberStyles.Any, CultureInfo.InvariantCulture, out v3New.x);
                 v3New.y = GUILayout.HorizontalSlider(v3.y, minVal, maxVal, _drawVector3SliderWidth, _drawVector3SliderHeight);
@@ -326,18 +331,18 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             }
             GUILayout.EndHorizontal();
 
-            if (GUI.changed && v3 != v3New) set(v3New);
+            if (GUI.changed && v3 != v3New) Change.WithUndo($"{{0}}.{memberName} = {{1}}", transform, v3New, set, oldValue: v3);
         }
 
-        private void DrawVector2(string name, Action<Vector2> set, Func<Vector2> get, float minVal, float maxVal)
+        private static void DrawVector2(string memberName, Transform transform, Action<Transform, Vector2> set, Func<Transform, Vector2> get, float minVal, float maxVal)
         {
-            var vector2 = get();
+            var vector2 = get(transform);
             var vector2New = vector2;
 
             GUI.changed = false;
             GUILayout.BeginHorizontal();
             {
-                GUILayout.Label(name, GUILayout.ExpandWidth(true), _drawVector3FieldHeight);
+                GUILayout.Label(memberName, GUILayout.ExpandWidth(true), _drawVector3FieldHeight);
                 vector2New.x = GUILayout.HorizontalSlider(vector2.x, minVal, maxVal, _drawVector3SliderWidth, _drawVector3SliderHeight);
                 float.TryParse(GUILayout.TextField(vector2New.x.ToString("F2", CultureInfo.InvariantCulture), _drawVector3FieldWidth, _drawVector3FieldHeight), NumberStyles.Any, CultureInfo.InvariantCulture, out vector2New.x);
                 vector2New.y = GUILayout.HorizontalSlider(vector2.y, minVal, maxVal, _drawVector3SliderWidth, _drawVector3SliderHeight);
@@ -345,7 +350,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             }
             GUILayout.EndHorizontal();
 
-            if (GUI.changed && vector2 != vector2New) set(vector2New);
+            if (GUI.changed && vector2 != vector2New) Change.WithUndo($"{{0}}.{memberName} = {{1}}", transform, vector2New, set, oldValue: vector2);
         }
 
         private void DrawSingleComponent(Component component)
@@ -353,7 +358,12 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             GUILayout.BeginHorizontal(GUI.skin.box);
             {
                 if (component is Behaviour bh)
-                    bh.enabled = GUILayout.Toggle(bh.enabled, "", GUILayout.ExpandWidth(false));
+                {
+                    GUI.changed = false;
+                    var enabledNew = GUILayout.Toggle(bh.enabled, "", GUILayout.ExpandWidth(false));
+                    if (GUI.changed)
+                        Change.MemberAssignment(bh, enabledNew, b => b.enabled);
+                }
 
                 var type = component.GetType();
                 if (GUILayout.Button(new GUIContent(type.Name, $"{component}\n\nFull type: {type.GetFancyDescription()}\n\nLeft click to open in Inspector\nRight click to for more options"), GUI.skin.label))
@@ -488,11 +498,11 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                     case RectTransform rt:
                         GUILayout.BeginVertical();
                         {
-                            DrawVector2(nameof(RectTransform.anchorMin), vector2 => rt.anchorMin = vector2, () => rt.anchorMin, 0, 1);
-                            DrawVector2(nameof(RectTransform.anchorMax), vector2 => rt.anchorMax = vector2, () => rt.anchorMax, 0, 1);
-                            DrawVector2(nameof(RectTransform.offsetMin), vector2 => rt.offsetMin = vector2, () => rt.offsetMin, -1000, 1000);
-                            DrawVector2(nameof(RectTransform.offsetMax), vector2 => rt.offsetMax = vector2, () => rt.offsetMax, -1000, 1000);
-                            DrawVector2(nameof(RectTransform.sizeDelta), vector2 => rt.sizeDelta = vector2, () => rt.sizeDelta, -1000, 1000);
+                            DrawVector2(nameof(RectTransform.anchorMin), rt, (t, vector2) => ((RectTransform)t).anchorMin = vector2, t => ((RectTransform)t).anchorMin, 0, 1);
+                            DrawVector2(nameof(RectTransform.anchorMax), rt, (t, vector2) => ((RectTransform)t).anchorMax = vector2, t => ((RectTransform)t).anchorMax, 0, 1);
+                            DrawVector2(nameof(RectTransform.offsetMin), rt, (t, vector2) => ((RectTransform)t).offsetMin = vector2, t => ((RectTransform)t).offsetMin, -1000, 1000);
+                            DrawVector2(nameof(RectTransform.offsetMax), rt, (t, vector2) => ((RectTransform)t).offsetMax = vector2, t => ((RectTransform)t).offsetMax, -1000, 1000);
+                            DrawVector2(nameof(RectTransform.sizeDelta), rt, (t, vector2) => ((RectTransform)t).sizeDelta = vector2, t => ((RectTransform)t).sizeDelta, -1000, 1000);
                             GUILayout.Label("rect " + rt.rect);
                         }
                         GUILayout.EndVertical();
