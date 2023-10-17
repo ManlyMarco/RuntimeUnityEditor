@@ -3,8 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text;
+using HarmonyLib;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace RuntimeUnityEditor.Core.Utils
 {
@@ -131,7 +134,7 @@ namespace RuntimeUnityEditor.Core.Utils
         {
             if (ReferenceEquals(value, null)) return "NULL";
 
-            if (value is UnityEngine.Object uobj)
+            if (value is Object uobj)
             {
                 // This is necessary because the is operator ignores the == override that makes Objects look like null
                 if (uobj.Equals(null)) return "NULL (Destroyed)";
@@ -144,7 +147,7 @@ namespace RuntimeUnityEditor.Core.Utils
         {
             if (ReferenceEquals(value, null)) return true;
 
-            if (value is UnityEngine.Object uobj)
+            if (value is Object uobj)
             {
                 // This is necessary because the is operator ignores the == override that makes Objects look like null
                 if (uobj.Equals(null)) return true;
@@ -203,6 +206,16 @@ namespace RuntimeUnityEditor.Core.Utils
             targetTransform.localScale = new Vector3(targetTransform.localScale.x * (lossyScale.x / targetTransform.lossyScale.x),
                                                      targetTransform.localScale.y * (lossyScale.y / targetTransform.lossyScale.y),
                                                      targetTransform.localScale.z * (lossyScale.z / targetTransform.lossyScale.z));
+        }
+        
+        public static string NameWithGenerics(this MethodBase member)
+        {
+            if (member == null)
+                return "null";
+            StringBuilder stringBuilder = new StringBuilder();
+            string str = member.GetParameters().Join(p => p.ParameterType.FullDescription() + " " + p.Name);
+            stringBuilder.Append(member.Name + "(" + str + ")");
+            return stringBuilder.ToString();
         }
     }
 }
