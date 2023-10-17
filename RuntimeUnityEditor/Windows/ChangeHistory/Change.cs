@@ -15,23 +15,27 @@ namespace RuntimeUnityEditor.Core.ChangeHistory
         public static IChange MemberAssignment<TObj, TVal>(TObj target, TVal newValue, Expression<Func<TObj, TVal>> memberSelector)
         {
             if (memberSelector.Body is MemberExpression body)
-            {
-                if (body.Member is PropertyInfo pi)
-                {
-                    void PropSet(TObj obj, TVal val) => pi.SetValue(obj, val, null);
-                    var defaultValue = pi.CanRead ? (TVal)pi.GetValue(target, null) : default;
-                    return Do("{0}." + pi.Name + " = {1}", target, newValue, PropSet, pi.CanRead ? PropSet : (Action<TObj, TVal>)null, defaultValue);
-                }
+                return MemberAssignment(target, newValue, body.Member);
+            throw new ArgumentException("Lambda must be a Property or a Field", nameof(memberSelector));
+        }
 
-                if (body.Member is FieldInfo fi)
-                {
-                    void FieldSet(TObj obj, TVal val) => fi.SetValue(obj, val);
-                    var defaultValue = (TVal)fi.GetValue(target);
-                    return Do("{0}." + fi.Name + " = {1}", target, newValue, FieldSet, FieldSet, defaultValue);
-                }
+        public static IChange MemberAssignment<TObj, TVal>(TObj target, TVal newValue, MemberInfo member)
+        {
+            if (member is PropertyInfo pi)
+            {
+                void PropSet(TObj obj, TVal val) => pi.SetValue(obj, val, null);
+                var defaultValue = pi.CanRead ? (TVal)pi.GetValue(target, null) : default;
+                return Do("{0}." + pi.Name + " = {1}", target, newValue, PropSet, pi.CanRead ? PropSet : (Action<TObj, TVal>)null, defaultValue);
             }
 
-            throw new ArgumentException("Lambda must be a Property or a Field.");
+            if (member is FieldInfo fi)
+            {
+                void FieldSet(TObj obj, TVal val) => fi.SetValue(obj, val);
+                var defaultValue = (TVal)fi.GetValue(target);
+                return Do("{0}." + fi.Name + " = {1}", target, newValue, FieldSet, FieldSet, defaultValue);
+            }
+
+            throw new ArgumentException("Member must be a Property or a Field", nameof(member));
         }
 
         public static IChange WithoutUndo<TObj, TVal>(string actionNameFormat, TObj target, TVal newValue, Action<TObj, TVal> set)

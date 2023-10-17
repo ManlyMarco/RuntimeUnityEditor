@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using HarmonyLib;
+using RuntimeUnityEditor.Core.ChangeHistory;
 
 namespace RuntimeUnityEditor.Core.Inspector.Entries
 {
@@ -25,7 +26,8 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         {
             if (CanSetValue())
             {
-                _list[_index] = newValue;
+                var oldValue = _list[_index];
+                Change.WithUndo($"{{0}}[{_index}] = {{1}}", _list, newValue, (list, o) => list[_index] = o, oldValue: oldValue);
                 _type = null;
                 return true;
             }
