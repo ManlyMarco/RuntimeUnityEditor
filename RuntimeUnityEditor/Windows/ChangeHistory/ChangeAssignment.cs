@@ -2,7 +2,7 @@
 
 namespace RuntimeUnityEditor.Core.ChangeHistory
 {
-    public class ChangeAssignment<TObj, TVal> : IChange
+    internal class ChangeAssignment<TObj, TVal> : IChange
     {
         public ChangeAssignment(TObj target, TVal newValue, TVal originalValue, Action<TObj, TVal> undoAction, string actionNameFormat)
         {

@@ -2,7 +2,7 @@
 
 namespace RuntimeUnityEditor.Core.ChangeHistory
 {
-    public class ChangeAction<TObj> : IChange
+    internal class ChangeAction<TObj> : IChange
     {
         public ChangeAction(string actionNameFormat, TObj target, Action<TObj> undoAction)
         {

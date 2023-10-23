@@ -8,6 +8,9 @@ using UnityEngine;
 
 namespace RuntimeUnityEditor.Core.ChangeHistory
 {
+    /// <summary>
+    /// UI window that displays a list of changes made to the game by RUE (or more specifically by everything that used the <see cref="T:RuntimeUnityEditor.Core.ChangeHistory.Change" /> API).
+    /// </summary>
     public class ChangeHistoryWindow : Window<ChangeHistoryWindow>
     {
         private static readonly GUIContent _inspectContent = new GUIContent("Insp.", "Inspect target object (the object that contains the changed member, not the changed member itself)");
@@ -17,6 +20,7 @@ namespace RuntimeUnityEditor.Core.ChangeHistory
         private bool _showTimestamps = true;
         private Action<bool> _showTimestampsCallback;
 
+        /// <inheritdoc />
         protected override void Initialize(InitSettings initSettings)
         {
             DisplayName = "History";
@@ -26,6 +30,7 @@ namespace RuntimeUnityEditor.Core.ChangeHistory
             _showTimestampsCallback = initSettings.RegisterSetting("Change History", "Show timestamps in Change History window", _showTimestamps, string.Empty, b => _showTimestamps = b);
         }
 
+        /// <inheritdoc />
         protected override void DrawContents()
         {
             GUILayout.BeginHorizontal(GUI.skin.box);
