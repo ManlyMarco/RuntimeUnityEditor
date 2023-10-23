@@ -71,6 +71,15 @@ namespace RuntimeUnityEditor.Core.Utils
         /// </summary>
         public static void SaveTextureToFileWithDialog(this Texture texture)
         {
+            string filename = null;
+            SaveTextureToFileWithDialog(texture, ref filename);
+        }
+
+        /// <summary>
+        /// Show file save dialog and write PNG version of the texture to selected filename.
+        /// </summary>
+        public static void SaveTextureToFileWithDialog(this Texture texture, ref string filename)
+        {
             const OpenFileDialog.OpenSaveFileDialgueFlags saveFileFlags = OpenFileDialog.OpenSaveFileDialgueFlags.OFN_LONGNAMES |
                                                                           OpenFileDialog.OpenSaveFileDialgueFlags.OFN_EXPLORER |
                                                                           OpenFileDialog.OpenSaveFileDialgueFlags.OFN_OVERWRITEPROMPT;
@@ -79,11 +88,12 @@ namespace RuntimeUnityEditor.Core.Utils
                 var data = texture?.BasedEncodeToPNG();
                 if (data != null)
                 {
-                    var filename = OpenFileDialog.ShowDialog("Export texture to file...", null, ".PNG file|*.png", ".png", saveFileFlags, "export.png");
-                    if (filename != null && filename.Length > 0)
+                    var filenames = OpenFileDialog.ShowDialog("Export texture to file...", filename, ".PNG file|*.png", ".png", saveFileFlags, "export.png");
+                    if (filenames != null && filenames.Length > 0)
                     {
-                        RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, "Writing encoded texture data to file at " + filename[0]);
-                        File.WriteAllBytes(filename[0], data);
+                        filename = filenames[0];
+                        RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, "Writing encoded texture data to file at " + filename);
+                        File.WriteAllBytes(filename, data);
                     }
                 }
                 else
@@ -98,10 +108,20 @@ namespace RuntimeUnityEditor.Core.Utils
                 RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, e.StackTrace);
             }
         }
+
         /// <summary>
         /// Show a file open dialog for .png files and load the selected png file into a new Texture2D.
         /// </summary>
         public static Texture2D LoadTextureFromFileWithDialog()
+        {
+            string filename = null;
+            return LoadTextureFromFileWithDialog(ref filename);
+        }
+
+        /// <summary>
+        /// Show a file open dialog for .png files and load the selected png file into a new Texture2D.
+        /// </summary>
+        public static Texture2D LoadTextureFromFileWithDialog(ref string filename)
         {
             const OpenFileDialog.OpenSaveFileDialgueFlags loadFileFlags = OpenFileDialog.OpenSaveFileDialgueFlags.OFN_LONGNAMES |
                                                                           OpenFileDialog.OpenSaveFileDialgueFlags.OFN_EXPLORER |
@@ -109,12 +129,13 @@ namespace RuntimeUnityEditor.Core.Utils
                                                                           OpenFileDialog.OpenSaveFileDialgueFlags.OFN_READONLY;
             try
             {
-                var filename = OpenFileDialog.ShowDialog("Load texture from file...", null, ".PNG file|*.png", ".png", loadFileFlags, "");
-                if (filename != null && filename.Length > 0)
+                var filenames = OpenFileDialog.ShowDialog("Load texture from file...", filename, ".PNG file|*.png", ".png", loadFileFlags, "");
+                if (filenames != null && filenames.Length > 0)
                 {
-                    RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, "Loading texture data from file at " + filename[0]);
+                    filename = filenames[0];
+                    RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, "Loading texture data from file at " + filename);
                     
-                    var data = File.ReadAllBytes(filename[0]);
+                    var data = File.ReadAllBytes(filename);
                     var tex = new Texture2D(4, 4, TextureFormat.ARGB32, false);
                     
                     try

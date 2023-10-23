@@ -80,7 +80,7 @@ namespace RuntimeUnityEditor.Core.Inspector
             private void CacheAllMembers(InstanceStackEntry entry)
             {
                 _fieldCache.Clear();
-
+                
                 var objectToOpen = entry?.Instance;
                 if (objectToOpen == null) return;
 

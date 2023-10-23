@@ -20,7 +20,7 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         public static string ObjectToString(object value)
         {
-            var isNull = value.IsNullOrDestroyed();
+            var isNull = value.IsNullOrDestroyedStr();
             if (isNull != null) return isNull;
 
             switch (value)
@@ -83,7 +83,7 @@ namespace RuntimeUnityEditor.Core.Inspector
         {
             if (unityAction == null) return "[NULL]";
             string str;
-            var isNull = unityAction.Target.IsNullOrDestroyed();
+            var isNull = unityAction.Target.IsNullOrDestroyedStr();
             if (isNull != null) str = "[" + isNull + "]";
             else str = unityAction.Target.GetType().FullName;
             var actionString = $"{str}.{unityAction.Method.Name}";
@@ -161,7 +161,7 @@ namespace RuntimeUnityEditor.Core.Inspector
             if(value == null && valueType == typeof(string))
                 return "";
 
-            var isNull = value.IsNullOrDestroyed();
+            var isNull = value.IsNullOrDestroyedStr();
             if (isNull != null) return isNull;
 
             var typeConverter = TomlTypeConverter.GetConverter(valueType);
