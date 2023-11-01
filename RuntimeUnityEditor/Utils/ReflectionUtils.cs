@@ -4,7 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using RuntimeUnityEditor.Core.Utils.Abstractions;
+using HarmonyLib;
+using RuntimeUnityEditor.Core.Clipboard;
 using UnityEngine.Events;
 
 namespace RuntimeUnityEditor.Core.Utils
@@ -46,8 +47,8 @@ namespace RuntimeUnityEditor.Core.Utils
                 var name = eventObj.GetPersistentMethodName(i);
                 var target = eventObj.GetPersistentTarget(i);
                 var m = target?.GetType()
-                    .GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
-                    .FirstOrDefault(info => info.Name == name);
+                              .GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
+                              .FirstOrDefault(info => info.Name == name);
                 if (m != null) mList.Add(new KeyValuePair<object, MethodInfo>(target, m));
             }
 
@@ -70,6 +71,13 @@ namespace RuntimeUnityEditor.Core.Utils
             }
 
             return sb.ToString();
+        }
+
+        public static string MethodCallToSourceRepresentation(object instance, MethodBase methodInfo, ICollection<string> parameterStrings)
+        {
+            var generics = methodInfo.GetGenericArguments();
+            var genericsString = generics.Length == 0 ? "" : "<" + string.Join(", ", generics.Select(x => x.FullDescription()).ToArray()) + ">";
+            return $"{instance?.GetType().FullDescription() ?? methodInfo.DeclaringType?.FullDescription() ?? "<Unknown>"}.{methodInfo.Name}{genericsString}({string.Join(", ", Enumerable.ToArray<string>(ClipboardWindow.ResolveMethodParameters(parameterStrings)))})";
         }
     }
 }

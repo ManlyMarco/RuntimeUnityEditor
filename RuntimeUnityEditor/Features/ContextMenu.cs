@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
+using RuntimeUnityEditor.Core.ChangeHistory;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.ObjectTree;
 using RuntimeUnityEditor.Core.ObjectView;
@@ -112,29 +113,35 @@ namespace RuntimeUnityEditor.Core
                                    (o is Renderer r && (r.sharedMaterial ?? r.material) != null && (r.sharedMaterial ?? r.material).mainTexture != null),
                               o =>
                               {
-                                  var newTex = TextureUtils.LoadTextureFromFileWithDialog();
+                                  string filename = "null";
+                                  var newTex = TextureUtils.LoadTextureFromFileWithDialog(ref filename);
 
                                   if (o is Texture2D t)
                                   {
                                       t.LoadRawTextureData(newTex.GetRawTextureData());
                                       t.Apply(true);
                                       UnityEngine.Object.Destroy(newTex);
+                                      Change.Report($"(ContextMenu)::{_objName}.LoadImage(File.ReadAllBytes(\"{filename}\"))");
                                   }
                                   else if (o is Material m)
                                   {
                                       m.mainTexture = newTex;
+                                      Change.Report($"(ContextMenu)::{_objName}.mainTexture = Texture2D.LoadImage(File.ReadAllBytes(\"{filename}\"))");
                                   }
                                   else if (o is Image i && i.material != null)
                                   {
                                       i.material.mainTexture = newTex;
+                                      Change.Report($"(ContextMenu)::{_objName}.mainTexture = Texture2D.LoadImage(File.ReadAllBytes(\"{filename}\"))");
                                   }
                                   else if (o is RawImage ri)
                                   {
                                       ri.texture = newTex;
+                                      Change.Report($"(ContextMenu)::{_objName}.texture = Texture2D.LoadImage(File.ReadAllBytes(\"{filename}\"))");
                                   }
                                   else if (o is Renderer r)
                                   {
                                       (r.sharedMaterial ?? r.material).mainTexture = newTex;
+                                      Change.Report($"(ContextMenu)::{_objName}.mainTexture = Texture2D.LoadImage(File.ReadAllBytes(\"{filename}\"))");
                                   }
                               }),
 
@@ -144,7 +151,7 @@ namespace RuntimeUnityEditor.Core
 
                 new MenuEntry("Dump object to file...", o => true, o => Dumper.DumpToTempFile(o, _objName)),
 
-                new MenuEntry("Destroy", o => o is UnityEngine.Object uo && uo, o => UnityEngine.Object.Destroy(o is Transform t ? t.gameObject : (UnityEngine.Object)o)),
+                new MenuEntry("Destroy", o => o is UnityEngine.Object uo && uo, o => Change.Action("(ContextMenu)::UnityEngine.Object.Destroy({0})", o is Transform t ? t.gameObject : (UnityEngine.Object)o, UnityEngine.Object.Destroy)),
 
                 new MenuEntry(),
 

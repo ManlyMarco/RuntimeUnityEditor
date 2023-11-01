@@ -15,7 +15,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
 
         public override string ToString()
         {
-            var isNull = Object.IsNullOrDestroyed();
+            var isNull = Object.IsNullOrDestroyedStr();
             if (isNull != null) return "[" + isNull + "]";
 
             return Object.ToString();

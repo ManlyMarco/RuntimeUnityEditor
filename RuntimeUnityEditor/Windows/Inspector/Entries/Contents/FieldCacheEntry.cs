@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using RuntimeUnityEditor.Core.ChangeHistory;
 using RuntimeUnityEditor.Core.Utils;
 
 namespace RuntimeUnityEditor.Core.Inspector.Entries
@@ -32,7 +33,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         {
             if (!FieldInfo.IsInitOnly)
             {
-                FieldInfo.SetValue(_instance, newValue);
+                Change.MemberAssignment(_instance, newValue, FieldInfo);
                 // Needed for structs to propagate changes back to the original field/prop
                 if (_parent != null && _parent.CanSetValue()) _parent.SetValue(_instance);
                 return true;

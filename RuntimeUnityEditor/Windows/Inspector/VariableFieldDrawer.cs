@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
+using RuntimeUnityEditor.Core.ChangeHistory;
 using RuntimeUnityEditor.Core.Clipboard;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.UI;
@@ -352,7 +353,7 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         private static void DrawSprite(Sprite spr, string objectName)
         {
-            var isNullOrDestroyed = spr.IsNullOrDestroyed();
+            var isNullOrDestroyed = spr.IsNullOrDestroyedStr();
             if (isNullOrDestroyed != null)
             {
                 GUILayout.Label(isNullOrDestroyed);
@@ -581,7 +582,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                                     try
                                     {
                                         var arg = _currentlyInvokingArgsValues[index];
-                                        typeArgs[index] = arg.StartsWith("#") ? (Type)ClipboardWindow.Contents[int.Parse(arg.Substring(1))] : AccessTools.TypeByName(arg);
+                                        typeArgs[index] = ClipboardWindow.TryGetObject(arg, out var clpboardObj) ? (Type)clpboardObj : AccessTools.TypeByName(arg);
                                     }
                                     catch (Exception e)
                                     {
@@ -600,7 +601,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                                 {
                                     var arg = _currentlyInvokingParamsValues[index];
                                     var param = methodParams[index];
-                                    var obj = arg.StartsWith("#") ? ClipboardWindow.Contents[int.Parse(arg.Substring(1))] : Convert.ChangeType(arg, param.ParameterType);
+                                    var obj = ClipboardWindow.TryGetObject(arg, out var clipboardObj) ? clipboardObj : Convert.ChangeType(arg, param.ParameterType);
                                     paramArgs[index] = obj;
                                 }
                                 catch (Exception e)
@@ -610,6 +611,8 @@ namespace RuntimeUnityEditor.Core.Inspector
                             }
 
                             _currentlyInvokingResult = methodInfo.Invoke(_currentlyInvokingInstance, methodInfo.Name == "DynamicInvoke" ? new object[] { paramArgs } : paramArgs);
+
+                            Change.Report(ReflectionUtils.MethodCallToSourceRepresentation(_currentlyInvokingInstance, methodInfo, _currentlyInvokingParamsValues));
                         }
                         catch (Exception e)
                         {

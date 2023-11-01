@@ -140,7 +140,7 @@ namespace RuntimeUnityEditor.Core
         /// Features that have been successfully initialized so far and are available to the user.
         /// </summary>
         public IEnumerable<IFeature> InitializedFeatures => _initializedFeatures;
-        
+
         /// <summary>
         /// Add a new feature to RuntimeUnityEditor.
         /// Will throw if the feature fails to initialize.
@@ -151,8 +151,18 @@ namespace RuntimeUnityEditor.Core
             Taskbar.Instance.SetFeatures(_initializedFeatures);
         }
 
+        internal bool RemoveFeature(IFeature feature)
+        {
+            if (_initializedFeatures.Remove(feature))
+            {
+                Taskbar.Instance.SetFeatures(_initializedFeatures);
+                return true;
+            }
+            return false;
+        }
+
         #endregion
-        
+
         internal static MonoBehaviour PluginObject => _initSettings.PluginMonoBehaviour;
         internal static ILoggerWrapper Logger => _initSettings.LoggerWrapper;
 

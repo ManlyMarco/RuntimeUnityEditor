@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using RuntimeUnityEditor.Core.Inspector;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.Utils;
@@ -102,6 +103,47 @@ namespace RuntimeUnityEditor.Core.Clipboard
             }
 
             GUILayout.EndScrollView();
+        }
+
+        public static IEnumerable<string> ResolveMethodParameters(IEnumerable<string> parameterStrings)
+        {
+            return parameterStrings.Select(ResolveString);
+        }
+
+        public static string ResolveString(string parameterString)
+        {
+            return TryExtractId(parameterString, out var id) ? Contents[id]?.ToString() ?? "null" : parameterString;
+        }
+
+        private static bool TryExtractId(string parameterString, out int id)
+        {
+            id = 0;
+            return parameterString.Length >= 2 && parameterString.StartsWith("#") && 
+                   int.TryParse(parameterString.Substring(1), out id) && 
+                   Contents.Count > id && id >= 0;
+        }
+
+        public static bool TryGetObject(int id, out object obj)
+        {
+            if (id < 0 || id >= Contents.Count)
+            {
+                obj = null;
+                return false;
+            }
+
+            obj = Contents[id];
+            return true;
+        }
+
+        public static bool TryGetObject(string parameterString, out object obj)
+        {
+            if (!TryExtractId(parameterString, out var id))
+            {
+                obj = null;
+                return false;
+            }
+
+            return TryGetObject(id, out obj);
         }
     }
 }
