@@ -2,8 +2,8 @@
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
+using RuntimeUnityEditor.Bepin5.LogViewer;
 using RuntimeUnityEditor.Core;
-using RuntimeUnityEditor.Core.Clipboard;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
 
