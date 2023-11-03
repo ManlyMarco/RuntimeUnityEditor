@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.Utils;
@@ -56,6 +57,10 @@ namespace RuntimeUnityEditor.Core.Inspector
 
                 return "IS ENUMERABLE";
             }
+
+            var inheritedConverter = _toStringConverters.FirstOrDefault(x => x.Key.IsAssignableFrom(valueType));
+            if (inheritedConverter.Key != null)
+                return inheritedConverter.Value(value);
 
             try
             {
@@ -158,7 +163,7 @@ namespace RuntimeUnityEditor.Core.Inspector
             if (value is string str)
                 return str;
 
-            if(value == null && valueType == typeof(string))
+            if (value == null && valueType == typeof(string))
                 return "";
 
             var isNull = value.IsNullOrDestroyedStr();
