@@ -42,9 +42,14 @@ namespace RuntimeUnityEditor.Core
     public abstract class Window<T> : FeatureBase<T>, IWindow where T : Window<T>
     {
         /// <summary>
-        /// Width of tooltips shown inside windows.
+        /// Default width of tooltips shown inside windows.
         /// </summary>
-        private const int TooltipWidth = 400;
+        protected const int DefaultTooltipWidth = 400;
+
+        /// <summary>
+        /// Width of tooltips shown inside this window.
+        /// </summary>
+        public int TooltipWidth { get; set; } = DefaultTooltipWidth;
 
         // ReSharper disable StaticMemberInGenericType
         private static GUIStyle _tooltipStyle;
@@ -71,7 +76,7 @@ namespace RuntimeUnityEditor.Core
             base.AfterInitialized(initSettings);
             WindowId = base.GetHashCode();
             _confRect = initSettings.RegisterSetting(SettingCategory, DisplayName + " window size", WindowRect, string.Empty, b => WindowRect = b);
-            
+
 #pragma warning disable CS0618
             // Backwards compat with CheatTools
             if (DefaultScreenPosition == ScreenPartition.Default && GetDefaultWindowRect(new Rect(0, 0, 1600, 900)) != default)
@@ -135,7 +140,7 @@ namespace RuntimeUnityEditor.Core
             WindowRect = IMGUIUtils.DragResizeEat(id, WindowRect);
         }
 
-        private static void DrawTooltip(Rect area)
+        private void DrawTooltip(Rect area)
         {
             if (!string.IsNullOrEmpty(GUI.tooltip))
             {
