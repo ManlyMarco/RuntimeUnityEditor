@@ -189,7 +189,7 @@ namespace RuntimeUnityEditor.Core.Profiler
                                 GUILayout.FlexibleSpace();
 
                                 ContextMenu.Instance.DrawContextButton(pd.Owner, pd.Method);
-                                if (DnSpyHelper.IsAvailable && GUILayout.Button("^")) DnSpyHelper.OpenInDnSpy(pd.Method);
+                                DnSpyHelper.DrawDnSpyButtonIfAvailable(pd.Method);
                             }
                             GUILayout.EndHorizontal();
 

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using RuntimeUnityEditor.Core.Inspector.Entries;
+using UnityEngine;
 
 namespace RuntimeUnityEditor.Core.Utils.Abstractions
 {
@@ -136,7 +137,7 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
             // TODO support for generic types
             switch (entry)
             {
-                case MethodInfo m:
+                case MethodBase m:
                     if (m.ToString().Contains(',') || declaringType.FullName.Contains(','))
                         throw new Exception("Unsupported type or method with generic parameters");
                     return $"\"{declaringType.Assembly.Location}\" --select M:{declaringType.FullName}.{m.ToString().Split(new[] { ' ' }, 2).Last()}";
@@ -176,5 +177,12 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
         void IFeature.OnEditorShownChanged(bool visible) { }
         FeatureDisplayType IFeature.DisplayType => FeatureDisplayType.Hidden;
         string IFeature.DisplayName => "DnSpyHelper";
+
+        private static readonly GUIContent _guiContent = new GUIContent("^", "Navigate to this member in dnSpy");
+        internal static void DrawDnSpyButtonIfAvailable(MemberInfo mi, GUIContent customButtonContent = null)
+        {
+            if (IsAvailable && GUILayout.Button(customButtonContent ?? _guiContent, GUILayout.ExpandWidth(false)))
+                OpenInDnSpy(mi);
+        }
     }
 }
