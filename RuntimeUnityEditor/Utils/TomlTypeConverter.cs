@@ -173,7 +173,7 @@ namespace RuntimeUnityEditor.Core.Utils
             if (converter == null) throw new ArgumentNullException(nameof(converter));
             if (CanConvert(type))
             {
-                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "Tried to add a TomlConverter when one already exists for type " + type.FullName);
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "Tried to add a TomlConverter when one already exists for type " + type.GetSourceCodeRepresentation());
                 return false;
             }
 

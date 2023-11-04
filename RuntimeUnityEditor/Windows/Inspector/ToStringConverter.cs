@@ -90,7 +90,7 @@ namespace RuntimeUnityEditor.Core.Inspector
             string str;
             var isNull = unityAction.Target.IsNullOrDestroyedStr();
             if (isNull != null) str = "[" + isNull + "]";
-            else str = unityAction.Target.GetType().FullName;
+            else str = unityAction.Target.GetType().GetSourceCodeRepresentation();
             var actionString = $"{str}.{unityAction.Method.Name}";
             return actionString;
         }
@@ -100,7 +100,7 @@ namespace RuntimeUnityEditor.Core.Inspector
             if (eventObj == null) return "[NULL]";
             if (i < 0 || i >= eventObj.GetPersistentEventCount()) return "[Event index out of range]";
             // It's fine to use ? here because GetType works fine on disposed objects and we want to know the type name
-            return $"{eventObj.GetPersistentTarget(i)?.GetType().FullName ?? "[NULL]"}.{eventObj.GetPersistentMethodName(i)}";
+            return $"{eventObj.GetPersistentTarget(i)?.GetType().GetSourceCodeRepresentation() ?? "[NULL]"}.{eventObj.GetPersistentMethodName(i)}";
         }
 
         private static readonly Dictionary<Type, bool> _canCovertCache = new Dictionary<Type, bool>();

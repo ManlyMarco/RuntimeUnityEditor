@@ -32,7 +32,7 @@ namespace RuntimeUnityEditor.Core.Utils
             var pad1 = new string(' ', 3 * d);
             var pad2 = new string(' ', 3 * (d + 1));
             var pad3 = new string(' ', 3 * (d + 2));
-            sw.WriteLine(pad1 + obj.name + "--" + obj.GetType().FullName);
+            sw.WriteLine(pad1 + obj.name + "--" + obj.GetType().GetSourceCodeRepresentation());
 
             foreach (var c in obj.GetComponents<Component>())
             {

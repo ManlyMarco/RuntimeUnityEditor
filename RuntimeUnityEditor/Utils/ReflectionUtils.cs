@@ -63,7 +63,7 @@ namespace RuntimeUnityEditor.Core.Utils
 
             foreach (var kvp in mList)
             {
-                sb.Append(kvp.Key.GetType().FullName);
+                sb.Append(kvp.Key.GetType().GetSourceCodeRepresentation());
                 // todo make this more powerful somehow, still doesn't show much, maybe with cecil?
                 var locals = kvp.Value.GetMethodBody()?.LocalVariables.Select(x => x.ToString());
                 if (locals != null) sb.Append(" - " + string.Join("; ", locals.ToArray()));

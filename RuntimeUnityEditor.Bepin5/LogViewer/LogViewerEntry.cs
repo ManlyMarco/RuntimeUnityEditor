@@ -45,7 +45,7 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
 
         public string GetClipboardString()
         {
-            return $"{_timeString} {_logLevelString} {_sourceNameString} {_dataString}\n{FilteredStackTraceString}\nSender: {Sender} ({Sender?.GetType().FullName ?? "NULL"})";
+            return $"{_timeString} {_logLevelString} {_sourceNameString} {_dataString}\n{FilteredStackTraceString}\nSender: {Sender} ({Sender?.GetType().GetSourceCodeRepresentation() ?? "NULL"})";
         }
 
         public bool DrawEntry()
@@ -139,7 +139,7 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
                 var frame = frames[i];
                 var m = frame.GetMethod();
                 var mName = m.Name;
-                var typeName = (m.DeclaringType ?? m.ReflectedType)?.FullName ?? "???";
+                var typeName = (m.DeclaringType ?? m.ReflectedType)?.GetSourceCodeRepresentation() ?? "???";
 
                 var first = false;
                 if (!realEncountered)

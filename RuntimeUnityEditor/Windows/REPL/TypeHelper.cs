@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RuntimeUnityEditor.Core.Utils;
+using System;
 using System.Reflection;
 using System.Text;
 
@@ -95,7 +96,7 @@ namespace RuntimeUnityEditor.Core.REPL
         {
             var sb = new StringBuilder();
 
-            sb.AppendLine($"Info about {type.FullName}");
+            sb.AppendLine($"Info about {type.GetSourceCodeRepresentation()}");
             sb.AppendLine("Methods");
 
             foreach (var methodInfo in type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static
@@ -110,7 +111,7 @@ namespace RuntimeUnityEditor.Core.REPL
                     {
                         if (putComma)
                             sb.Append(", ");
-                        sb.Append(genericArgument.FullName);
+                        sb.Append(genericArgument.GetSourceCodeRepresentation());
                         putComma = true;
                     }
 
@@ -124,7 +125,7 @@ namespace RuntimeUnityEditor.Core.REPL
                 {
                     if (putComma)
                         sb.Append(", ");
-                    sb.Append(parameterInfo.ParameterType.FullName);
+                    sb.Append(parameterInfo.ParameterType.GetSourceCodeRepresentation());
                     if (parameterInfo.DefaultValue != DBNull.Value)
                         sb.Append($"= {parameterInfo.DefaultValue}");
                     putComma = true;

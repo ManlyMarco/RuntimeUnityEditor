@@ -126,7 +126,7 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
 
             string GetTrimmedTypeName(ILogSource obj)
             {
-                var fullName = obj?.GetType().FullName ?? "NULL";
+                var fullName = obj?.GetType().GetSourceCodeRepresentation() ?? "NULL";
                 if (fullName.StartsWith("BepInEx.Logging.", StringComparison.Ordinal))
                     fullName = fullName.Substring("BepInEx.Logging.".Length);
                 return fullName;
