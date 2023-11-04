@@ -376,7 +376,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                     {
                         var transform = component.transform;
                         OnInspectorOpen(new InstanceStackEntry(transform, transform.name),
-                                        new InstanceStackEntry(component, type.FullName));
+                                        new InstanceStackEntry(component, type.GetSourceCodeRepresentation()));
                     }
                 }
 
@@ -608,7 +608,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                             .SelectMany(Extensions.GetTypesSafe)
                             .Where(x => x.GetSourceCodeRepresentation().Contains(_searchText, StringComparison.OrdinalIgnoreCase));
 
-                        var stackEntries = matchedTypes.Select(t => new StaticStackEntry(t, t.FullName)).ToList();
+                        var stackEntries = matchedTypes.Select(t => new StaticStackEntry(t, t.GetSourceCodeRepresentation())).ToList();
 
                         if (stackEntries.Count == 0)
                         {

@@ -2,6 +2,7 @@
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
+using RuntimeUnityEditor.Bepin5.LogViewer;
 using RuntimeUnityEditor.Core;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
@@ -31,6 +32,8 @@ namespace RuntimeUnityEditor.Bepin5
             }
 
             Instance = new RuntimeUnityEditorCore(new Bep5InitSettings(this));
+
+            Instance.AddFeature(new LogViewerWindow());
         }
 
         private void Update()

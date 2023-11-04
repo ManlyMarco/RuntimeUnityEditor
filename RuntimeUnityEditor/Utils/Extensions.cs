@@ -207,15 +207,5 @@ namespace RuntimeUnityEditor.Core.Utils
                                                      targetTransform.localScale.y * (lossyScale.y / targetTransform.lossyScale.y),
                                                      targetTransform.localScale.z * (lossyScale.z / targetTransform.lossyScale.z));
         }
-        
-        public static string NameWithGenerics(this MethodBase member)
-        {
-            if (member == null)
-                return "null";
-            StringBuilder stringBuilder = new StringBuilder();
-            string str = member.GetParameters().Join(p => p.ParameterType.FullDescription() + " " + p.Name);
-            stringBuilder.Append(member.Name + "(" + str + ")");
-            return stringBuilder.ToString();
-        }
     }
 }

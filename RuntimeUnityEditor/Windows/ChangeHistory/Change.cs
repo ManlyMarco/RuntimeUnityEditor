@@ -172,7 +172,7 @@ namespace RuntimeUnityEditor.Core.ChangeHistory
         internal static string GetTargetDisplayString(object target)
         {
             if (target is UnityEngine.Object uObj && !uObj)
-                return uObj.GetType().FullName + "(Destroyed)";
+                return uObj.GetType().GetSourceCodeRepresentation() + "(Destroyed)";
 
             switch (target)
             {
@@ -181,7 +181,7 @@ namespace RuntimeUnityEditor.Core.ChangeHistory
                 case GameObject go:
                     return $"({go.transform.GetFullTransfromPath()})::GameObject";
                 case Component c:
-                    return $"({c.transform.GetFullTransfromPath()})::{c.GetType().FullName}";
+                    return $"({c.transform.GetFullTransfromPath()})::{c.GetType().GetSourceCodeRepresentation()}";
                 case string str:
                     return str;
                 default:

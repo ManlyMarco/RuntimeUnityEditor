@@ -77,7 +77,7 @@ namespace RuntimeUnityEditor.Core.Utils.ObjectDumper
             }
 
             var isString = value is string;
-            var typeName = value.GetType().FullName;
+            var typeName = value.GetType().GetSourceCodeRepresentation();
             var stringValue = value.ToString();
             if (value is Exception ex)
                 stringValue = ex.GetType().Name + ": " + ex.Message;
