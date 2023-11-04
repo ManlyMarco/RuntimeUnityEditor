@@ -157,7 +157,9 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
                 GUILayout.EndHorizontal();
                 GUILayout.BeginHorizontal(GUI.skin.box, GUILayout.ExpandWidth(false));
                 {
+                    if (!Capture) GUI.color = Color.red;
                     Capture = GUILayout.Toggle(Capture, new GUIContent("Enable log capture", "Note: This can hurt performance, especially if there is log spam."));
+                    GUI.color = Color.white;
                     CaptureOnStartup = GUILayout.Toggle(CaptureOnStartup, new GUIContent("Enable on game startup", "Warning: This can hurt performance, especially after running for a while!"));
 
                     if (GUILayout.Button("Clear the list"))
@@ -250,7 +252,7 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
             }
             GUILayout.EndScrollView();
 
-            TooltipWidth = Mathf.Max(300, (int)WindowRect.width - 100);
+            TooltipWidth = Mathf.Min(777, Mathf.Max(300, (int)WindowRect.width - 100));
         }
 
         internal void OnLogEvent(object sender, LogEventArgs eventArgs)

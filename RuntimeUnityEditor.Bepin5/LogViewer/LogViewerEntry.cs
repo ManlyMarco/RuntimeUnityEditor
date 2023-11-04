@@ -83,10 +83,24 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
             }
         }
 
+        public bool IsMatch(string searchString, LogLevel logLevelFilter)
+        {
+            return (logLevelFilter & LogEventArgs.Level) != 0
+                   && (string.IsNullOrEmpty(searchString)
+                       || _dataString.text.Contains(searchString, StringComparison.OrdinalIgnoreCase)
+                       || FilteredStackTraceString.Contains(searchString, StringComparison.OrdinalIgnoreCase)
+                       || LogEventArgs.Source.SourceName.Contains(searchString, StringComparison.OrdinalIgnoreCase));
+        }
+
+        #region Parsing
+
+        private const int SkippedStackFrames = 4;
+        private static bool _stacktraceTostringFallback;
+
         public static LogViewerEntry CreateFromLogEventArgs(object sender, LogEventArgs eventArgs)
         {
             string hoverText;
-            var st = new StackTrace(4);
+            var st = new StackTrace(SkippedStackFrames);
             StackFrame[] frames = null;
 
         fallback:
@@ -119,9 +133,7 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
 
             return new LogViewerEntry(sender, eventArgs, frames, hoverText);
         }
-
-        private static bool _stacktraceTostringFallback;
-
+        
         private static string ParseStackTrace(StackTrace st, out StackFrame[] filteredFrames)
         {
             filteredFrames = null;
@@ -160,7 +172,7 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
                 if (first)
                     firstRealIdx = i;
 
-                sb.AppendFormat("[{0}] ", i);
+                sb.AppendFormat("[{0}] ", i + SkippedStackFrames);
                 sb.Append(typeName);
                 sb.Append('.');
                 sb.Append(mName);
@@ -172,6 +184,9 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
             //    sb.AppendLine($"(The stack trace starts at frame {4 + skipped})");
 
             filteredFrames = frames.Skip(firstRealIdx).ToArray();
+
+            if (sb.Length == 0)
+                sb.Append(@"¯\_(ツ)_/¯");
 
             return sb.ToString();
         }
@@ -190,13 +205,6 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
             return string.Empty;
         }
 
-        public bool IsMatch(string searchString, LogLevel logLevelFilter)
-        {
-            return (logLevelFilter & LogEventArgs.Level) != 0
-                   && (string.IsNullOrEmpty(searchString)
-                       || _dataString.text.Contains(searchString, StringComparison.OrdinalIgnoreCase)
-                       || FilteredStackTraceString.Contains(searchString, StringComparison.OrdinalIgnoreCase)
-                       || LogEventArgs.Source.SourceName.Contains(searchString, StringComparison.OrdinalIgnoreCase));
-        }
+        #endregion
     }
 }
