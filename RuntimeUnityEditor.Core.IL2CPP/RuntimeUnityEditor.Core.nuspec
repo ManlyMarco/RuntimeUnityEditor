@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>RuntimeUnityEditor.Core</id>
+    <version>$version$</version>
+    <authors>ManlyMarco</authors>
+    <projectUrl>https://github.com/ManlyMarco/RuntimeUnityEditor</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>In-game inspector and debugging tools for applications made with Unity3D game engine</description>
+    <developmentDependency>true</developmentDependency>
+    <tags></tags>
+  </metadata>
+  <files>
+    <file src="..\install.ps1" target="tools"/>
+  </files>
+</package>

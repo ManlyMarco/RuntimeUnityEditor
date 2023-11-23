@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RuntimeUnityEditor\RuntimeUnityEditor.Core.csproj" />
+    <ProjectReference Include="..\RuntimeUnityEditor.Core.IL2CPP\RuntimeUnityEditor.Core.IL2CPP.csproj" />
   </ItemGroup>
 
   <ItemGroup>
