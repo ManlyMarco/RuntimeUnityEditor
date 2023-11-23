@@ -12,6 +12,7 @@ using System.Runtime.InteropServices;
 [assembly: Guid("a66a97b4-f32f-4748-8332-48f0876f0aac")]
 
 [assembly: InternalsVisibleTo("RuntimeUnityEditor.Bepin5")]
+[assembly: InternalsVisibleTo("RuntimeUnityEditor.Bepin6.IL2CPP")]
 [assembly: InternalsVisibleTo("RuntimeUnityEditor.UMM")]
 
 [assembly: AssemblyVersion(RuntimeUnityEditor.Core.RuntimeUnityEditorCore.Version)]

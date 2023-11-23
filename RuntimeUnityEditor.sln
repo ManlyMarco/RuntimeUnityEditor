@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mcs", "modules\mcs\mcs\mcs.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RuntimeUnityEditor.UMM", "RuntimeUnityEditor.UMM\RuntimeUnityEditor.UMM.csproj", "{BD33CA70-24B9-4E80-908F-3E3A3C264904}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RuntimeUnityEditor.Bepin6.IL2CPP", "RuntimeUnityEditor.Bepin6.IL2CPP\RuntimeUnityEditor.Bepin6.IL2CPP.csproj", "{8227FF38-2BD9-4010-86C8-644F96789A6A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,14 @@ Global
 		{BD33CA70-24B9-4E80-908F-3E3A3C264904}.Release|Any CPU.Build.0 = Release|Any CPU
 		{BD33CA70-24B9-4E80-908F-3E3A3C264904}.Release|x64.ActiveCfg = Release|Any CPU
 		{BD33CA70-24B9-4E80-908F-3E3A3C264904}.Release|x64.Build.0 = Release|Any CPU
+		{8227FF38-2BD9-4010-86C8-644F96789A6A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8227FF38-2BD9-4010-86C8-644F96789A6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8227FF38-2BD9-4010-86C8-644F96789A6A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8227FF38-2BD9-4010-86C8-644F96789A6A}.Debug|x64.Build.0 = Debug|Any CPU
+		{8227FF38-2BD9-4010-86C8-644F96789A6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8227FF38-2BD9-4010-86C8-644F96789A6A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8227FF38-2BD9-4010-86C8-644F96789A6A}.Release|x64.ActiveCfg = Release|Any CPU
+		{8227FF38-2BD9-4010-86C8-644F96789A6A}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
