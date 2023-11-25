@@ -261,35 +261,32 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                     //todo optimize
                     //todo extract into an extension method and use everywhere instead of GetComponents<Component>()
                     //var allTypes = AccessTools.AllAssemblies().SelectMany(x => x.GetTypesSafe()).ToDictionary(x=>x.FullName, x=>x);
-                    var allTypes = AccessTools.AllAssemblies().Where(x=>x.FullName != "InjectedMonoTypes").SelectMany(x => x.GetTypesSafe()).ToList();
-                     //AccessTools.AllAssemblies().Where(x=>x.FullName != "InjectedMonoTypes").SelectMany(x => x.GetTypesSafe()).ToDictionary(x=>x.FullName, x=>x);
+
+
+
+                    //Console.WriteLine("DUPES:\n" + string.Join("\n", allTypes.Where(x => x.Count() > 1).Select(x => x.Key + " ass: " + string.Join(" | ", x.Select(x => x.Assembly.FullName)))));
+                    //AccessTools.AllAssemblies().Where(x=>x.FullName != "InjectedMonoTypes").SelectMany(x => x.GetTypesSafe()).ToDictionary(x=>x.FullName, x=>x);
 
                     foreach (var component in SelectedTransform.GetComponents<Component>())
                     {
                         if (component == null)
                             continue;
 
-                        Console.WriteLine(component.GetIl2CppType().FullNameOrDefault);
-                        Console.WriteLine(component.GetIl2CppType().AssemblyQualifiedName);
-                        Console.WriteLine(component.GetIl2CppType().InternalNameIfAvailable);
-                        Console.WriteLine(component.GetIl2CppType().IsRuntimeImplemented());
-
-                        var typeName = component.GetIl2CppType().FullNameOrDefault;
-
-                        var type = allTypes.FirstOrDefault(x => x.FullName == typeName);
+                        var il2CppType = component.GetIl2CppType();
 
                         //var type = AccessTools.TypeByName(typeName);
 
                         //todo optimize
                         Component monoComponent;
-                        if (type != null)
+                        if (TryGetMonoType(il2CppType, out var type))
                         {
                             var cast = AccessTools.Method(typeof(Il2CppObjectBase), nameof(Il2CppObjectBase.Cast));
-                            monoComponent = (Component)cast.MakeGenericMethod(type).Invoke(component, null) ?? component;
+                            monoComponent = cast.MakeGenericMethod(type!).Invoke(component, null) as Component ?? component;
                         }
                         else
+                        {
                             monoComponent = component;
-
+                        }
 
                         if (!string.IsNullOrEmpty(_searchTextComponents) && !RootGameObjectSearcher.SearchInComponent(_searchTextComponents, monoComponent, false))
                             continue;
@@ -299,6 +296,54 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 }
             }
             GUILayout.EndScrollView();
+        }
+
+
+        private static readonly Dictionary<string, Type?> _cachedTypes = new();
+        private static readonly HashSet<string> _cachedAssemblies = new();
+        private static bool TryGetMonoType(Il2CppSystem.Type il2CppType, out Type? monoType)
+        {
+            var typeName = il2CppType.FullNameOrDefault;
+
+            if (_cachedTypes.TryGetValue(typeName, out monoType)) return monoType != null;
+
+            // Look for newly loaded assemblies and add all types from them to the cache
+            var newAssemblies = AccessTools.AllAssemblies().Where(x => x.FullName != null && _cachedAssemblies.Add(x.FullName)).ToList();
+            //Console.WriteLine(string.Join("\n", newAssemblies.First(x=>x.FullName.Contains("ConfigurationM")).GetTypesSafe().Select(x=>x.FullName)));
+            foreach (var types in newAssemblies /*.Where(x => x.FullName != "InjectedMonoTypes")*/
+                                  .SelectMany(x => x.GetTypesSafe())
+                                  .GroupBy(x => x.FullName!))
+            {
+                _cachedTypes[types.Key] = types.OrderByDescending(a =>
+                {
+                    var assemblyFullName = a.Assembly.FullName!;
+                    return assemblyFullName.StartsWith("UnityEngine.") || assemblyFullName.StartsWith("System.");
+                }).First();
+            }
+
+            if (_cachedTypes.TryGetValue(typeName, out monoType)) return monoType != null;
+
+            // If we still can't find the type, try to find it by name and namespace. Nested types are missing the namespace part in IL2CPP Types.
+            // todo try this first to be safe?
+            var typeNameWithNamespace = il2CppType.Namespace + "." + typeName.Replace('.', '+');
+            
+            Console.WriteLine(typeName);
+            Console.WriteLine(il2CppType.FormatTypeName());
+            Console.WriteLine(il2CppType.Namespace);
+            
+
+            if (_cachedTypes.TryGetValue(typeNameWithNamespace, out monoType))
+            {
+                _cachedTypes[typeName] = monoType;
+                _cachedTypes[typeNameWithNamespace] = monoType;
+                return monoType != null;
+            }
+            else
+            {
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "Failed to find any Mono Type matching an IL2CPP Type: " + il2CppType.AssemblyQualifiedName);
+                _cachedTypes[typeName] = null;
+                return false;
+            }
         }
 
         private void DrawTransformControls()
@@ -548,6 +593,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
         private string _searchText = string.Empty;
         private string _searchTextComponents = string.Empty;
+
         private void DisplayObjectTree()
         {
             GUILayout.BeginVertical(GUI.skin.box);

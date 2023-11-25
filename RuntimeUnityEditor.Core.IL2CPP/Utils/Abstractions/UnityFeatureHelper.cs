@@ -155,22 +155,7 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
         public static Texture2D LoadTexture(byte[] texData)
         {
             var tex = new Texture2D(1, 1, TextureFormat.ARGB32, false);
-
-            // Around Unity 2018 the LoadImage and other export/import methods got moved from Texture2D to extension methods
-            var loadMethod = typeof(Texture2D).GetMethod("LoadImage", new[] { typeof(byte[]) });
-            if (loadMethod != null)
-            {
-                loadMethod.Invoke(tex, new object[] { texData });
-            }
-            else
-            {
-                var converter = Type.GetType("UnityEngine.ImageConversion, UnityEngine.ImageConversionModule");
-                if (converter == null) throw new ArgumentNullException(nameof(converter));
-                var converterMethod = converter.GetMethod("LoadImage", new[] { typeof(Texture2D), typeof(byte[]) });
-                if (converterMethod == null) throw new ArgumentNullException(nameof(converterMethod));
-                converterMethod.Invoke(null, new object[] { tex, texData });
-            }
-
+            tex.LoadImage(texData, false);
             return tex;
         }
     }
