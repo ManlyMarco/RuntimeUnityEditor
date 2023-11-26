@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
 using RuntimeUnityEditor.Core.Gizmos.lib;
-using RuntimeUnityEditor.Core.IL2CPP.Utils;
 using RuntimeUnityEditor.Core.ObjectTree;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;

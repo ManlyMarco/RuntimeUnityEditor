@@ -8,7 +8,7 @@ using RuntimeUnityEditor.Core.Utils;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
 
-namespace RuntimeUnityEditor.Core.IL2CPP.Utils
+namespace RuntimeUnityEditor.Core
 {
     internal static class IL2CppExtensions
     {

@@ -52,8 +52,8 @@ namespace RuntimeUnityEditor.Core.ChangeHistory
             if (member == null)
                 throw new ArgumentNullException(nameof(member));
 
-            if (member.DeclaringType != typeof(TObj))
-                throw new ArgumentException("Member must be declared in the type of the target object", nameof(member));
+            //if (member.DeclaringType != typeof(TObj))
+            //    throw new ArgumentException("Member must be declared in the type of the target object", nameof(member));
 
             if (member is PropertyInfo pi)
             {

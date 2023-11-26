@@ -6,7 +6,6 @@ using System.Reflection;
 using System.Text;
 using BepInEx.Unity.IL2CPP;
 using Mono.CSharp;
-using RuntimeUnityEditor.Core.IL2CPP.Utils;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.ObjectTree;
 using RuntimeUnityEditor.Core.Utils.Abstractions;

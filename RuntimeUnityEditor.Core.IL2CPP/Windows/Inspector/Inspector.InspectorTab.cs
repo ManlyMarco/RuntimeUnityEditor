@@ -5,7 +5,6 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using RuntimeUnityEditor.Core.IL2CPP.Utils;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.ObjectTree;
 using RuntimeUnityEditor.Core.Utils;
@@ -81,7 +80,7 @@ namespace RuntimeUnityEditor.Core.Inspector
             private void CacheAllMembers(InstanceStackEntry entry)
             {
                 _fieldCache.Clear();
-                
+
                 var objectToOpen = entry?.Instance;
                 if (objectToOpen == null) return;
 
@@ -162,7 +161,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                         .Select(f => new FieldCacheEntry(objectToOpen, f, type, parent)).Cast<ICacheEntry>());
 
                     var isRenderer = objectToOpen is Renderer;
-
+                    var isIl2cppType = objectToOpen is Il2CppSystem.Type;
                     _fieldCache.AddRange(type.GetAllProperties(false)
                                              .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
                                              .Select(p =>
@@ -175,6 +174,15 @@ namespace RuntimeUnityEditor.Core.Inspector
                                                      if (p.Name == "materials")
                                                          return new CallbackCacheEntry<Material[]>("materials", "Local instance of sharedMaterials (create on entry)", () => ((Renderer)objectToOpen).materials);
                                                  }
+                                                 else if (isIl2cppType)
+                                                 {
+                                                     // These two are dangerous to evaluate, they hard crash the game with access violation more often than not
+                                                     if (p.Name == nameof(Il2CppSystem.Type.DeclaringType))
+                                                         return new CallbackCacheEntry<Il2CppSystem.Type>(nameof(Il2CppSystem.Type.DeclaringType), "Skipped evaluation, click to enter (DANGER, MAY HARD CRASH)", () => ((Il2CppSystem.Type)objectToOpen).DeclaringType);
+                                                     if (p.Name == nameof(Il2CppSystem.Type.DeclaringMethod))
+                                                         return new CallbackCacheEntry<Il2CppSystem.Reflection.MethodBase>(nameof(Il2CppSystem.Type.DeclaringMethod), "Skipped evaluation, click to enter (DANGER, MAY HARD CRASH)", () => ((Il2CppSystem.Type)objectToOpen).DeclaringMethod);
+                                                 }
+
                                                  return (ICacheEntry)new PropertyCacheEntry(objectToOpen, p, type, parent);
                                              }));
 
