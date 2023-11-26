@@ -3,11 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using BepInEx.Unity.IL2CPP.Utils;
-using HarmonyLib;
 using RuntimeUnityEditor.Core.IL2CPP.Utils;
 using RuntimeUnityEditor.Core.Inspector.Entries;
+using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -208,6 +207,18 @@ namespace RuntimeUnityEditor.Core.Utils
             targetTransform.localScale = new Vector3(targetTransform.localScale.x * (lossyScale.x / targetTransform.lossyScale.x),
                                                      targetTransform.localScale.y * (lossyScale.y / targetTransform.lossyScale.y),
                                                      targetTransform.localScale.z * (lossyScale.z / targetTransform.lossyScale.z));
+        }
+
+        /// <summary>
+        /// SetActive may change the scene of the GameObject if it is currently NULL, which might be unexpected to the user.
+        /// If this happens, show a warning.
+        /// </summary>
+        public static void SetActiveWithSceneChangeWarning(this GameObject o, bool value)
+        {
+            var sceneBak = o.scene;
+            o.SetActive(value);
+            if (sceneBak != o.scene)
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning | LogLevel.Message, $"Scene of GameObject [{o.name}] changed from [{sceneBak.name ?? "NULL"}] to [{o.scene.name ?? "NULL"}]");
         }
     }
 }

@@ -152,11 +152,11 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 }
                 else if (go.scene.name == null && !go.activeInHierarchy)
                 {
-                    GUI.color = new Color(0.6f, 0.6f, 0.4f, 1);
+                    GUI.color = new Color(1, 1, 0.8f, go.activeSelf ? 0.75f : 0.5f);
                 }
                 else if (!go.activeInHierarchy)
                 {
-                    GUI.color = new Color(1, 1, 1, 0.6f);
+                    GUI.color = new Color(1, 1, 1, go.activeSelf ? 0.75f : 0.5f);
                 }
 
                 GUILayout.BeginHorizontal();
@@ -297,7 +297,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                     GUI.changed = false;
                     var newVal = GUILayout.Toggle(selectedGameObject.activeSelf, "Active", GUILayout.ExpandWidth(false));
                     if (GUI.changed)
-                        Change.Action($"{{0}}.SetActive({newVal});", selectedGameObject, o => o.SetActive(newVal), o => o.SetActive(!newVal));
+                        Change.Action($"{{0}}.SetActive({newVal});", selectedGameObject, o => o.SetActiveWithSceneChangeWarning(newVal), o => o.SetActiveWithSceneChangeWarning(!newVal));
 
                     GUILayout.FlexibleSpace();
 
@@ -309,12 +309,17 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 }
                 GUILayout.EndHorizontal();
 
+                var oldWidth = GUI.skin.horizontalSlider.fixedWidth;
+                GUI.skin.horizontalSliderThumb.fixedWidth = 12;
+
                 DrawVector3(nameof(Transform.position), transform, (t, v) => t.position = v, t => t.position, -5, 5);
                 DrawVector3(nameof(Transform.localPosition), transform, (t, v) => t.localPosition = v, t => t.localPosition, -5, 5);
                 DrawVector3(nameof(Transform.lossyScale), transform, (t, v) => t.SetLossyScale(v), t => t.lossyScale, 0.00001f, 5);
                 DrawVector3(nameof(Transform.localScale), transform, (t, v) => t.localScale = v, t => t.localScale, 0.00001f, 5);
                 DrawVector3(nameof(Transform.eulerAngles), transform, (t, v) => t.eulerAngles = v, t => t.eulerAngles, 0, 360);
                 DrawVector3(nameof(Transform.localEulerAngles), transform, (t, v) => t.localEulerAngles = v, t => t.localEulerAngles, 0, 360);
+
+                GUI.skin.horizontalSlider.fixedWidth = oldWidth;
             }
             GUILayout.EndVertical();
         }
