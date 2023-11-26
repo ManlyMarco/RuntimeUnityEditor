@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using BepInEx.Unity.IL2CPP.Utils;
 using HarmonyLib;
+using RuntimeUnityEditor.Core.IL2CPP.Utils;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -89,7 +90,7 @@ namespace RuntimeUnityEditor.Core.Utils
         {
             if (self.name.Equals(name))
                 return self;
-            foreach (Transform t in self)
+            foreach (var t in self.GetChildren())
             {
                 var res = t.FindDescendant(name);
                 if (res != null)

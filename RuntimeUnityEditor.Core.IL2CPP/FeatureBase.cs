@@ -71,7 +71,7 @@ namespace RuntimeUnityEditor.Core
     public abstract class FeatureBase<T> : IFeature where T : FeatureBase<T>
     {
         // ReSharper disable once StaticMemberInGenericType
-        private static bool _initialized;
+        private protected static bool _initialized;
         /// <summary>
         /// True if this feature was successfully initialized.
         /// </summary>

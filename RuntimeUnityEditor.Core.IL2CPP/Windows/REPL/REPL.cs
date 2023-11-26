@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using BepInEx.Unity.IL2CPP;
 using Mono.CSharp;
+using RuntimeUnityEditor.Core.IL2CPP.Utils;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.ObjectTree;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
@@ -23,9 +25,10 @@ namespace RuntimeUnityEditor.Core.REPL
     {
         static REPL()
         {
-            var go = new GameObject("UnityREPL");
-            go.transform.parent = RuntimeUnityEditorCore.PluginObject.transform;
-            MB = go.AddComponent<ReplHelper>();
+            //var go = new GameObject("UnityREPL");
+            //go.transform.parent = RuntimeUnityEditorCore.PluginObject.transform;
+            //MB = go.AddComponent<ReplHelper>();
+            MB = IL2CPPChainloader.AddUnityComponent<ReplHelper>();
         }
 
         public static string clear
@@ -119,7 +122,7 @@ namespace RuntimeUnityEditor.Core.REPL
             if (obj == null) throw new ArgumentNullException(nameof(obj));
 
             var results = new List<Component>();
-            foreach (var component in Object.FindObjectsOfType<Component>())
+            foreach (var component in Object.FindObjectsOfType<Component>().Select(c => c.TryAutoCast() as Component ?? c))
             {
                 var type = component.GetType();
 

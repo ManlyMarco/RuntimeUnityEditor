@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
 using RuntimeUnityEditor.Core.Gizmos.lib;
+using RuntimeUnityEditor.Core.IL2CPP.Utils;
 using RuntimeUnityEditor.Core.ObjectTree;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
@@ -35,13 +37,13 @@ namespace RuntimeUnityEditor.Core.Gizmos
 
             if (visible)
             {
-                if (_gizmosInstance == null)
-                    _gizmosInstance = RuntimeUnityEditorCore.PluginObject.gameObject.AddComponent<GizmosInstance>();
+                if (!_gizmosInstance)
+                    _gizmosInstance = IL2CPPChainloader.AddUnityComponent<GizmosInstance>(); //RuntimeUnityEditorCore.PluginObject.gameObject.AddComponent<GizmosInstance>();
                 _gizmosInstance.enabled = true;
 
                 UpdateState(ObjectTreeViewer.Instance.SelectedTransform);
             }
-            else if (_gizmosInstance != null)
+            else if (_gizmosInstance)
             {
                 _gizmosInstance.enabled = false;
             }
@@ -61,10 +63,10 @@ namespace RuntimeUnityEditor.Core.Gizmos
                 _dbcType = AccessTools.TypeByName("DynamicBoneCollider");
             }
 
-            var allComponents = rootTransform.GetComponentsInChildren<Component>();
+            var allComponents = rootTransform.GetAllComponentsInChildrenCasted(false); //todo include inactive with different color?
             foreach (var component in allComponents)
             {
-                if (component == null)
+                if (!component)
                     continue;
                 else if (component is Renderer)
                     _drawList.Add(new KeyValuePair<Action<Component>, Component>(DrawRendererGizmo, component));
@@ -151,17 +153,18 @@ namespace RuntimeUnityEditor.Core.Gizmos
 
         private static void DrawDynamicBoneColliderGizmo(Component obj)
         {
-            if (obj == null) return;
+            if (!obj) return;
 
             var transform = obj.transform;
             var tv = Traverse.Create(obj);
 
-            var mBound = (int)tv.Field("m_Bound").GetValue(); // Bound enum
+            // Fields are properties in IL2CPP
+            var mBound = (int)tv.Property("m_Bound").GetValue(); // Bound enum
             var color = mBound == 0 ? Color.yellow : Color.red; // 0 = Bound.Outside
 
-            var mRadius = tv.Field("m_Radius").GetValue<float>();
-            var mHeight = tv.Field("m_Height").GetValue<float>();
-            var mCenter = tv.Field("m_Center").GetValue<Vector3>();
+            var mRadius = tv.Property("m_Radius").GetValue<float>();
+            var mHeight = tv.Property("m_Height").GetValue<float>();
+            var mCenter = tv.Property("m_Center").GetValue<Vector3>();
             var radius = mRadius * Mathf.Abs(transform.lossyScale.z);
             var height = (mHeight - mRadius) * 0.5f;
             if (height <= 0f)
@@ -171,7 +174,7 @@ namespace RuntimeUnityEditor.Core.Gizmos
             }
             var center = mCenter;
             var center2 = mCenter;
-            var mDirection = (int)tv.Field("m_Direction").GetValue(); // Direction enum
+            var mDirection = (int)tv.Property("m_Direction").GetValue(); // Direction enum
             switch (mDirection)
             {
                 case 0: //Direction.X:

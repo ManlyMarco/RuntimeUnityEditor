@@ -188,27 +188,32 @@ namespace RuntimeUnityEditor.Core.Gizmos.lib
             }
 
             //todo
-            //if (GraphicsSettings.renderPipelineAsset == null)
+            if (GraphicsSettings.renderPipelineAsset == null)
             {
                 Camera.onPostRender += (Camera.CameraCallback)OnRendered;
             }
-            //else
-            //{
-            //    RenderPipelineManager.endCameraRendering += OnRendered;
-            //}
+            else
+            {
+                RenderPipelineManager.endCameraRendering += (Il2CppSystem.Action<ScriptableRenderContext, Camera>)OnRendered2;
+            }
+        }
+
+        private void OnRendered2(ScriptableRenderContext context, Camera camera)
+        {
+            OnRendered(camera);
         }
 
         private void OnDisable()
         {
             //todo
-            //if (GraphicsSettings.renderPipelineAsset == null)
+            if (GraphicsSettings.renderPipelineAsset == null)
             {
                 Camera.onPostRender -= (Camera.CameraCallback)OnRendered;
             }
-            //else
-            //{
-            //    RenderPipelineManager.endCameraRendering -= OnRendered;
-            //}
+            else
+            {
+                RenderPipelineManager.endCameraRendering -= (Il2CppSystem.Action<ScriptableRenderContext, Camera>)OnRendered2;
+            }
         }
 
         //private void OnRendered(ScriptableRenderContext context, Camera camera) => OnRendered(camera);

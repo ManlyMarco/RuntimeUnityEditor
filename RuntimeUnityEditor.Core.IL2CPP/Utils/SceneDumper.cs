@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using RuntimeUnityEditor.Core.IL2CPP.Utils;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
 
@@ -27,16 +28,16 @@ namespace RuntimeUnityEditor.Core.Utils
 
         private static void PrintRecursive(TextWriter sw, GameObject obj, int d = 0)
         {
-            if (obj == null) return;
+            if (!obj) return;
 
             var pad1 = new string(' ', 3 * d);
             var pad2 = new string(' ', 3 * (d + 1));
             var pad3 = new string(' ', 3 * (d + 2));
             sw.WriteLine(pad1 + obj.name + "--" + obj.GetType().GetSourceCodeRepresentation());
 
-            foreach (var c in obj.GetComponents<Component>())
+            foreach (var c in obj.GetAllComponentsCasted())
             {
-                if(c == null) continue; // Sometimes they can be null for some reason
+                if(!c) continue; // Sometimes they can be null for some reason
 
                 sw.WriteLine(pad2 + "::" + c.GetType().Name);
 
@@ -55,7 +56,7 @@ namespace RuntimeUnityEditor.Core.Utils
                     }
                 }
             }
-            foreach (Transform t in obj.transform)
+            foreach (var t in obj.transform.GetChildren())
                 PrintRecursive(sw, t.gameObject, d + 1);
         }
     }

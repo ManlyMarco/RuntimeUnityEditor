@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
+using UnityEngine.Rendering;
 #pragma warning disable CS1591
 
 namespace RuntimeUnityEditor.Core
@@ -11,9 +13,12 @@ namespace RuntimeUnityEditor.Core
     public sealed class WireframeFeature : FeatureBase<WireframeFeature>
     {
         private static readonly Dictionary<Camera, CameraClearFlags> _origFlags = new Dictionary<Camera, CameraClearFlags>();
-        
+
         protected override void Initialize(InitSettings initSettings)
         {
+            if (GraphicsSettings.currentRenderPipeline != null)
+                throw new NotSupportedException("GL.wireframe is not supported with SRP");
+
             DisplayName = "Wireframe";
             Enabled = false;
         }

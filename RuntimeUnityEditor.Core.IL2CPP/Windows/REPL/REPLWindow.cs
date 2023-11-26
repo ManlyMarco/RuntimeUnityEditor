@@ -112,6 +112,7 @@ namespace RuntimeUnityEditor.Core.REPL
                 try
                 {
                     RuntimeUnityEditorCore.Instance.RemoveFeature(this);
+                    _initialized = false;
                     _evaluator.Dispose();
                 }
                 catch (Exception e)

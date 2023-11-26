@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using RuntimeUnityEditor.Core.IL2CPP.Utils;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.ObjectTree;
 using RuntimeUnityEditor.Core.Utils;
@@ -124,7 +125,7 @@ namespace RuntimeUnityEditor.Core.Inspector
 
                         //_fieldCache.Add(new ReadonlyCacheEntry("Child objects",
                         //                                       new Il2CppSystem.Collections.Generic.List<Transform>(castedObj.transform.GetEnumerator()).Cast<Transform>().ToArray()));
-                        _fieldCache.Add(new ReadonlyCacheEntry("Components", castedObj.GetComponents<Component>()));
+                        _fieldCache.Add(new ReadonlyCacheEntry("Components", castedObj.GetAllComponentsCasted()));
                     }
                     else if (objectToOpen is Texture tex)
                     {

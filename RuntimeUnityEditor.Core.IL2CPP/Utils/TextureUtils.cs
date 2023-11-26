@@ -43,27 +43,9 @@ namespace RuntimeUnityEditor.Core.Utils
         public static byte[] BasedEncodeToPNG(this Texture tex)
         {
             var t2d = tex.ToTexture2D();
-            try
-            {
-                var m = typeof(Texture2D).GetMethod("EncodeToPNG", BindingFlags.Instance | BindingFlags.Public);
-                if (m != null)
-                {
-                    return (byte[])m.Invoke(t2d, new object[0]);
-                }
-                else
-                {
-                    var t = Type.GetType("UnityEngine.ImageConversion, UnityEngine.ImageConversionModule", false);
-                    var m2 = t?.GetMethod("EncodeToPNG", BindingFlags.Static | BindingFlags.Public);
-                    if (m2 != null)
-                        return (byte[])m2.Invoke(null, new object[] { t2d });
-
-                    throw new Exception("Could not find method EncodeToPNG, can't save to file.");
-                }
-            }
-            finally
-            {
-                Object.Destroy(t2d);
-            }
+            var arr = t2d.EncodeToPNG();
+            Object.Destroy(t2d);
+            return arr;
         }
 
         /// <summary>
@@ -137,27 +119,11 @@ namespace RuntimeUnityEditor.Core.Utils
                     
                     var data = File.ReadAllBytes(filename);
                     var tex = new Texture2D(4, 4, TextureFormat.ARGB32, false);
-                    
+
                     try
                     {
-                        var m = typeof(Texture2D).GetMethod("LoadImage", new Type[] { typeof(byte[]) });
-                        if (m != null)
-                        {
-                            m.Invoke(tex, new object[] { data });
-                            return tex;
-                        }
-                        else
-                        {
-                            //LoadImage(this Texture2D tex, byte[] data)
-                            var t = Type.GetType("UnityEngine.ImageConversion, UnityEngine.ImageConversionModule", false);
-                            var m2 = t?.GetMethod("LoadImage", new Type[] { typeof(Texture2D), typeof(byte[]) }); //BindingFlags.Static | BindingFlags.Public
-                            if (m2 != null)
-                            {
-                                m2.Invoke(null, new object[] { tex, data });
-                                return tex;
-                            }
-                        }
-                        throw new Exception("Could not find method LoadImage.");
+                        tex.LoadImage(data, false);
+                        return tex;
                     }
                     catch
                     {

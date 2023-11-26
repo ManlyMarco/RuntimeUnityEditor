@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -85,14 +86,14 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
             var activeScene = _sceneManager.GetMethod("GetActiveScene", BindingFlags.Static | BindingFlags.Public);
             if (activeScene == null) throw new ArgumentNullException(nameof(activeScene));
             var scene = activeScene.Invoke(null, null);
-            
-            var rootGameObjects = scene.GetType().GetMethod("GetRootGameObjects", BindingFlags.Instance | BindingFlags.Public, null, new Type[]{}, null);
+
+            var rootGameObjects = scene.GetType().GetMethod("GetRootGameObjects", BindingFlags.Instance | BindingFlags.Public, null, new Type[] { }, null);
             if (rootGameObjects == null) throw new ArgumentNullException(nameof(rootGameObjects));
             var objects = rootGameObjects.Invoke(scene, null);
 
             return (GameObject[])objects;
         }
-        
+
         /// <summary>
         /// Figure out where the log file is written to and open it.
         /// </summary>
@@ -103,11 +104,22 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
                 if (path == null) return false;
                 try
                 {
-                    Process.Start(path);
+                    try
+                    {
+                        Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+                    }
+                    catch (Win32Exception)
+                    {
+                        if (File.Exists(path))
+                            Process.Start(new ProcessStartInfo("notepad.exe", $"\"{path}\""));
+                        else
+                            throw;
+                    }
                     return true;
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Console.WriteLine(ex);
                     return false;
                 }
             }
@@ -127,6 +139,11 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
             {
                 var path = prop.GetValue(null, null) as string;
                 candidates.Add(path);
+                Console.WriteLine(path);
+            }
+            else
+            {
+                Console.WriteLine("wtf");
             }
 
             if (Directory.Exists(Application.persistentDataPath))
@@ -141,8 +158,8 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
             candidates.Clear();
             // Fall back to more aggresive brute search
             // BepInEx 5.x log file, can be "LogOutput.log.1" or higher if multiple game instances run
-            candidates.AddRange(Directory.GetFiles(rootDir,"LogOutput.log*", SearchOption.AllDirectories));
-            candidates.AddRange(Directory.GetFiles(rootDir,"output_log.txt", SearchOption.AllDirectories));
+            candidates.AddRange(Directory.GetFiles(rootDir, "LogOutput.log*", SearchOption.AllDirectories));
+            candidates.AddRange(Directory.GetFiles(rootDir, "output_log.txt", SearchOption.AllDirectories));
             latestLog = candidates.Where(File.Exists).OrderByDescending(File.GetLastWriteTimeUtc).FirstOrDefault();
             if (TryOpen(latestLog)) return;
 

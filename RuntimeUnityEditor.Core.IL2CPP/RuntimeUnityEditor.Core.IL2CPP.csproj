@@ -5,6 +5,7 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <RootNamespace>RuntimeUnityEditor.Core</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

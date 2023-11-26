@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using Il2CppInterop.Runtime;
+using RuntimeUnityEditor.Core.IL2CPP.Utils;
 using RuntimeUnityEditor.Core.Utils;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
@@ -134,9 +135,8 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
                 _searchResults = GetRootObjects()
                     .SelectMany(x => x.GetComponentsInChildren<Transform>(true))
-                    .Where(x => x.name.Contains(searchString, StringComparison.InvariantCultureIgnoreCase) || searchComponents &&
-                                x.GetComponents<Component>()
-                                    .Any(c => SearchInComponent(searchString, c, searchProperties)))
+                    .Where(x => x.name.Contains(searchString, StringComparison.InvariantCultureIgnoreCase) || 
+                                searchComponents && x.GetAllComponentsCasted().Any(c => SearchInComponent(searchString, c, searchProperties)))
                     .OrderBy(x => x.name, StringComparer.InvariantCultureIgnoreCase)
                     .Select(x => x.gameObject)
                     .ToList();
@@ -223,7 +223,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             RuntimeUnityEditorCore.Logger.Log(LogLevel.Info, "Deep searching for references, this can take a while...");
 
             var results = GetRootObjects()
-                             .SelectMany(x => x.GetComponentsInChildren<Component>(true))
+                             .SelectMany(x => x.GetAllComponentsInChildrenCasted(true))
                              .Where(x => SearchReferencesInComponent(objInstance, x))
                              .OrderBy(x => x.name, StringComparer.InvariantCultureIgnoreCase)
                              .Select(x => x.gameObject)
