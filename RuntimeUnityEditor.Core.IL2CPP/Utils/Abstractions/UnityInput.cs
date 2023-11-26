@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;/*
+using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.Controls;*/
+using UnityEngine.InputSystem.Controls;
 
 namespace RuntimeUnityEditor.Core.Utils.Abstractions
 {
@@ -27,17 +27,23 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
                 {
                     try
                     {
-                        Input.GetKeyDown(KeyCode.A);
-                        _current = new LegacyInputSystem();
-                        RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, "[UnityInput] Using LegacyInputSystem");
+                        try
+                        {
+                            Input.GetKeyDown(KeyCode.A);
+                            _current = new LegacyInputSystem();
+                            RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, "[UnityInput] Using LegacyInputSystem");
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            var newInputSystem = new NewInputSystem();
+                            newInputSystem.GetKeyDown(KeyCode.A); //todo needs a test
+                            _current = newInputSystem;
+                            RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, "[UnityInput] Using NewInputSystem");
+                        }
                     }
-                    //catch (InvalidOperationException)
-                    //{
-                    //    _current = new NewInputSystem();
-                    //    RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, "[UnityInput] Using NewInputSystem");
-                    //}
                     catch (Exception ex)
                     {
+                        _current = new NullInputSystem();
                         RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, "[UnityInput] Failed to detect available input systems - " + ex);
                     }
                 }
@@ -106,7 +112,39 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
 		IEnumerable<KeyCode> SupportedKeyCodes { get; }
     }
 
-    /*
+    internal class NullInputSystem : IInputSystem
+    {
+        public bool GetKey(string name) => false;
+
+        public bool GetKey(KeyCode key) => false;
+
+        public bool GetKeyDown(string name) => false;
+
+        public bool GetKeyDown(KeyCode key) => false;
+
+        public bool GetKeyUp(string name) => false;
+
+        public bool GetKeyUp(KeyCode key) => false;
+
+        public bool GetMouseButton(int button) => false;
+
+        public bool GetMouseButtonDown(int button) => false;
+
+        public bool GetMouseButtonUp(int button) => false;
+
+        public void ResetInputAxes() { }
+
+        public Vector3 mousePosition => Vector3.zero;
+        public Vector2 mouseScrollDelta => Vector2.zero;
+        public bool mousePresent => false;
+
+        public bool anyKey => false;
+
+        public bool anyKeyDown => false;
+
+        public IEnumerable<KeyCode> SupportedKeyCodes { get; } = Enumerable.Empty<KeyCode>();
+    }
+
     internal class NewInputSystem : IInputSystem
     {
         public bool GetKey(string name) => GetControl(name)?.isPressed ?? false;
@@ -127,7 +165,7 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
 
         public bool GetMouseButtonUp(int button) => GetControl(KeyCode.Mouse0 + button)?.wasReleasedThisFrame ?? false;
 
-        public void ResetInputAxes() { /*Not supported#1# }
+        public void ResetInputAxes() { /*Not supported*/ }
 
         public Vector3 mousePosition => Mouse.current.position.ReadValue();
         public Vector2 mouseScrollDelta => Mouse.current.scroll.ReadValue();
@@ -819,7 +857,6 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
             return null;
         }
     }
-    */
 
     internal class LegacyInputSystem : IInputSystem
     {
