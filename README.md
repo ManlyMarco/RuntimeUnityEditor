@@ -1,8 +1,8 @@
 # Runtime Unity Editor / Debugging Tools
-In-game inspector, editor and interactive console for applications made with Unity3D game engine. It's designed for debugging and modding Unity games, but can also be used as a universal trainer. Runs under [BepInEx5](https://github.com/BepInEx/BepInEx) and [UMM](https://github.com/newman55/unity-mod-manager).
+In-game inspector, editor and interactive console for applications made with Unity3D game engine. It's designed for debugging and modding Unity games, but can also be used as a universal trainer. Runs under [BepInEx5](https://github.com/BepInEx/BepInEx), BepInEx6 IL2CPP and [UMM](https://github.com/newman55/unity-mod-manager).
 
 ### Features
-- Works on most games made in Unity 4.x or newer that use the mono runtime (IL2CPP is not supported at the moment)
+- Works on most games made in Unity 4.x or newer that use either the mono or IL2CPP runtime
 - Minimal impact on the game - no GameObjects or Components are spawned (outside of the plugin component loaded by the mod loader) and no hooks are used (except if requested for profiler)
 - GameObject and component browser
 - Object inspector (allows modifying values of objects in real time) with clipboard
@@ -19,12 +19,10 @@ In-game inspector, editor and interactive console for applications made with Uni
 ![preview](https://user-images.githubusercontent.com/39247311/208912018-014154e1-7ad8-4df0-a4a3-662c334ccedc.jpg)
 
 ### How to use (BepInEx)
-1. Install BepInEx v4.x or v5.x if you don't have it already. You can download it [here](https://github.com/BepInEx/BepInEx).
-2. Download the latest BepInEx build (RuntimeUnityEditor_BepInEx5_vX.X.zip) from the [Releases](https://github.com/ManlyMarco/RuntimeUnityEditor/releases) page. Make sure to get the correct version for your BepInEx.
-3. Extract the BepInEx folder from the archive directly into your game directory (you should already have a BepInEx folder there from previous step). Replace files if asked.
-4. To turn on press the F12 key when in-game. A window should appear on top of the game. If it doesn't appear, check logs for errors.
-
-Note: If the plugin fails to load under BepInEx 4 with a type load exception, move RuntimeUnityEditor.Core.dll to BepInEx/core folder.
+1. If you don't have it already, install and configure latest version of BepInEx v5, or if the game uses IL2CPP then BepInEx v6 (at least be.664). You can download it [here](https://github.com/BepInEx/BepInEx).
+2. Download the latest RUE release for your version of BepInEx from the [Releases](https://github.com/ManlyMarco/RuntimeUnityEditor/releases) page.
+3. Extract the release archive from the archive directly into your game directory (you should already have a BepInEx folder there from previous step). Replace files if asked.
+4. To turn on press the F12 key when in-game. A window should appear on top of the game. If it doesn't appear, check game log for errors.
 
 ### How to use (Unity Mod Manager)
 1. Install Unity Mod Manager if you don't have it already. You can download it [here](https://www.nexusmods.com/site/mods/21). Select your game from the the dropdown list and then click the Install button.
