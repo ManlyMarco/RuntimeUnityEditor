@@ -8,7 +8,13 @@ using UnityEngine;
 
 namespace RuntimeUnityEditor.Bepin6.IL2CPP
 {
-
+    /// <summary>
+    /// This is a loader plugin for BepInEx6 (IL2CPP version).
+    /// When referencing RuntimeUnityEditor from other code it's recommended to not reference this assembly and instead reference RuntimeUnityEditorCore directly.
+    /// If you need your code to run after RUE is initialized, add a <code>[BepInDependency(RuntimeUnityEditorCore.GUID)]</code> attribute to your plugin.
+    /// You can see if RuntimeUnityEditor has finished loading with <code>RuntimeUnityEditorCore.IsInitialized()</code>.
+    /// </summary>
+    [Obsolete("It's recommended to reference RuntimeUnityEditorCore directly")]
     [BepInPlugin(RuntimeUnityEditorCore.GUID, "Runtime Unity Editor", RuntimeUnityEditorCore.Version)]
     public class RuntimeUnityEditorPluginIL2CPP : BasePlugin
     {

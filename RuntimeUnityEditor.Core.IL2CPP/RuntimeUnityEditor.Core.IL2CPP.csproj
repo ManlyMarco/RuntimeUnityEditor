@@ -7,7 +7,18 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <RootNamespace>RuntimeUnityEditor.Core</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <OutputPath>..\bin\IL2CPP\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+
+    <DebugType>embedded</DebugType>
   </PropertyGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <Delete Files="$(OutputPath)\RuntimeUnityEditor.Core.IL2CPP.deps.json" />
+    <Delete Files="$(OutputPath)\mcs.pdb" />
+  </Target>
 
   <ItemGroup>
     <None Remove="ILRepack.targets" />
@@ -41,6 +52,7 @@
   <ItemGroup>
     <Reference Include="Unity.InputSystem">
       <HintPath>..\Libs\IL2CPP_net6\Unity.InputSystem.dll</HintPath>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
 
