@@ -39,7 +39,7 @@ namespace RuntimeUnityEditor.Core.Profiler
         private static readonly Harmony _hi = new Harmony("rue-profiler");
 
         private static bool _fixed, _update, _late, _ongui;
-        private static bool _pause, _hideInputEvents, _msTime;
+        private static bool _pause, _hideInputEvents, _msTime, _aggregation;
         private static int _ordering;
         private static int _currentExecutionCount;
         private static bool _needResort;
@@ -84,6 +84,7 @@ namespace RuntimeUnityEditor.Core.Profiler
                     _pause = GUILayout.Toggle(_pause, "Pause");
                     _hideInputEvents = GUILayout.Toggle(_hideInputEvents, "Hide input events");
                     _msTime = GUILayout.Toggle(_msTime, "Time in ms");
+                    _aggregation = GUILayout.Toggle(_aggregation, "Aggregation");
                 }
                 GUILayout.EndHorizontal();
             }
@@ -310,7 +311,20 @@ namespace RuntimeUnityEditor.Core.Profiler
                 if (_needResort)
                 {
                     _dataDisplay.Clear();
-                    _dataDisplay.AddRange(_data.Values.OrderBy<ProfilerInfo, object>(x =>
+
+                    IEnumerable<ProfilerInfo> infos = _data.Values;
+
+                    if ( _aggregation )
+                    {
+                        infos = infos
+                            .GroupBy(x => x.FullName)
+                            .Select(group =>
+                                group.Aggregate(new ProfilerInfo(group.First(), $"[{group.Count(),3}] {group.First().FullName}"),
+                                (a, b) => ProfilerInfo.Add(a, b))
+                                );
+                    }
+
+                    _dataDisplay.AddRange(infos.OrderBy<ProfilerInfo, object>(x =>
                         {
                             switch (_ordering)
                             {
@@ -395,6 +409,26 @@ namespace RuntimeUnityEditor.Core.Profiler
                         _needResort = true;
                     }
                 }
+            }
+
+            // for aggregate
+            public ProfilerInfo( ProfilerInfo parent, string fullName = null )
+            {
+                Method = parent.Method;
+                Owner = null;
+                FullName = fullName ?? parent.FullName;
+                DisplayName = FullName;
+                Timer = new Stopwatch();
+                GuiEvent = parent.GuiEvent;
+                ExecutionOrder = parent._executionOrder;
+            }
+
+            static public ProfilerInfo Add( ProfilerInfo x, ProfilerInfo y )
+            {
+                ProfilerInfo sum = new ProfilerInfo(x);
+                sum.TicksSpent.Sample(x.TicksSpent.GetAverage() + y.TicksSpent.GetAverage());
+                sum.GcBytes.Sample(x.GcBytes.GetAverage() + y.GcBytes.GetAverage());
+                return sum;
             }
         }
 
