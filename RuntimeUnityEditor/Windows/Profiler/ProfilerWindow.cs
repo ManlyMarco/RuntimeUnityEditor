@@ -332,7 +332,7 @@ namespace RuntimeUnityEditor.Core.Profiler
                         infos = infos
                             .GroupBy(x => x.FullName)
                             .Select(group =>
-                                group.Aggregate(new ProfilerInfo(group.First(), $"[{group.Count(),3}] {group.First().FullName}"),
+                                group.Aggregate(new ProfilerInfo(group.First(), $"{group.First().FullName}"),
                                 (a, b) => ProfilerInfo.Add(a, b))
                                 );
                     }
@@ -445,8 +445,8 @@ namespace RuntimeUnityEditor.Core.Profiler
                 ProfilerInfo sum = new ProfilerInfo(x);
                 sum.TicksSpent.Sample(x.TicksSpent.GetAverage() + y.TicksSpent.GetAverage());
                 sum.GcBytes.Sample(x.GcBytes.GetAverage() + y.GcBytes.GetAverage());
-                return sum;
                 sum.Instances = x.Instances + y.Instances;
+                return sum;
             }
         }
 
