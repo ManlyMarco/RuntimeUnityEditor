@@ -295,8 +295,6 @@ namespace RuntimeUnityEditor.Core.Profiler
 
         private IEnumerator FrameEndCo()
         {
-            bool prevAggregation = false; 
-
             while (true)
             {
                 yield return _waitForEndOfFrame;
@@ -305,7 +303,7 @@ namespace RuntimeUnityEditor.Core.Profiler
 
                 _currentExecutionCount = 0;
 
-                if (_ordering == 1 || _ordering == 2 || prevAggregation != _aggregation )
+                if (_ordering == 1 || _ordering == 2 )
                     _needResort = true;
 
                 if (!_pause)
@@ -323,7 +321,7 @@ namespace RuntimeUnityEditor.Core.Profiler
                     }
                 }
 
-                if (_needResort)
+                if (_needResort || _aggregation)
                 {
                     _dataDisplay.Clear();
 
@@ -335,7 +333,7 @@ namespace RuntimeUnityEditor.Core.Profiler
                             .GroupBy(x => x.FullName)
                             .Select(group =>
                                 group.Aggregate(new ProfilerInfo(group.First(), $"{group.First().FullName}"),
-                                (a, b) => ProfilerInfo.Add(a, b))
+                                (a, b) => ProfilerInfo.Merge(a, b))
                                 );
                     }
 
@@ -353,7 +351,6 @@ namespace RuntimeUnityEditor.Core.Profiler
                 }
 
                 _needResort = false;
-                prevAggregation = _aggregation;
             }
         }
 
@@ -443,7 +440,7 @@ namespace RuntimeUnityEditor.Core.Profiler
                 Instances = 0;
             }
 
-            static public ProfilerInfo Add( ProfilerInfo x, ProfilerInfo y )
+            static public ProfilerInfo Merge( ProfilerInfo x, ProfilerInfo y )
             {
                 ProfilerInfo sum = new ProfilerInfo(x);
                 sum.TicksSpent.Sample(x.TicksSpent.GetAverage() + y.TicksSpent.GetAverage());
