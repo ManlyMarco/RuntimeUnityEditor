@@ -332,7 +332,9 @@ namespace RuntimeUnityEditor.Core.Profiler
                         infos = infos
                             .GroupBy(x => x.FullName)
                             .Select(group =>
-                                group.Aggregate(new ProfilerInfo(group.First(), $"{group.First().FullName}"),
+                                group
+                                    .Where(pi => pi.SinceLastRun < 2)
+                                    .Aggregate(new ProfilerInfo(group.First(), $"{group.First().FullName}"),
                                 (a, b) => ProfilerInfo.Merge(a, b))
                                 );
                     }
