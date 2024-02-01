@@ -436,7 +436,8 @@ namespace RuntimeUnityEditor.Core.Profiler
                 DisplayName = FullName;
                 Timer = new Stopwatch();
                 GuiEvent = parent.GuiEvent;
-                ExecutionOrder = parent._executionOrder;
+                _executionOrder = parent._executionOrder;
+                HighestExecutionOrder = parent.HighestExecutionOrder;
                 Instances = 0;
             }
 
@@ -446,6 +447,8 @@ namespace RuntimeUnityEditor.Core.Profiler
                 sum.TicksSpent.Sample(x.TicksSpent.GetAverage() + y.TicksSpent.GetAverage());
                 sum.GcBytes.Sample(x.GcBytes.GetAverage() + y.GcBytes.GetAverage());
                 sum.Instances = x.Instances + y.Instances;
+                sum._executionOrder = Math.Max(x._executionOrder, y._executionOrder);
+                sum.HighestExecutionOrder = Math.Max(x.HighestExecutionOrder, y.HighestExecutionOrder);
                 return sum;
             }
         }
