@@ -295,6 +295,8 @@ namespace RuntimeUnityEditor.Core.Profiler
 
         private IEnumerator FrameEndCo()
         {
+            bool prevAggregation = false; 
+
             while (true)
             {
                 yield return _waitForEndOfFrame;
@@ -303,7 +305,7 @@ namespace RuntimeUnityEditor.Core.Profiler
 
                 _currentExecutionCount = 0;
 
-                if (_ordering == 1 || _ordering == 2)
+                if (_ordering == 1 || _ordering == 2 || prevAggregation != _aggregation )
                     _needResort = true;
 
                 if (!_pause)
@@ -351,6 +353,7 @@ namespace RuntimeUnityEditor.Core.Profiler
                 }
 
                 _needResort = false;
+                prevAggregation = _aggregation;
             }
         }
 
