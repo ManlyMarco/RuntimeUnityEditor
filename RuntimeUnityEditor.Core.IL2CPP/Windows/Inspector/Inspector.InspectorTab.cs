@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using HarmonyLib;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.ObjectTree;
 using RuntimeUnityEditor.Core.Utils;
@@ -150,6 +151,39 @@ namespace RuntimeUnityEditor.Core.Inspector
                         _fieldCache.AddRange(enumerable.Cast<object>()
                             .Select((x, y) => x is ICacheEntry ? x : new ReadonlyListCacheEntry(x, y))
                             .Cast<ICacheEntry>());
+                    }
+                    else
+                    {
+                        // Needed for IL2CPP collections since they don't implement IEnumerable
+                        // Can cause side effects if the object is not a real collection
+                        var getEnumeratorM = type.GetMethod("GetEnumerator", AccessTools.all, Type.EmptyTypes);
+                        if (getEnumeratorM != null)
+                        {
+                            try
+                            {
+                                var enumerator = getEnumeratorM.Invoke(objectToOpen, null);
+                                if (enumerator != null)
+                                {
+                                    var enumeratorType = enumerator.GetType();
+                                    var moveNextM = enumeratorType.GetMethod("MoveNext", AccessTools.all, Type.EmptyTypes);
+                                    var currentP = enumeratorType.GetProperty("Current");
+                                    if (moveNextM != null && currentP != null)
+                                    {
+                                        var count = 0;
+                                        while ((bool)moveNextM.Invoke(enumerator, null))
+                                        {
+                                            var current = currentP.GetValue(enumerator, null);
+                                            _fieldCache.Add(new ReadonlyListCacheEntry(current, count));
+                                            count++;
+                                        }
+                                    }
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, $"Failed to enumerate object \"{objectToOpen}\" ({type.FullName}) : {e}");
+                            }
+                        }
                     }
 
                     // No need if it's not a value type, only used to propagate changes back so it's redundant with classes

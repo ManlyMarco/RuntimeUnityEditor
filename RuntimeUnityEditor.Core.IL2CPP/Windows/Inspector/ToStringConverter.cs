@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using HarmonyLib;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.Utils;
 using UnityEngine;
@@ -46,7 +47,7 @@ namespace RuntimeUnityEditor.Core.Inspector
             if (value is ICollection collection)
                 return $"Count = {collection.Count}";
 
-            if (value is IEnumerable _)
+            if (value is IEnumerable _ || value.GetType().GetMethod("GetEnumerator", AccessTools.all, Type.EmptyTypes) != null)
             {
                 var property = valueType.GetProperty("Count", BindingFlags.Public | BindingFlags.Instance);
                 if (property != null && property.CanRead)
@@ -67,7 +68,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                 if (valueType.IsGenericType)
                 {
                     var baseType = valueType.GetGenericTypeDefinition();
-                    if (baseType == typeof(KeyValuePair<,>))
+                    if (baseType == typeof(KeyValuePair<,>) || baseType == typeof(Il2CppSystem.Collections.Generic.KeyValuePair<,>))
                     {
                         //var argTypes = baseType.GetGenericArguments();
                         var kvpKey = valueType.GetProperty("Key")?.GetValue(value, null);
