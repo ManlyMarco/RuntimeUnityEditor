@@ -295,6 +295,8 @@ namespace RuntimeUnityEditor.Core.Profiler
 
         private IEnumerator FrameEndCo()
         {
+            bool prevAggregation = false;
+
             while (true)
             {
                 yield return _waitForEndOfFrame;
@@ -321,7 +323,7 @@ namespace RuntimeUnityEditor.Core.Profiler
                     }
                 }
 
-                if (_needResort || _aggregation)
+                if (_needResort || _aggregation || prevAggregation != _aggregation)
                 {
                     _dataDisplay.Clear();
 
@@ -334,7 +336,7 @@ namespace RuntimeUnityEditor.Core.Profiler
                             .Select(group =>
                                 group
                                     .Where(pi => pi.SinceLastRun < 2)
-                                    .Aggregate(new ProfilerInfo(group.First(), $"{group.First().FullName}"),
+                                    .Aggregate(new ProfilerInfo(group.First(), group.First().FullName),
                                 (a, b) => ProfilerInfo.Merge(a, b))
                                 );
                     }
@@ -353,6 +355,7 @@ namespace RuntimeUnityEditor.Core.Profiler
                 }
 
                 _needResort = false;
+                prevAggregation = _aggregation;
             }
         }
 
