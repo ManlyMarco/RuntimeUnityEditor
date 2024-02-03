@@ -394,7 +394,7 @@ namespace RuntimeUnityEditor.Core.Profiler
 
             public long GcBytesAtStart;
 
-            public int Instances;
+            public uint Instances;
 
             internal uint SinceLastRun;
             internal int HighestExecutionOrder;
