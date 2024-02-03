@@ -397,12 +397,12 @@ namespace RuntimeUnityEditor.Core.Profiler
 
             public int Instances;
 
+            internal uint SinceLastRun;
             internal int HighestExecutionOrder;
             public bool OriginalRan;
 
             public bool PostfixRan;
 
-            internal byte SinceLastRun;
 
             public ProfilerInfo(MethodBase method, MonoBehaviour owner, EventType guiEvent = (EventType)(-1))
             {
