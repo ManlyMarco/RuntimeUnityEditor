@@ -18,11 +18,12 @@ namespace RuntimeUnityEditor.Core.Profiler
     public sealed class ProfilerWindow : Window<ProfilerWindow>
     {
         private const string OnGuiMethodName = "OnGUI";
+        private const int RanW = 25;
         private static readonly string[] _orderingStrings = { "#", "Time", "Memory", "Name" };
         private static readonly GUILayoutOption[] _cGcW = { GUILayout.MinWidth(50), GUILayout.MaxWidth(50) };
         private static readonly GUILayoutOption[] _cOrderW = { GUILayout.MinWidth(30), GUILayout.MaxWidth(30) };
         private static readonly GUILayoutOption[] _cRanHeaderW = { GUILayout.MinWidth(43), GUILayout.MaxWidth(43) };
-        private static readonly GUILayoutOption[] _cRanW2 = { GUILayout.MinWidth(25), GUILayout.MaxWidth(25) };
+        private static readonly GUILayoutOption[] _cRanW2 = { GUILayout.MinWidth(RanW), GUILayout.MaxWidth(RanW) };
         private static readonly GUILayoutOption[] _cTicksW = { GUILayout.MinWidth(50), GUILayout.MaxWidth(50) };
         private static readonly GUILayoutOption[] _cInsW = { GUILayout.MinWidth(50), GUILayout.MaxWidth(50) };
         private static readonly GUILayoutOption[] _expandW = { GUILayout.ExpandWidth(true) };
@@ -172,7 +173,10 @@ namespace RuntimeUnityEditor.Core.Profiler
                                 if (!ran && !pd.Owner) _needResort = true;
 
                                 GUILayout.Toggle(ran, GUIContent.none); // enabled
-                                GUILayout.Toggle(pd.OriginalRan, GUIContent.none, _cRanW2); // enabled
+                                if (!_aggregation)
+                                    GUILayout.Toggle(pd.OriginalRan, GUIContent.none, _cRanW2); // enabled
+                                else
+                                    GUILayout.Space(RanW);
 
                                 var ticks = pd.TicksSpent.GetAverage();
                                 var ms = ConvertTicksToMs(ticks);
