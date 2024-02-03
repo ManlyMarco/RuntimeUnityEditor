@@ -332,10 +332,9 @@ namespace RuntimeUnityEditor.Core.Profiler
                     if ( _aggregation )
                     {
                         infos = infos
-                            .GroupBy(x => x.FullName)
+                            .GroupBy(x => new KeyValuePair<string,bool>(x.FullName, x.SinceLastRun < 2))
                             .Select(group =>
                                 group
-                                    .Where(pi => pi.SinceLastRun < 2)
                                     .Aggregate(new ProfilerInfo(group.First(), group.First().FullName),
                                 (a, b) => ProfilerInfo.Merge(a, b))
                                 );
@@ -444,6 +443,7 @@ namespace RuntimeUnityEditor.Core.Profiler
                 _executionOrder = parent._executionOrder;
                 HighestExecutionOrder = parent.HighestExecutionOrder;
                 Instances = 0;
+                SinceLastRun = parent.SinceLastRun;
             }
 
             static public ProfilerInfo Merge( ProfilerInfo x, ProfilerInfo y )
