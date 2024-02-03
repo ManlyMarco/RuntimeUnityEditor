@@ -176,7 +176,7 @@ namespace RuntimeUnityEditor.Core.Profiler
                                 if (!_aggregation)
                                     GUILayout.Toggle(pd.OriginalRan, GUIContent.none, _cRanW2); // enabled
                                 else
-                                    GUILayout.Space(RanW);
+                                    GUILayout.Space(RanW + 4);
 
                                 var ticks = pd.TicksSpent.GetAverage();
                                 var ms = ConvertTicksToMs(ticks);
