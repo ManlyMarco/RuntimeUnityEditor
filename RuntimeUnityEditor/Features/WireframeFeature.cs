@@ -16,7 +16,7 @@ namespace RuntimeUnityEditor.Core
         private MonoBehaviour _monoBehaviour;
 
         //Effects incompatible with wireframes.
-        private static string[] _DisableEffectNames = { "GlobalFog", "BloomAndFlares", "CustomRender", "AmplifyColorEffect" };
+        private static string[] _DisableEffectNames = { "GlobalFog", "BloomAndFlares", "CustomRender", "AmplifyColorEffect", "PostProcessLayer" };
 
         private List<Behaviour> _disabledEffects = new List<Behaviour>();
 
