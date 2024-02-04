@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Collections;
 using System.Collections.Generic;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
@@ -11,12 +12,19 @@ namespace RuntimeUnityEditor.Core
     /// </summary>
     public sealed class WireframeFeature : FeatureBase<WireframeFeature>
     {
-        private static readonly Dictionary<Camera, CameraWithWireframe> _targets = new Dictionary<Camera, CameraWithWireframe>();
-        
+        private static Camera _targetCamera = null;
+        private MonoBehaviour _monoBehaviour;
+
+        //Effects incompatible with wireframes.
+        private static string[] _DisableEffectNames = { "GlobalFog", "BloomAndFlares", "CustomRender", "AmplifyColorEffect" };
+
+        private List<Behaviour> _disabledEffects = new List<Behaviour>();
+
         protected override void Initialize(InitSettings initSettings)
         {
             DisplayName = "Wireframe";
             Enabled = false;
+            _monoBehaviour = initSettings.PluginMonoBehaviour;
         }
 
         public override bool Enabled
@@ -27,61 +35,61 @@ namespace RuntimeUnityEditor.Core
                 if (base.Enabled != value)
                 {
                     base.Enabled = value;
+
                     if (value)
                     {
-                        Camera.onPreRender += OnPreRender;
-                        Camera.onPostRender += OnPostRender;
-                    }
-                    else
-                    {
-                        Camera.onPreRender -= OnPreRender;
-                        Camera.onPostRender -= OnPostRender;
-                        GL.wireframe = false;
-
-                        foreach (var cam in _targets)
-                            cam.Value.Restore();
-
-                        _targets.Clear();
+                        _monoBehaviour.StartCoroutine(Routine());
                     }
                 }
             }
         }
 
-        class CameraWithWireframe
+        IEnumerator Routine()
         {
-            //Incompatible post-effects
-            static string[] _DisableEffectNames = { "GlobalFog" };
+            SetEffectEnabled(false, true);
+            yield return null;
 
-            Camera _camera;
-            Behaviour[] _disableEffects;
+            if (Enabled)
+                yield return null;  //Wait for multiple frames
 
-            public CameraWithWireframe( Camera camera )
+            if (Enabled)
             {
-                _camera = camera;
-                _disableEffects = _DisableEffectNames.Select(name => camera.gameObject.GetComponent(name) as Behaviour).Where(c => c != null && c.enabled).ToArray();
+                Camera.onPreRender += OnPreRender;
+                Camera.onPostRender += OnPostRender;
+                yield return null;
+
+                while (Enabled)
+                {
+                    SetEffectEnabled(false, false); //Always off
+                    yield return null;
+                }
+
+                Camera.onPreRender -= OnPreRender;
+                Camera.onPostRender -= OnPostRender;
             }
 
-            public void Set()
-            {
-                if (_camera == null)
-                    return;
+            SetEffectEnabled(true, false);
+        }
 
-                GL.wireframe = true;
-                foreach (var effect in _disableEffects)
-                    if(effect != null)
-                        effect.enabled = false;
+        private void SetEffectEnabled( bool enabled, bool collectEffects )
+        {
+            if( collectEffects)
+            {
+                _disabledEffects.Clear();
+
+                foreach (var camera in GameObject.FindObjectsOfType<Camera>())
+                {
+                    _disabledEffects.AddRange(
+                        _DisableEffectNames
+                            .Select(name => camera.gameObject.GetComponent(name) as Behaviour)
+                            .Where(c => c != null && c.enabled)
+                        );
+                }
             }
 
-            public void Restore()
-            {
-                if (_camera == null)
-                    return;
-
-                foreach (var effect in _disableEffects)
-                    if (effect != null)
-                        effect.enabled = true;
-                GL.wireframe = false;
-            }
+            foreach (var effect in _disabledEffects)
+                if (effect != null)
+                    effect.enabled = enabled;
         }
 
         private static void OnPreRender(Camera cam)
@@ -89,16 +97,17 @@ namespace RuntimeUnityEditor.Core
             // Avoid affecting game state if wireframe is already used
             if (GL.wireframe) return;
 
-            if( !_targets.TryGetValue(cam, out var wireframe) )
-                wireframe = _targets[cam] = new CameraWithWireframe(cam);
-
-            wireframe.Set();
+            _targetCamera = cam;
+            GL.wireframe = true;
         }
 
         private static void OnPostRender(Camera cam)
         {
-            if (_targets.TryGetValue(cam, out var wireframe))
-                wireframe.Restore();
+            if( _targetCamera == cam )
+            {
+                GL.wireframe = false;
+                _targetCamera = null;
+            }
         }
     }
 }
