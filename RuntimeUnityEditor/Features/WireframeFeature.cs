@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Linq;
+using System.Collections.Generic;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
 #pragma warning disable CS1591
@@ -10,7 +11,7 @@ namespace RuntimeUnityEditor.Core
     /// </summary>
     public sealed class WireframeFeature : FeatureBase<WireframeFeature>
     {
-        private static readonly Dictionary<Camera, CameraClearFlags> _origFlags = new Dictionary<Camera, CameraClearFlags>();
+        private static readonly Dictionary<Camera, CameraWithWireframe> _targets = new Dictionary<Camera, CameraWithWireframe>();
         
         protected override void Initialize(InitSettings initSettings)
         {
@@ -37,14 +38,49 @@ namespace RuntimeUnityEditor.Core
                         Camera.onPostRender -= OnPostRender;
                         GL.wireframe = false;
 
-                        foreach (var origFlag in _origFlags)
-                        {
-                            if (origFlag.Key != null)
-                                origFlag.Key.clearFlags = origFlag.Value;
-                        }
-                        _origFlags.Clear();
+                        foreach (var cam in _targets)
+                            cam.Value.Restore();
+
+                        _targets.Clear();
                     }
                 }
+            }
+        }
+
+        class CameraWithWireframe
+        {
+            //Incompatible post-effects
+            static string[] _DisableEffectNames = { "GlobalFog" };
+
+            Camera _camera;
+            Behaviour[] _disableEffects;
+
+            public CameraWithWireframe( Camera camera )
+            {
+                _camera = camera;
+                _disableEffects = _DisableEffectNames.Select(name => camera.gameObject.GetComponent(name) as Behaviour).Where(c => c != null && c.enabled).ToArray();
+            }
+
+            public void Set()
+            {
+                if (_camera == null)
+                    return;
+
+                GL.wireframe = true;
+                foreach (var effect in _disableEffects)
+                    if(effect != null)
+                        effect.enabled = false;
+            }
+
+            public void Restore()
+            {
+                if (_camera == null)
+                    return;
+
+                foreach (var effect in _disableEffects)
+                    if (effect != null)
+                        effect.enabled = true;
+                GL.wireframe = false;
             }
         }
 
@@ -53,20 +89,16 @@ namespace RuntimeUnityEditor.Core
             // Avoid affecting game state if wireframe is already used
             if (GL.wireframe) return;
 
-            if (!_origFlags.ContainsKey(cam))
-                _origFlags.Add(cam, cam.clearFlags);
+            if( !_targets.TryGetValue(cam, out var wireframe) )
+                wireframe = _targets[cam] = new CameraWithWireframe(cam);
 
-            cam.clearFlags = CameraClearFlags.Color;
-            GL.wireframe = true;
+            wireframe.Set();
         }
 
         private static void OnPostRender(Camera cam)
         {
-            if (_origFlags.TryGetValue(cam, out var flags))
-            {
-                cam.clearFlags = flags;
-                GL.wireframe = false;
-            }
+            if (_targets.TryGetValue(cam, out var wireframe))
+                wireframe.Restore();
         }
     }
 }
