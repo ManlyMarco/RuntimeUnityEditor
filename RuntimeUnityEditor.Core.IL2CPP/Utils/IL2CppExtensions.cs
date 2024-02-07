@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
 using Il2CppInterop.Runtime.InteropTypes;
 using RuntimeUnityEditor.Core.Utils;
@@ -19,7 +21,7 @@ namespace RuntimeUnityEditor.Core
             obj.top = top;
             obj.bottom = bottom;
         }
-        
+
         public static Transform[] GetChildren(this Transform transform)
         {
             var children = new Transform[transform.childCount];
@@ -50,12 +52,12 @@ namespace RuntimeUnityEditor.Core
         {
             return component.GetComponents<Component>().Select(x => x.TryAutoCast() ?? x).OfType<Component>().ToArray();
         }
-        
+
         public static Component[] GetAllComponentsInChildrenCasted(this GameObject gameObject, bool includeInactive)
         {
             return gameObject.GetComponentsInChildren<Component>(includeInactive).Select(x => x.TryAutoCast() ?? x).OfType<Component>().ToArray();
         }
-        
+
         public static Component[] GetAllComponentsInChildrenCasted(this Component component, bool includeInactive)
         {
             return component.GetComponentsInChildren<Component>(includeInactive).Select(x => x.TryAutoCast() ?? x).OfType<Component>().ToArray();
@@ -78,9 +80,34 @@ namespace RuntimeUnityEditor.Core
 
         public static Type? TryGetMonoType(this Il2CppSystem.Type il2CppType)
         {
-            var typeName = il2CppType.FullNameOrDefault;
+            var typeName = il2CppType.FullName;
 
             if (_cachedTypes.TryGetValue(typeName, out var monoType)) return monoType;
+
+            // Only mono interop types that are statically referenced are automatically loaded
+            // Since RUE is entirely using reflection, we sometimes need to manually load the interop assemblies
+            if (!_cachedAssemblies.Contains(il2CppType.Assembly.FullName))
+            {
+                try
+                {
+                    // Only available since bleeding edge build #680
+                    var interopAssPath = AccessTools.PropertyGetter(typeof(IL2CPPChainloader).Assembly.GetType("BepInEx.Unity.IL2CPP.Il2CppInteropManager"), "IL2CPPInteropAssemblyPath")?.Invoke(null, null) as string;
+                    if (interopAssPath == null) throw new InvalidOperationException("Interop assembly path is not available");
+
+                    var shortAssName = il2CppType.Assembly.GetName().Name;
+
+                    var assPath = Path.Combine(interopAssPath, shortAssName + ".dll");
+                    if (File.Exists(assPath))
+                    {
+                        RuntimeUnityEditorCore.Logger.Log(LogLevel.Info, "Loading interop assembly from " + assPath);
+                        Assembly.LoadFile(assPath);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+            }
 
             // Look for newly loaded assemblies and add all types from them to the cache
             var newAssemblies = AccessTools.AllAssemblies().Where(x => x.FullName != null && _cachedAssemblies.Add(x.FullName)).ToList();
