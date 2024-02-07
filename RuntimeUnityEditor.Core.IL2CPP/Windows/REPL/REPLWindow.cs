@@ -163,16 +163,17 @@ namespace RuntimeUnityEditor.Core.REPL
         {
             if (_completionsListingStyle == null)
             {
-                _completionsListingStyle = new GUIStyle(GUI.skin.button)
-                {
-                    border = new RectOffset(),
-                    margin = new RectOffset(),
-                    padding = new RectOffset(),
-                    hover = { background = Texture2D.whiteTexture, textColor = Color.black },
-                    normal = { background = null },
-                    focused = { background = Texture2D.whiteTexture, textColor = Color.black },
-                    active = { background = Texture2D.whiteTexture, textColor = Color.black }
-                };
+                _completionsListingStyle = GUI.skin.button.CreateCopy();
+                _completionsListingStyle.border = new RectOffset();
+                _completionsListingStyle.margin = new RectOffset();
+                _completionsListingStyle.padding = new RectOffset();
+                _completionsListingStyle.hover.background = Texture2D.whiteTexture;
+                _completionsListingStyle.hover.textColor = Color.black;
+                _completionsListingStyle.normal.background = null;
+                _completionsListingStyle.focused.background = Texture2D.whiteTexture;
+                _completionsListingStyle.focused.textColor = Color.black;
+                _completionsListingStyle.active.background = Texture2D.whiteTexture;
+                _completionsListingStyle.active.textColor = Color.black;
             }
 
             GUILayout.BeginVertical();

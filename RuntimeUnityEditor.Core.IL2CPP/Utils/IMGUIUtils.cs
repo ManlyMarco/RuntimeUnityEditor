@@ -131,7 +131,7 @@ namespace RuntimeUnityEditor.Core.Utils
 
         public static bool DrawButtonWithShadow(Rect r, GUIContent content, GUIStyle style, float shadowAlpha, Vector2 direction)
         {
-            GUIStyle letters = new GUIStyle(style);
+            GUIStyle letters = style.CreateCopy();
             letters.normal.background = null;
             letters.hover.background = null;
             letters.active.background = null;
@@ -246,6 +246,18 @@ namespace RuntimeUnityEditor.Core.Utils
         public static bool IsMouseRightClick()
         {
             return Event.current.button == 1;
+        }
+
+        public static GUIStyle CreateCopy(this GUIStyle original)
+        {
+#if IL2CPP
+            // Copy constructor is sometimes stripped out in IL2CPP
+            var guiStyle = new GUIStyle();
+            guiStyle.m_Ptr = GUIStyle.Internal_Copy(guiStyle, original);
+            return guiStyle;
+#else
+            return new GUIStyle(original);
+#endif
         }
     }
 }

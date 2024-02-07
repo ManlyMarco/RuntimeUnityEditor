@@ -77,7 +77,7 @@ namespace RuntimeUnityEditor.Core
         {
             if (_hoverText.Length > 0)
             {
-                if (_labelSkin == null) _labelSkin = new GUIStyle(GUI.skin.label);
+                if (_labelSkin == null) _labelSkin = GUI.skin.label.CreateCopy();
 
                 // Figure out which corner of the screen to draw the hover text in
                 _labelSkin.alignment = TextAnchor.UpperLeft;

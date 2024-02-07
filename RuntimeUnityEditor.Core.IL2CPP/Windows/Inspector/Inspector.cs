@@ -76,11 +76,9 @@ namespace RuntimeUnityEditor.Core.Inspector
         {
             if (_alignedButtonStyle == null)
             {
-                _alignedButtonStyle = new GUIStyle(GUI.skin.button)
-                {
-                    alignment = TextAnchor.MiddleLeft,
-                    wordWrap = true
-                };
+                _alignedButtonStyle = GUI.skin.button.CreateCopy();
+                _alignedButtonStyle.alignment = TextAnchor.MiddleLeft;
+                _alignedButtonStyle.wordWrap = true;
             }
 
             var canEnterValue = field.CanEnterValue();

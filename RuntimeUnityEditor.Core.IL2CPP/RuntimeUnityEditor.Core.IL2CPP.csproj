@@ -13,6 +13,7 @@
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
 
     <DebugType>embedded</DebugType>
+    <DefineConstants>$(DefineConstants);IL2CPP</DefineConstants>
   </PropertyGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
