@@ -385,7 +385,7 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         #region Method Invoke
 
-        private static readonly GUIContent _buttonInvokeContent = new GUIContent("Invoke",null, "Execute this method. Will open a new window to let you specify any necessary parameters.");
+        private static readonly GUIContent _buttonInvokeContent = new GUIContent("Invoke", null, "Execute this method. Will open a new window to let you specify any necessary parameters.");
         private static readonly int _currentlyInvokingWindowId = Core.RuntimeUnityEditorCore.Version.GetHashCode() + 80085;
 
         private static MethodInfo _currentlyInvoking;
@@ -601,7 +601,19 @@ namespace RuntimeUnityEditor.Core.Inspector
                                 {
                                     var arg = _currentlyInvokingParamsValues[index];
                                     var param = methodParams[index];
-                                    var obj = ClipboardWindow.TryGetObject(arg, out var clipboardObj) ? clipboardObj : Convert.ChangeType(arg, param.ParameterType);
+                                    var paramType = param.ParameterType;
+                                    var nullableParamType = Nullable.GetUnderlyingType(paramType);
+                                    if (nullableParamType != null)
+                                    {
+                                        if (string.IsNullOrEmpty(arg))
+                                        {
+                                            paramArgs[index] = null;
+                                            continue;
+                                        }
+                                        paramType = nullableParamType;
+                                    }
+
+                                    var obj = ClipboardWindow.TryGetObject(arg, out var clipboardObj) ? clipboardObj : Convert.ChangeType(arg, paramType);
                                     paramArgs[index] = obj;
                                 }
                                 catch (Exception e)

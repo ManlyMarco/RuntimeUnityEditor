@@ -21,6 +21,9 @@ namespace RuntimeUnityEditor.Core.Utils
 
         public long GetAverage()
         {
+            if (_samples.Count == 0)
+                return 0;
+
             return _sampleAccumulator / _samples.Count;
         }
 
