@@ -557,10 +557,6 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
                 GUILayout.Space(3);
 
-                if (SelectedTransform == null) GUI.enabled = false;
-                if (GUILayout.Button("Dump obj", GUILayout.ExpandWidth(false)))
-                    SceneDumper.DumpObjects(SelectedTransform?.gameObject);
-                GUI.enabled = true;
             }
             GUILayout.EndHorizontal();
 
