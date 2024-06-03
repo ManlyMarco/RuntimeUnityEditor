@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using HarmonyLib;
+using System.Text;
 using RuntimeUnityEditor.Core.Utils;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
@@ -26,7 +26,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         private bool _lastSearchComponents;
         private bool _lastSearchNames;
 
-        public int SceneIndexFilter
+        internal int SceneIndexFilter
         {
             get => _sceneIndexFilter;
             set
@@ -39,6 +39,11 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 }
             }
         }
+
+        /// <summary>
+        /// Search results are currently being indexed.
+        /// </summary>
+        public bool BusyIndexing => _indexingTimer.ElapsedMilliseconds > 100 && _indexingCo != null;
 
         /// <summary>
         /// A filtered list is currently being shown instead of all items.
@@ -98,296 +103,6 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             return GetRootObjects();
         }
 
-
-
-
-
-        /*
-        private sealed class ObjectInfo
-        {
-            public readonly GameObject GameObject;
-
-            public ObjectInfo Parent;
-
-            public ObjectInfo Root
-            {
-                get
-                {
-                    // Find the root of the hierarchy
-                    var current = this;
-                    while (current.Parent != null)
-                        current = current.Parent;
-                    return current;
-                }
-            }
-
-
-            internal Scene? _scene;
-            // Used for filtering by scene
-            public Scene? Scene => Root._scene;
-            // Used for searching by name
-            public string Name;
-            // Used for component searching
-            public string ComponentNames;
-            // Used for deep searching
-            public string ComponentProperties;
-            public ObjectInfo(GameObject gameObject)
-            {
-                if (gameObject == null) throw new ArgumentNullException(nameof(gameObject));
-                GameObject = gameObject;
-            }
-        }
-
-        private Dictionary<GameObject, ObjectInfo> _gatheredInfo = new Dictionary<GameObject, ObjectInfo>();
-
-        public IEnumerator RefreshCo()
-        {
-            //todo measure speed of all steps and add   yield return null;
-
-            var allObjects = Resources.FindObjectsOfTypeAll<GameObject>();
-            _gatheredInfo = allObjects.ToDictionary(x => x, x => new ObjectInfo(x));
-
-
-            //bool searchComponents = true;
-            bool searchProperties = true;
-
-            UpdateList(searchProperties);
-        }
-
-        private void UpdateList(bool searchProperties)
-        {
-            var loadedScenes = Enumerable.Range(0, SceneManager.sceneCount).Select(i =>
-            {
-                var scene = SceneManager.GetSceneAt(i);
-                return new { id = i, scene, objects = scene.GetRootGameObjects() };
-            }).ToList();
-
-            // Update search strings and other info
-            foreach (var goInfo in _gatheredInfo.Values.ToList())
-            {
-                // todo handle dead objects differently? maybe keep them in the list but mark them as dead
-                if (!goInfo.GameObject)
-                {
-                    _gatheredInfo.Remove(goInfo.GameObject);
-                    continue;
-                }
-
-                //todo also somehow update children?
-
-
-                // Update basic info
-                goInfo.Name = goInfo.GameObject.name;
-
-                var parentTr = goInfo.GameObject.transform.parent;
-                var parentGo = parentTr != null ? parentTr.gameObject : null;
-                if (parentGo != null)
-                {
-                    goInfo._scene = null;
-                    if (_gatheredInfo.TryGetValue(parentGo, out var parentInfo))
-                    {
-                        goInfo.Parent = parentInfo;
-                    }
-                    else
-                    {
-                        Console.WriteLine("!! not found go " + parentGo);
-                    }
-                }
-                else
-                {
-                    var ownerScene = loadedScenes.Find(sc => sc.objects.Contains(goInfo.GameObject));
-                    goInfo._scene = ownerScene?.scene;
-                }
-
-                // Update search strings
-                //if (searchComponents)
-                {
-                    var components = goInfo.GameObject.GetComponents<Component>();
-                    goInfo.ComponentNames = string.Join("\0", components.Select(c => c.GetType().Name.ToLowerInvariant()).ToArray());
-
-                    if (searchProperties)
-                    {
-                        goInfo.ComponentProperties = string.Join("\0", components.Select(ExtractComponentSearchString).ToArray());
-                    }
-                }
-            }
-        }*/
-
-        private sealed class SearchStrings
-        {
-            public readonly GameObject Owner;
-            public readonly string Name;
-            public readonly string ComponentNames;
-            public readonly string ComponentProperties;
-
-            private SearchStrings(GameObject owner, string name, string componentNames, string componentProperties)
-            {
-                Owner = owner;
-                Name = name;
-                ComponentNames = componentNames;
-                ComponentProperties = componentProperties;
-            }
-
-            public bool Match(string searchString, bool searchNames, bool searchComponents, bool searchProperties)
-            {
-                if (searchNames && Name.Contains(searchString, StringComparison.Ordinal))
-                    return true;
-
-                if (searchComponents && ComponentNames != null && ComponentNames.Contains(searchString, StringComparison.Ordinal))
-                    return true;
-
-                if (searchProperties && ComponentProperties != null && ComponentProperties.Contains(searchString, StringComparison.Ordinal))
-                    return true;
-
-                return false;
-            }
-
-            public static SearchStrings Create(GameObject obj, bool searchProperties)
-            {
-                if (!obj) return null;
-
-                var components = obj.GetComponents<Component>().Where(c => c).ToArray();
-                var componentNames = string.Join("\0", components.Select(c => c.GetType().Name).ToArray());
-                var componentProperties = searchProperties ? string.Join("\0", components.Select(ExtractComponentSearchString).ToArray()) : null;
-                return new SearchStrings(obj, obj.name.ToLowerInvariant(), componentNames.ToLowerInvariant(), componentProperties?.ToLowerInvariant());
-            }
-        }
-        private readonly Dictionary<GameObject, SearchStrings> _searchIndex = new Dictionary<GameObject, SearchStrings>();
-        private bool _fullIndexUpdate = true;
-        private void QueueFullReindex()
-        {
-            _fullIndexUpdate = true;
-        }
-
-        private readonly Stopwatch _indexingTimer = new Stopwatch();
-        private Coroutine _indexingCo;
-
-        private IEnumerator IndexObjectsCo()
-        {
-            _indexingTimer.Start();
-            var timer = Stopwatch.StartNew();
-
-        Restart:
-
-            _searchIndex.Keys.Where(x => !x).ToList().ForEach(x => _searchIndex.Remove(x));
-
-            var rootObjects = GetRootObjects();
-
-            if (!_fullIndexUpdate)
-                rootObjects = rootObjects.Where(x => !_searchIndex.ContainsKey(x)).ToList();
-            _fullIndexUpdate = false;
-
-            foreach (var tr in rootObjects.SelectMany(go => go.GetComponentsInChildren<Transform>(true)))
-            {
-                var go = tr.gameObject;
-                _searchIndex[go] = SearchStrings.Create(go, _lastSearchProperties);
-
-                if (timer.ElapsedMilliseconds > 20)
-                {
-                    timer.Reset();
-                    _indexingTimer.Stop();
-
-                    yield return null;
-
-                    _indexingTimer.Start();
-                    timer.Start();
-
-                    _searchResults = DoSearch();
-
-                    if (_fullIndexUpdate)
-                    {
-                        RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, "Restarting indexing...");
-                        goto Restart;
-                    }
-                }
-            }
-
-            _indexingCo = null;
-            StopIndexing();
-        }
-
-        private List<GameObject> DoSearch()
-        {
-            StartIndexing();
-
-            var targets = GetRootObjects().SelectMany(x => x.GetComponentsInChildren<Transform>(true)).Select(x => x.gameObject).Where(x => x).ToList();
-
-            var searched = targets.RunParallel(go =>
-            {
-                _searchIndex.TryGetValue(go, out var searchStrings);
-
-                if (searchStrings == null)
-                {
-                    _fullIndexUpdate = true;
-                    return null;
-                }
-
-                return searchStrings.Match(_lastSearchString, _lastSearchNames, _lastSearchComponents, _lastSearchProperties) ? searchStrings : null;
-            });
-
-            // This one's kind of slow because of sorting
-            var results = searched.Where(x => x != null && x.Owner)
-                          .OrderBy(x => x.Name, StringComparer.Ordinal)
-                          .ThenBy(x => x.Owner.GetHashCode())
-                          .Select(x => x.Owner)
-                          .ToList();
-
-            return results;
-        }
-
-        private void StartIndexing()
-        {
-            if (_indexingCo == null)
-                _indexingCo = RuntimeUnityEditorCore.PluginObject.StartCoroutine(IndexObjectsCo());
-        }
-
-        private void StopIndexing()
-        {
-            if (_indexingCo != null)
-                RuntimeUnityEditorCore.PluginObject.StopCoroutine(_indexingCo);
-            _indexingCo = null;
-
-            if (_indexingTimer.ElapsedMilliseconds > 0)
-                RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, $"Took {_indexingTimer.ElapsedMilliseconds}ms to index objects in the scene");
-            _indexingTimer.Reset();
-        }
-
-        private static readonly HashSet<string> _nameBlacklist = new HashSet<string>
-        {
-            "parent", "parentInternal", "root", "transform", "gameObject",
-            // Animator properties inaccessible outside of OnAnimatorIK
-            "bodyPosition", "bodyRotation",
-            // AudioSource obsolete properties
-            "minVolume", "maxVolume", "rolloffFactor",
-            // NavMeshAgent properties often spewing errors
-            "destination", "remainingDistance"
-        };
-        //static Type[] typeBlacklist = new[] { typeof(bool) };
-        private static readonly Type _boolType = typeof(bool);
-
-        private static string ExtractComponentSearchString(Component c)
-        {
-            var type = c.GetType();
-
-            var sb = new System.Text.StringBuilder();
-
-            foreach (var prop in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                                     .Where(x => x.CanRead && x.PropertyType != _boolType && !_nameBlacklist.Contains(x.Name)))
-            {
-                try { sb.AppendLine(prop.GetValue(c, null)?.ToString()); }
-                catch { /* Skip invalid values */ }
-            }
-
-            foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                                      .Where(x => x.FieldType != _boolType && !_nameBlacklist.Contains(x.Name)))
-            {
-                try { sb.AppendLine(field.GetValue(c)?.ToString()); }
-                catch { /* Skip invalid values */ }
-            }
-
-            return sb.ToString();
-        }
-
-
         /// <summary>
         /// Refresh the list of GameObjects currently in the scene.
         /// </summary>
@@ -404,7 +119,6 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             {
                 sw = Stopwatch.StartNew();
                 _cachedRootGameObjects = new OrderedSet<GameObject>();
-                //todo orderby speed?
                 foreach (var gameObject in FindAllRootGameObjects().OrderBy(x => x.name, StringComparer.InvariantCultureIgnoreCase))
                     _cachedRootGameObjects.AddLast(gameObject);
 
@@ -416,7 +130,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 {
                     var newItems = UnityFeatureHelper.GetSceneGameObjects();
                     for (var index = 0; index < newItems.Length; index++)
-                        _cachedRootGameObjects.InsertSorted(newItems[index], GameObjectNameComparer.Instance); //todo update search selective
+                        _cachedRootGameObjects.InsertSorted(newItems[index], GameObjectNameComparer.Instance);
                 }
             }
 
@@ -443,6 +157,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         /// Perform a search in all current GameObjects. GameOjbect names are always searched.
         /// </summary>
         /// <param name="searchString">What to search for. Checks if the string is contained while ignoring case.</param>
+        /// <param name="searchNames">Search GameObject names.</param>
         /// <param name="searchComponents">Search component names.</param>
         /// <param name="searchProperties">Search values of component properties. Very slow.</param>
         /// <param name="refreshObjects">Perform a full refresh if necessary.</param>
@@ -465,7 +180,9 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             {
                 if (refreshObjects && SceneIndexFilter >= 0) Refresh(true, _lastObjectFilter);
 
+#if DEBUG
                 RuntimeUnityEditorCore.Logger.Log(LogLevel.Info, $"Searching in{(searchNames ? " Names" : "")}{(searchComponents ? " Components" : "")}{(searchProperties ? " Properties" : "")} for [{searchString}]");
+#endif
                 var sw = Stopwatch.StartNew();
 
                 _lastSearchString = searchString.ToLowerInvariant();
@@ -475,7 +192,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                     _searchResults = DoSearch();
 
                     if (sw.ElapsedMilliseconds > 100)
-                        RuntimeUnityEditorCore.Logger.Log(LogLevel.Info, $"Search took {sw.ElapsedMilliseconds}ms");
+                        RuntimeUnityEditorCore.Logger.Log(LogLevel.Info, $"Search took {sw.ElapsedMilliseconds}ms!");
                 }
                 catch (Exception e)
                 {
@@ -594,45 +311,28 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
             var type = c.GetType();
 
-            var nameBlacklist = new HashSet<string>
-                {
-                    "parent", "parentInternal", "root", "transform", "gameObject",
-                    // Animator properties inaccessible outside of OnAnimatorIK
-                    "bodyPosition", "bodyRotation",
-                    // AudioSource obsolete properties
-                    "minVolume", "maxVolume", "rolloffFactor",
-                    // NavMeshAgent properties often spewing errors
-                    "destination", "remainingDistance"
-                };
-
             foreach (var prop in type
                 .GetProperties(HarmonyLib.AccessTools.all)
-                .Where(x => x.CanRead && x.PropertyType.IsClass && !nameBlacklist.Contains(x.Name)))
+                .Where(x => x.CanRead && x.PropertyType.IsClass && !_nameBlacklist.Contains(x.Name)))
             {
                 try
                 {
                     if (prop.GetValue(c, null) == objInstance)
                         return true;
                 }
-                catch
-                {
-                    // Skip invalid values
-                }
+                catch { /* Skip invalid values */ }
             }
 
             foreach (var field in type
                 .GetFields(HarmonyLib.AccessTools.all)
-                .Where(x => x.FieldType.IsClass && !nameBlacklist.Contains(x.Name)))
+                .Where(x => x.FieldType.IsClass && !_nameBlacklist.Contains(x.Name)))
             {
                 try
                 {
                     if (field.GetValue(c) == objInstance)
                         return true;
                 }
-                catch
-                {
-                    // Skip invalid values
-                }
+                catch { /* Skip invalid values */ }
             }
 
             return false;
@@ -645,6 +345,10 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             var isGameObjectNull = (object)o == null || o.GetInstanceID() == 0;
             System.Diagnostics.Debug.Assert(isGameObjectNull == (o == null));
             return isGameObjectNull;
+        }
+        private static bool IsGameObjectAlive(GameObject o)
+        {
+            return !IsGameObjectNull(o);
         }
 
         private sealed class GameObjectNameComparer : IComparer<GameObject>
@@ -661,5 +365,179 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 return compare;
             }
         }
+
+        #region Search and indexing
+
+        private List<GameObject> DoSearch()
+        {
+            StartIndexing();
+
+            var targets = GetRootObjects().SelectMany(x => x.GetComponentsInChildren<Transform>(true)).Select(x => x.gameObject).Where(IsGameObjectAlive).ToList();
+
+            var searched = targets.RunParallel(go =>
+            {
+                _searchIndex.TryGetValue(go, out var searchStrings);
+                return searchStrings != null && searchStrings.Match(_lastSearchString, _lastSearchNames, _lastSearchComponents, _lastSearchProperties) ? searchStrings : null;
+            });
+
+            // This one's kind of slow because of sorting
+            var results = searched.Where(x => x != null)
+                                  .OrderBy(x => x.Name, StringComparer.Ordinal)
+                                  .ThenBy(x => x.Owner.GetInstanceID()) // Stops order changing randomly as list is populated
+                                  .Select(x => x.Owner)
+                                  .ToList();
+
+            return results;
+        }
+
+        private readonly Dictionary<GameObject, SearchStrings> _searchIndex = new Dictionary<GameObject, SearchStrings>();
+        private readonly Stopwatch _indexingTimer = new Stopwatch();
+        private Coroutine _indexingCo;
+        private bool _fullIndexUpdate = true;
+
+        private void QueueFullReindex()
+        {
+            _fullIndexUpdate = true;
+        }
+
+        private void StartIndexing()
+        {
+            if (_indexingCo == null)
+                _indexingCo = RuntimeUnityEditorCore.PluginObject.StartCoroutine(IndexObjectsCo());
+        }
+
+        private void StopIndexing()
+        {
+            if (_indexingCo != null)
+                RuntimeUnityEditorCore.PluginObject.StopCoroutine(_indexingCo);
+            _indexingCo = null;
+
+            if (_indexingTimer.ElapsedMilliseconds > 0)
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, $"Took {_indexingTimer.ElapsedMilliseconds}ms to index objects in the scene");
+            _indexingTimer.Reset();
+        }
+
+        private IEnumerator IndexObjectsCo()
+        {
+            _indexingTimer.Start();
+
+        Restart:
+
+            _searchIndex.Keys.Where(IsGameObjectNull).ToList().ForEach(x => _searchIndex.Remove(x));
+
+            var rootObjects = GetRootObjects();
+
+            if (!_fullIndexUpdate)
+                rootObjects = rootObjects.Where(x => !_searchIndex.ContainsKey(x)).ToList();
+            _fullIndexUpdate = false;
+
+            yield return null;
+
+            var timer = Stopwatch.StartNew();
+
+            foreach (var tr in rootObjects.SelectMany(go => go.GetComponentsInChildren<Transform>(true)))
+            {
+                var go = tr.gameObject;
+                _searchIndex[go] = SearchStrings.Create(go, _lastSearchProperties);
+
+                if (timer.ElapsedMilliseconds > 20)
+                {
+                    timer.Reset();
+                    _indexingTimer.Stop();
+
+                    yield return null;
+
+                    _indexingTimer.Start();
+                    timer.Start();
+
+                    _searchResults = DoSearch();
+
+                    if (_fullIndexUpdate)
+                    {
+                        RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, "Restarting indexing...");
+                        goto Restart;
+                    }
+                }
+            }
+
+            _indexingCo = null;
+            StopIndexing();
+        }
+
+        private static readonly HashSet<string> _nameBlacklist = new HashSet<string>
+        {
+            "parent", "parentInternal", "root", "transform", "gameObject",
+            // Animator properties inaccessible outside of OnAnimatorIK
+            "bodyPosition", "bodyRotation",
+            // AudioSource obsolete properties
+            "minVolume", "maxVolume", "rolloffFactor",
+            // NavMeshAgent properties often spewing errors
+            "destination", "remainingDistance"
+        };
+        private static readonly Type _boolType = typeof(bool);
+        private static string ExtractComponentSearchString(Component c)
+        {
+            var type = c.GetType();
+
+            var sb = new StringBuilder();
+
+            foreach (var prop in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                                     .Where(x => x.CanRead && x.PropertyType != _boolType && !_nameBlacklist.Contains(x.Name)))
+            {
+                try { sb.AppendLine(prop.GetValue(c, null)?.ToString()); }
+                catch { /* Skip invalid values */ }
+            }
+
+            foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                                      .Where(x => x.FieldType != _boolType && !_nameBlacklist.Contains(x.Name)))
+            {
+                try { sb.AppendLine(field.GetValue(c)?.ToString()); }
+                catch { /* Skip invalid values */ }
+            }
+
+            return sb.ToString();
+        }
+
+        private sealed class SearchStrings
+        {
+            public readonly GameObject Owner;
+            public readonly string Name;
+            public readonly string ComponentNames;
+            public readonly string ComponentProperties;
+
+            private SearchStrings(GameObject owner, string name, string componentNames, string componentProperties)
+            {
+                Owner = owner;
+                Name = name;
+                ComponentNames = componentNames;
+                ComponentProperties = componentProperties;
+            }
+
+            public bool Match(string searchString, bool searchNames, bool searchComponents, bool searchProperties)
+            {
+                if (searchNames && Name.Contains(searchString, StringComparison.Ordinal))
+                    return true;
+
+                if (searchComponents && ComponentNames != null && ComponentNames.Contains(searchString, StringComparison.Ordinal))
+                    return true;
+
+                if (searchProperties && ComponentProperties != null && ComponentProperties.Contains(searchString, StringComparison.Ordinal))
+                    return true;
+
+                return false;
+            }
+
+            public static SearchStrings Create(GameObject obj, bool searchProperties)
+            {
+                if (IsGameObjectNull(obj)) return null;
+
+                var components = obj.GetComponents<Component>().Where(c => c).ToArray();
+                var componentNames = string.Join("\0", components.Select(c => c.GetType().Name).ToArray());
+                var componentProperties = searchProperties ? string.Join("\0", components.Select(ExtractComponentSearchString).ToArray()) : null;
+                return new SearchStrings(obj, obj.name.ToLowerInvariant(), componentNames.ToLowerInvariant(), componentProperties?.ToLowerInvariant());
+            }
+        }
+
+        #endregion
     }
 }

@@ -556,25 +556,19 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         private readonly ImguiComboBox _sceneDropdown = new ImguiComboBox();
         private static readonly GUIContent _sceneDropdownAllScenesContent = new GUIContent("All scenes", "Show GameObjects from all loaded scenes.\n\nSelect a scene from the dropdown to only show GameObjects that belong to that scene (they will be destroyed if the scene is unloaded).");
         private GUIContent _sceneDropdownCurrentContent = _sceneDropdownAllScenesContent;
+        
+        private void UpdateSearch()
+        {
+            _gameObjectSearcher.Search(_searchText, _searchNames, _searchComponents.Value, _searchProperties.Value, false);
+            _treeScrollPosition = Vector2.zero;
+        }
 
+        private static readonly string[] _spinner = { "|", "/", "-", "\\" };
         private void DisplayTreeSearchBox()
         {
             //todo
-            // redo search ui
-            //   better show that search is active
-            // precache searchables?
-            //   when to purge cache?
-            //     only valid for the current search?
-            //     expiry timer?
-            //   search in background?
-            //   immediate search on typing?
-            //   run over multiple frames, show some indicator. 
-            //     coroutine, process until time limit, yield, repeat until done
-            // dropdown for scene selection
             // add info markings to list items on right
             //   scene, prefab, etc
-
-
 
             GUILayout.BeginVertical(GUI.skin.box);
             {
@@ -587,16 +581,16 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                     GUI.SetNextControlName("searchbox");
                     _searchText = GUILayout.TextField(_searchText, GUILayout.ExpandWidth(true));
 
+                    // Show indicator that search results are still being updated
+                    if (_gameObjectSearcher.BusyIndexing)
+                        GUILayout.Label(_spinner[Mathf.FloorToInt(((Time.time * 2) % 1) / 0.25f)], GUILayout.Width(5));
+
                     if (GUI.changed)
-                    {
-                        _gameObjectSearcher.Search(_searchText, _searchNames, _searchComponents.Value, _searchProperties.Value, false);
-                        _treeScrollPosition = Vector2.zero;
-                        //_searchTextComponents = _searchText;
-                    }
+                        UpdateSearch();
                     if (GUILayout.Button("Clear", GUILayout.ExpandWidth(false)))
                     {
                         _searchText = string.Empty;
-                        _gameObjectSearcher.Search(_searchText, _searchNames, _searchComponents.Value, _searchProperties.Value, false);
+                        UpdateSearch();
                         SelectAndShowObject(SelectedTransform);
                     }
                 }
@@ -609,10 +603,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                     _searchComponents.Value = GUILayout.Toggle(_searchComponents.Value, new GUIContent("Components", "Include names of components on a GameObject when searching with the search box."));
                     _searchProperties.Value = GUILayout.Toggle(_searchProperties.Value, new GUIContent("Properties", "Include values of properties and fields of components on a GameObject when searching with the search box. Very slow and may have side effects!"));
                     if (GUI.changed)
-                    {
-                        _gameObjectSearcher.Search(_searchText, _searchNames, _searchComponents.Value, _searchProperties.Value, false);
-                        _treeScrollPosition = Vector2.zero;
-                    }
+                        UpdateSearch();
 
                     GUILayout.FlexibleSpace();
 
@@ -648,17 +639,13 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             GUILayout.EndVertical();
         }
 
+        //todo gate with UnityFeatureHelper.SupportsScenes
         private void DisplaySceneControls()
         {
             // Scene stuff
             GUILayout.BeginHorizontal(GUI.skin.box);
             {
-                GUILayout.Label("Scene", GUILayout.ExpandWidth(false));
-
-                //todo gate with UnityFeatureHelper.SupportsScenes
-                // todo tooltips with detailed scene data
-                // ability to load and unload scenes
-
+                GUILayout.Label("Scene: ", GUILayout.ExpandWidth(false));
 
                 var loadedScenes = Enumerable.Range(0, SceneManager.sceneCount).Select(SceneManager.GetSceneAt);
 
@@ -672,7 +659,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                                             _sceneDropdownCurrentContent = sceneIndex < 0 ? _sceneDropdownAllScenesContent : GetSceneContent(sceneIndex, SceneManager.GetSceneAt(sceneIndex));
                                             _gameObjectSearcher.SceneIndexFilter = sceneIndex;
 
-                                            _gameObjectSearcher.Search(_searchText, _searchNames, _searchComponents.Value, _searchProperties.Value, false);
+                                            UpdateSearch();
                                         }
                                         catch (Exception e)
                                         {
@@ -686,7 +673,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 var guiEnabled = GUI.enabled;
                 if (_gameObjectSearcher.SceneIndexFilter < 0 || _gameObjectSearcher.SceneIndexFilter >= SceneManager.sceneCount) GUI.enabled = false;
 
-                if (GUILayout.Button("Unload", GUILayout.ExpandWidth(false)))
+                if (GUILayout.Button(new GUIContent("Unload", "Attempt to unload currently selected scene. It may fail if there is only one scene loaded."), GUILayout.ExpandWidth(false)))
                 {
                     var scene = SceneManager.GetSceneAt(_gameObjectSearcher.SceneIndexFilter);
                     if (scene.isLoaded)
@@ -698,9 +685,10 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 }
                 GUI.enabled = guiEnabled;
 
+                //todo add scene manager
                 //if (GUILayout.Button("Manage", GUILayout.ExpandWidth(false)))
                 //{
-                //    //todo open scene manager
+                //    
                 //}
             }
             GUILayout.EndHorizontal();
