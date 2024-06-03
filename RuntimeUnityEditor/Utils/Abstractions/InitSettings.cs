@@ -8,6 +8,8 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
     /// </summary>
     public abstract class InitSettings
     {
+        #region API
+
         /// <summary>
         /// Register a new persistent setting.
         /// </summary>
@@ -31,5 +33,47 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
         /// Path to write/read extra config files from
         /// </summary>
         public abstract string ConfigPath { get; }
+
+        #endregion
+
+        #region Helpers
+
+        /// <summary>
+        /// Wrapper for a setting.
+        /// </summary>
+        public sealed class Setting<T>
+        {
+            private T _value;
+            /// <summary>
+            /// Triggered when <see cref="Value"/> changes.
+            /// </summary>
+            public event Action<T> ValueChanged;
+
+            /// <summary>
+            /// Current value of the setting.
+            /// </summary>
+            public T Value
+            {
+                get => _value;
+                set
+                {
+                    if (!Equals(_value, value))
+                    {
+                        _value = value;
+                        ValueChanged?.Invoke(value);
+                    }
+                }
+            }
+        }
+        /// <inheritdoc cref="RegisterSetting{T}(string,string,T,string,Action{T})" />
+        public Setting<T> RegisterSetting<T>(string category, string name, T defaultValue, string description)
+        {
+            var setting = new Setting<T>();
+            var callback = RegisterSetting(category, name, defaultValue, description, obj => setting.Value = obj);
+            setting.ValueChanged += callback;
+            return setting;
+        }
+
+        #endregion
     }
 }
