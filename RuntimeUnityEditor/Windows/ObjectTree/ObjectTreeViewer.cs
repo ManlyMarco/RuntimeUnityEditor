@@ -11,7 +11,6 @@ using RuntimeUnityEditor.Core.Utils;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
@@ -128,6 +127,8 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
         private void DisplayObjectTreeHelper(GameObject go, int indent, ref int currentCount, ref int notVisibleCount)
         {
+            if(go == null) return;
+
             currentCount++;
 
             var needsHeightMeasure = _singleObjectTreeItemHeight == 0f;
@@ -153,7 +154,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 {
                     GUI.color = Color.cyan;
                 }
-                else if (go.scene.name == null && !go.activeInHierarchy)
+                else if (go.GetSceneName(out var sceneName) && sceneName == null && !go.activeInHierarchy)
                 {
                     GUI.color = new Color(0.6f, 0.6f, 0.4f, 1);
                 }
@@ -548,15 +549,11 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 }
                 GUILayout.EndScrollView();
 
-                DisplaySceneControls();
+                    DisplaySceneControls();
             }
             GUILayout.EndVertical();
         }
 
-        private readonly ImguiComboBox _sceneDropdown = new ImguiComboBox();
-        private static readonly GUIContent _sceneDropdownAllScenesContent = new GUIContent("All scenes", "Show GameObjects from all loaded scenes.\n\nSelect a scene from the dropdown to only show GameObjects that belong to that scene (they will be destroyed if the scene is unloaded).");
-        private GUIContent _sceneDropdownCurrentContent = _sceneDropdownAllScenesContent;
-        
         private void UpdateSearch()
         {
             _gameObjectSearcher.Search(_searchText, _searchNames, _searchComponents.Value, _searchProperties.Value, false);
@@ -639,15 +636,26 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             GUILayout.EndVertical();
         }
 
-        //todo gate with UnityFeatureHelper.SupportsScenes
+        //todo optimize maybe
+        private readonly ImguiComboBox _sceneDropdown = new ImguiComboBox();
+        private static readonly GUIContent _sceneDropdownAllScenesContent = new GUIContent("All scenes", "Show GameObjects from all loaded scenes.\n\nSelect a scene from the dropdown to only show GameObjects that belong to that scene (they will be destroyed if the scene is unloaded).");
+        private GUIContent _sceneDropdownCurrentContent = _sceneDropdownAllScenesContent;
         private void DisplaySceneControls()
         {
-            // Scene stuff
+            if (!UnityFeatureHelper.SupportsScenes) return;
+
+            //try { DisplaySceneControlsInternal();}
+            //catch (TypeLoadException) {  }
+            //catch (MemberAccessException) {  }
+
+            GUIContent GetSceneContent(int i, UnityFeatureHelper.SceneWrapper x) => new GUIContent($"#{i} {x.name}", x.ToString());
+
             GUILayout.BeginHorizontal(GUI.skin.box);
             {
                 GUILayout.Label("Scene: ", GUILayout.ExpandWidth(false));
 
-                var loadedScenes = Enumerable.Range(0, SceneManager.sceneCount).Select(SceneManager.GetSceneAt);
+                var loadedScenes = Enumerable.Range(0, UnityFeatureHelper.sceneCount).Select(UnityFeatureHelper.GetSceneAt);
+                
 
                 _sceneDropdown.Show(_sceneDropdownCurrentContent,
                                     () => Enumerable.Repeat(_sceneDropdownAllScenesContent, 1).Concat(loadedScenes.Select((x, i) => GetSceneContent(i, x))).ToArray(),
@@ -656,7 +664,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                                         try
                                         {
                                             var sceneIndex = i - 1;
-                                            _sceneDropdownCurrentContent = sceneIndex < 0 ? _sceneDropdownAllScenesContent : GetSceneContent(sceneIndex, SceneManager.GetSceneAt(sceneIndex));
+                                            _sceneDropdownCurrentContent = sceneIndex < 0 ? _sceneDropdownAllScenesContent : GetSceneContent(sceneIndex, UnityFeatureHelper.GetSceneAt(sceneIndex));
                                             _gameObjectSearcher.SceneIndexFilter = sceneIndex;
 
                                             UpdateSearch();
@@ -671,14 +679,14 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                                     });
 
                 var guiEnabled = GUI.enabled;
-                if (_gameObjectSearcher.SceneIndexFilter < 0 || _gameObjectSearcher.SceneIndexFilter >= SceneManager.sceneCount) GUI.enabled = false;
+                if (_gameObjectSearcher.SceneIndexFilter < 0 || _gameObjectSearcher.SceneIndexFilter >= UnityFeatureHelper.sceneCount) GUI.enabled = false;
 
                 if (GUILayout.Button(new GUIContent("Unload", "Attempt to unload currently selected scene. It may fail if there is only one scene loaded."), GUILayout.ExpandWidth(false)))
                 {
-                    var scene = SceneManager.GetSceneAt(_gameObjectSearcher.SceneIndexFilter);
+                    var scene = UnityFeatureHelper.GetSceneAt(_gameObjectSearcher.SceneIndexFilter);
                     if (scene.isLoaded)
                     {
-                        SceneManager.UnloadScene(scene.name);
+                        UnityFeatureHelper.UnloadScene(scene.name);
                         _gameObjectSearcher.SceneIndexFilter = -1;
                         _sceneDropdownCurrentContent = _sceneDropdownAllScenesContent;
                     }
@@ -692,11 +700,6 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 //}
             }
             GUILayout.EndHorizontal();
-        }
-
-        private static GUIContent GetSceneContent(int i, Scene x)
-        {
-            return new GUIContent($"#{i} {x.name}", $"Name: {x.name}\nBuildIndex: {x.buildIndex}\nRootCount: {x.rootCount}\nIsLoaded: {x.isLoaded}\nIsDirty: {x.isDirty}\nPath: {x.path}");
         }
 
         /// <summary>

@@ -8,7 +8,6 @@ using System.Text;
 using RuntimeUnityEditor.Core.Utils;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace RuntimeUnityEditor.Core.ObjectTree
 {
@@ -71,7 +70,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         {
             if (SceneIndexFilter >= 0)
             {
-                return GetSceneRootObjects(SceneIndexFilter);
+                return UnityFeatureHelper.GetSceneRootObjects(SceneIndexFilter);
             }
 
             if (_cachedRootGameObjects != null)
@@ -84,11 +83,6 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         }
 
         //todo needs to be gated somehow
-        private static IEnumerable<GameObject> GetSceneRootObjects(int sceneLoadIndex)
-        {
-            var scene = SceneManager.GetSceneAt(sceneLoadIndex);
-            return scene.GetRootGameObjects();
-        }
 
         /// <summary>
         /// Get a list of what should be displayed.
@@ -128,7 +122,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             {
                 if (UnityFeatureHelper.SupportsScenes)
                 {
-                    var newItems = UnityFeatureHelper.GetSceneGameObjects();
+                    var newItems = UnityFeatureHelper.GetActiveSceneGameObjects();
                     for (var index = 0; index < newItems.Length; index++)
                         _cachedRootGameObjects.InsertSorted(newItems[index], GameObjectNameComparer.Instance);
                 }
@@ -340,6 +334,9 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
         private static bool IsGameObjectNull(GameObject o)
         {
+            // Looks like Unity 4.x doesn't set InstanceID to 0 after object is destroyed. Checking SupportsScenes seems close enough.
+            if (!UnityFeatureHelper.SupportsScenes) return o == null;
+
             // This is around 25% faster than o == null
             // Object.IsNativeObjectAlive would be even better at above 35% but isn't public and reflection would eat the gains
             var isGameObjectNull = (object)o == null || o.GetInstanceID() == 0;

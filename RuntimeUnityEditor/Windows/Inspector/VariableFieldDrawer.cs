@@ -369,7 +369,8 @@ namespace RuntimeUnityEditor.Core.Inspector
                     extraData += $"TextureRect={spr.textureRect}";
             }
 
-            GUILayout.Label($"Name={spr.name} Rect={spr.rect} Pivot={spr.pivot} Packed={spr.packed} {extraData}");
+            // pivot is not supported in Unity 4.x
+            GUILayout.Label($"Name={spr.name} Rect={spr.rect} Pivot={spr.TryGetPropertyValue(nameof(Sprite.pivot)) ?? "UNSUPPORTED"} Packed={spr.packed} {extraData}");
 
             GUILayout.FlexibleSpace();
 

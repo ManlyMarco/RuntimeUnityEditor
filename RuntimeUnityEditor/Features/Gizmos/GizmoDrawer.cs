@@ -22,6 +22,8 @@ namespace RuntimeUnityEditor.Core.Gizmos
 
         protected override void Initialize(InitSettings initSettings)
         {
+            UnityFeatureHelper.EnsureCameraRenderEventsAreAvailable();
+
             Enabled = false;
             DisplayName = "Gizmos";
             ObjectTreeViewer.Instance.TreeSelectionChanged += UpdateState;
