@@ -228,8 +228,15 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
                             }
                             else
                             {
-                                GUIUtility.systemCopyBuffer = entry.GetClipboardString();
-                                RuntimeUnityEditorCore.Logger.Log(Core.Utils.Abstractions.LogLevel.Message, $"[{nameof(LogViewerWindow)}] Copied to clipboard");
+                                try
+                                {
+                                    UnityFeatureHelper.systemCopyBuffer = entry.GetClipboardString();
+                                    RuntimeUnityEditorCore.Logger.Log(Core.Utils.Abstractions.LogLevel.Message, $"[{nameof(LogViewerWindow)}] Copied to clipboard");
+                                }
+                                catch (Exception e)
+                                {
+                                    RuntimeUnityEditorCore.Logger.Log(Core.Utils.Abstractions.LogLevel.Message | Core.Utils.Abstractions.LogLevel.Error, $"[{nameof(LogViewerWindow)}] Failed to copy to clipboard: " + e.Message);
+                                }
                             }
                         }
 

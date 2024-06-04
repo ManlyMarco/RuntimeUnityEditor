@@ -23,6 +23,8 @@ namespace RuntimeUnityEditor.Core
 
         protected override void Initialize(InitSettings initSettings)
         {
+            UnityFeatureHelper.EnsureCameraRenderEventsAreAvailable();
+
             DisplayName = "Wireframe";
             Enabled = false;
 
