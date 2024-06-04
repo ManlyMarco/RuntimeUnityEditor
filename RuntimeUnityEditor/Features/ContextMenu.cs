@@ -213,7 +213,7 @@ namespace RuntimeUnityEditor.Core
         /// </summary>
         public void DrawContextButton(object obj, MemberInfo objMemberInfo)
         {
-            if (obj != null && GUILayout.Button("...", GUILayout.ExpandWidth(false)))
+            if (obj != null && GUILayout.Button("...", IMGUIUtils.LayoutOptionsExpandWidthFalse))
                 Show(obj, objMemberInfo);
         }
 

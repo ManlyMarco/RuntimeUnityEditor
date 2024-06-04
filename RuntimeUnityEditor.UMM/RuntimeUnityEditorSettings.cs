@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
+using RuntimeUnityEditor.Core.Utils;
 using UnityEngine;
 using UnityModManagerNet;
 #pragma warning disable CS0618
@@ -120,7 +121,7 @@ namespace RuntimeUnityEditor.UMM
                     }
                     else if (setting is Setting<UnityEngine.KeyCode> keycodeSetting)
                     {
-                        GUILayout.Label(settingName, GUILayout.ExpandWidth(false));
+                        GUILayout.Label(settingName, IMGUIUtils.LayoutOptionsExpandWidthFalse);
 
                         var value = new KeyBinding() { keyCode = keycodeSetting.Value };
                         if (UnityModManager.UI.DrawKeybinding(ref value, settingName)) keycodeSetting.Value = value.keyCode;
@@ -129,9 +130,9 @@ namespace RuntimeUnityEditor.UMM
                     else if (setting is Setting<string> stringSetting)
                     {
                         GUILayout.BeginVertical();
-                        GUILayout.Label(settingName, GUILayout.ExpandWidth(false));
+                        GUILayout.Label(settingName, IMGUIUtils.LayoutOptionsExpandWidthFalse);
 
-                        var value = GUILayout.TextField(stringSetting.Value, GUILayout.ExpandWidth(true));
+                        var value = GUILayout.TextField(stringSetting.Value, IMGUIUtils.LayoutOptionsExpandWidthTrue);
                         if (value != stringSetting.Value) stringSetting.Value = value;
                         GUILayout.EndVertical();
                     }

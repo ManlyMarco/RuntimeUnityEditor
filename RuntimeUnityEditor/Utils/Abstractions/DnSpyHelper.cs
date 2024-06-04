@@ -181,7 +181,7 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
         private static readonly GUIContent _guiContent = new GUIContent("^", "Navigate to this member in dnSpy");
         internal static void DrawDnSpyButtonIfAvailable(MemberInfo mi, GUIContent customButtonContent = null)
         {
-            if (IsAvailable && GUILayout.Button(customButtonContent ?? _guiContent, GUILayout.ExpandWidth(false)))
+            if (IsAvailable && GUILayout.Button(customButtonContent ?? _guiContent, IMGUIUtils.LayoutOptionsExpandWidthFalse))
                 OpenInDnSpy(mi);
         }
     }

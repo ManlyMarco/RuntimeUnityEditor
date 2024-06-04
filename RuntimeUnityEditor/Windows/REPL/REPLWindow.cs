@@ -193,7 +193,7 @@ namespace RuntimeUnityEditor.Core.REPL
                             _completionsListingStyle.normal.textColor = Color.white;
                             foreach (var snipplet in _savedSnipplets)
                             {
-                                if (GUILayout.Button(snipplet, GUI.skin.box, GUILayout.ExpandWidth(true)))
+                                if (GUILayout.Button(snipplet, GUI.skin.box, IMGUIUtils.LayoutOptionsExpandWidthTrue))
                                 {
                                     _inputField = snipplet;
                                     _snippletsShown = false;
@@ -201,7 +201,7 @@ namespace RuntimeUnityEditor.Core.REPL
                                 }
                             }
 
-                            if (GUILayout.Button(">> Edit snipplet list in external editor <<", GUI.skin.box, GUILayout.ExpandWidth(true)))
+                            if (GUILayout.Button(">> Edit snipplet list in external editor <<", GUI.skin.box, IMGUIUtils.LayoutOptionsExpandWidthTrue))
                             {
                                 AppendLogLine("Opening snipplet file at " + _snippletFilename);
 
@@ -218,7 +218,7 @@ namespace RuntimeUnityEditor.Core.REPL
                         foreach (var suggestion in _suggestions)
                         {
                             _completionsListingStyle.normal.textColor = suggestion.GetTextColor();
-                            if (GUILayout.Button(suggestion.Full, _completionsListingStyle, GUILayout.ExpandWidth(true)))
+                            if (GUILayout.Button(suggestion.Full, _completionsListingStyle, IMGUIUtils.LayoutOptionsExpandWidthTrue))
                             {
                                 AcceptSuggestion(suggestion.Addition);
                                 break;
@@ -252,10 +252,10 @@ namespace RuntimeUnityEditor.Core.REPL
                         _refocusCursorIndex = -1;
                     }
 
-                    if (GUILayout.Button("Run", GUILayout.ExpandWidth(false)))
+                    if (GUILayout.Button("Run", IMGUIUtils.LayoutOptionsExpandWidthFalse))
                         AcceptInput();
 
-                    if (GUILayout.Button(_snippletsShown ? "Cancel" : (_inputField.Length == 0 ? "Load" : "Save"), GUILayout.ExpandWidth(false)))
+                    if (GUILayout.Button(_snippletsShown ? "Cancel" : (_inputField.Length == 0 ? "Load" : "Save"), IMGUIUtils.LayoutOptionsExpandWidthFalse))
                     {
                         if (_snippletsShown)
                         {
@@ -285,7 +285,7 @@ namespace RuntimeUnityEditor.Core.REPL
                         }
                     }
 
-                    if (GUILayout.Button("Autostart", GUILayout.ExpandWidth(false)))
+                    if (GUILayout.Button("Autostart", IMGUIUtils.LayoutOptionsExpandWidthFalse))
                     {
                         AppendLogLine("Opening autostart file at " + _autostartFilename);
 
@@ -298,7 +298,7 @@ namespace RuntimeUnityEditor.Core.REPL
                         ScrollToBottom();
                     }
 
-                    if (GUILayout.Button("History", GUILayout.ExpandWidth(false)))
+                    if (GUILayout.Button("History", IMGUIUtils.LayoutOptionsExpandWidthFalse))
                     {
                         AppendLogLine("");
                         AppendLogLine("# History of executed commands:");
