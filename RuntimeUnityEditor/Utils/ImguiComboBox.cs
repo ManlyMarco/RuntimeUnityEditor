@@ -68,7 +68,7 @@ namespace RuntimeUnityEditor.Core.Utils
             if (listStyle == null) listStyle = GUI.skin.button;
             var content = selectedContent ?? GUIContent.none;
 
-            var rect = GUILayoutUtility.GetRect(content, listStyle, GUILayout.ExpandWidth(true));
+            var rect = GUILayoutUtility.GetRect(content, listStyle, IMGUIUtils.LayoutOptionsExpandWidthTrue);
 
             var originalChanged = GUI.changed;
 

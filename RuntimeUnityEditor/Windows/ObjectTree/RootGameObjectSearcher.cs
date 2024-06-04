@@ -24,7 +24,10 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         private static bool _lastSearchProperties;
         private bool _lastSearchComponents;
         private bool _lastSearchNames;
-
+        
+        // -1 for all scenes
+        // todo only additive scenes option?
+        private int _sceneIndexFilter = -1;
         internal int SceneIndexFilter
         {
             get => _sceneIndexFilter;
@@ -59,10 +62,6 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 .Select(x => x.gameObject);
         }
 
-        // -1 for all scenes
-        // todo only additive scenes option
-        private int _sceneIndexFilter = -1;
-
         /// <summary>
         /// Get a mostly up-to-date list of all root Transforms. Fast.
         /// </summary>
@@ -81,8 +80,6 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
             return Enumerable.Empty<GameObject>();
         }
-
-        //todo needs to be gated somehow
 
         /// <summary>
         /// Get a list of what should be displayed.
