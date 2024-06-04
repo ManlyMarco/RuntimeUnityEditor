@@ -86,7 +86,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             {
                 if (UnityFeatureHelper.SupportsScenes)
                 {
-                    var newItems = UnityFeatureHelper.GetSceneGameObjects();
+                    var newItems = UnityFeatureHelper.GetActiveSceneGameObjects();
                     for (var index = 0; index < newItems.Length; index++)
                         _cachedRootGameObjects.InsertSorted(newItems[index], GameObjectNameComparer.Instance);
                 }

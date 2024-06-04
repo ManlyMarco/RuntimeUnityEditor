@@ -42,14 +42,28 @@ namespace RuntimeUnityEditor.Core.ChangeHistory
 
                 if (GUILayout.Button("Copy all to clipboard"))
                 {
-                    GUIUtility.systemCopyBuffer = string.Join("\n", Change.Changes.Select(c => c.GetDisplayString()).ToArray());
-                    RuntimeUnityEditorCore.Logger.Log(LogLevel.Message, $"Copied {Change.Changes.Count} changes to clipboard");
+                    try
+                    {
+                        UnityFeatureHelper.systemCopyBuffer = string.Join("\n", Change.Changes.Select(c => c.GetDisplayString()).ToArray());
+                        RuntimeUnityEditorCore.Logger.Log(LogLevel.Message, $"Copied {Change.Changes.Count} changes to clipboard");
+                    }
+                    catch (Exception e)
+                    {
+                        RuntimeUnityEditorCore.Logger.Log(LogLevel.Message | LogLevel.Error, "Failed to copy to clipboard: " + e.Message);
+                    }
                 }
 
                 if (GUILayout.Button("...as pseudo-code"))
                 {
-                    GUIUtility.systemCopyBuffer = string.Join("\n", Change.Changes.Select(ConvertChangeToPseudoCodeString).ToArray());
-                    RuntimeUnityEditorCore.Logger.Log(LogLevel.Message, $"Copied {Change.Changes.Count} changes to clipboard (converted to pseudo-code)");
+                    try
+                    {
+                        UnityFeatureHelper.systemCopyBuffer = string.Join("\n", Change.Changes.Select(ConvertChangeToPseudoCodeString).ToArray());
+                        RuntimeUnityEditorCore.Logger.Log(LogLevel.Message, $"Copied {Change.Changes.Count} changes to clipboard (converted to pseudo-code)");
+                    }
+                    catch (Exception e)
+                    {
+                        RuntimeUnityEditorCore.Logger.Log(LogLevel.Message | LogLevel.Error, "Failed to copy to clipboard: " + e.Message);
+                    }
                 }
 
                 GUILayout.FlexibleSpace();

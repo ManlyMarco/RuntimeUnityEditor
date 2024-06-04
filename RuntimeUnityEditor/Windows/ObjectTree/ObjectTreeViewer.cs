@@ -145,7 +145,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 {
                     GUI.color = Color.cyan;
                 }
-                else if (go.scene.name == null && !go.activeInHierarchy)
+                else if (go.GetSceneName(out var sceneName) && sceneName == null && !go.activeInHierarchy)
                 {
                     GUI.color = new Color(0.6f, 0.6f, 0.4f, 1);
                 }

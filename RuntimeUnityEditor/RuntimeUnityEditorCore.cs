@@ -207,7 +207,7 @@ namespace RuntimeUnityEditor.Core
                             if (feature is Taskbar)
                                 throw new InvalidOperationException("WindowManager somehow failed to initialize! I am die, thank you forever.", e);
 
-                            Logger.Log(LogLevel.Warning, $"Failed to initialize {feature.GetType().Name} - " + e);
+                            Logger.Log(LogLevel.Warning, $"Failed to initialize {feature.GetType().Name} - {(e is NotSupportedException ? e.Message : e.ToString())}");
                         }
                     }
 
