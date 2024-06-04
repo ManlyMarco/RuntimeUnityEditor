@@ -40,7 +40,7 @@ namespace RuntimeUnityEditor.Core.Clipboard
                     GUILayout.FlexibleSpace();
                     GUILayout.Label("You can copy objects to clipboard by clicking the 'C' button in inspector, or by running the 'copy(object)' command in REPL. Structs are copied by value, classes by reference.\n\n" +
                                     "Clipboard contents can be used in REPL by running the 'paste(index)' command, or in inspector when invoking a method.\n\n" +
-                                    "Press 'X' to remove item from clipboard, right click on it to open a menu with more options.", GUILayout.ExpandWidth(true));
+                                    "Press 'X' to remove item from clipboard, right click on it to open a menu with more options.", IMGUIUtils.LayoutOptionsExpandWidthTrue);
                     GUILayout.FlexibleSpace();
                 }
                 GUILayout.EndVertical();
@@ -57,7 +57,7 @@ namespace RuntimeUnityEditor.Core.Clipboard
                     {
                         GUILayout.Label("Index", GUILayout.Width(widthIndex), GUILayout.ExpandWidth(false));
                         GUILayout.Label("Type", GUILayout.Width(widthName), GUILayout.ExpandWidth(false));
-                        GUILayout.Label("Value", GUILayout.ExpandWidth(true));
+                        GUILayout.Label("Value", IMGUIUtils.LayoutOptionsExpandWidthTrue);
                     }
                     GUILayout.EndHorizontal();
 
@@ -78,7 +78,7 @@ namespace RuntimeUnityEditor.Core.Clipboard
                             var prevEnabled = GUI.enabled;
                             GUI.enabled = type != null && typeof(IConvertible).IsAssignableFrom(type);
                             GUI.changed = false;
-                            var newVal = GUILayout.TextField(ToStringConverter.ObjectToString(content), GUILayout.ExpandWidth(true));
+                            var newVal = GUILayout.TextField(ToStringConverter.ObjectToString(content), IMGUIUtils.LayoutOptionsExpandWidthTrue);
                             if (GUI.changed && type != null)
                             {
                                 try
@@ -93,7 +93,7 @@ namespace RuntimeUnityEditor.Core.Clipboard
 
                             GUI.enabled = prevEnabled;
 
-                            if (GUILayout.Button("X", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button("X", IMGUIUtils.LayoutOptionsExpandWidthFalse))
                                 Contents.RemoveAt(index);
                         }
                         GUILayout.EndHorizontal();

@@ -143,19 +143,19 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
         {
             GUILayout.BeginHorizontal();
             {
-                GUILayout.BeginHorizontal(GUI.skin.box, GUILayout.ExpandWidth(true));
+                GUILayout.BeginHorizontal(GUI.skin.box, IMGUIUtils.LayoutOptionsExpandWidthTrue);
                 {
                     GUI.changed = false;
                     var searchString = SearchString;
                     var isEmpty = string.IsNullOrEmpty(searchString) && GUI.GetNameOfFocusedControl() != "sbox";
                     if (isEmpty) GUI.color = Color.gray;
                     GUI.SetNextControlName("sbox");
-                    var newString = GUILayout.TextField(isEmpty ? "Search log text and stack traces..." : searchString, GUILayout.ExpandWidth(true));
+                    var newString = GUILayout.TextField(isEmpty ? "Search log text and stack traces..." : searchString, IMGUIUtils.LayoutOptionsExpandWidthTrue);
                     if (GUI.changed) SearchString = newString;
                     GUI.color = Color.white;
                 }
                 GUILayout.EndHorizontal();
-                GUILayout.BeginHorizontal(GUI.skin.box, GUILayout.ExpandWidth(false));
+                GUILayout.BeginHorizontal(GUI.skin.box, IMGUIUtils.LayoutOptionsExpandWidthFalse);
                 {
                     if (!Capture) GUI.color = Color.red;
                     Capture = GUILayout.Toggle(Capture, new GUIContent("Enable log capture", "Note: This can hurt performance, especially if there is log spam."));
@@ -240,7 +240,7 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
                             }
                         }
 
-                        if (entry.Sender != null && GUILayout.Button("Inspect", GUILayout.ExpandWidth(false)))
+                        if (entry.Sender != null && GUILayout.Button("Inspect", IMGUIUtils.LayoutOptionsExpandWidthFalse))
                             Inspector.Instance.Push(new InstanceStackEntry(entry, entry.LogEventArgs.Source.SourceName + " -> Log entry"), true);
 
                         DnSpyHelper.DrawDnSpyButtonIfAvailable(entry.Method, new GUIContent("^", $"In dnSpy, attempt to navigate to the method that produced this log message:\n\n{entry.Method.GetFancyDescription()}"));

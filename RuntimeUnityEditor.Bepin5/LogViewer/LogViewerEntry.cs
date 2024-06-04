@@ -52,13 +52,13 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
         {
             GUI.color = GetColor();
             var clicked = GUILayout.Button(_timeString, GUI.skin.label, GUILayout.MinWidth(35));
-            GUILayout.Label("[", GUILayout.ExpandWidth(false));
+            GUILayout.Label("[", IMGUIUtils.LayoutOptionsExpandWidthFalse);
             clicked |= GUILayout.Button(_logLevelString, GUI.skin.label, GUILayout.MinWidth(45));
-            GUILayout.Label(":", GUILayout.ExpandWidth(false));
+            GUILayout.Label(":", IMGUIUtils.LayoutOptionsExpandWidthFalse);
             clicked |= GUILayout.Button(_sourceNameString, GUI.skin.label, GUILayout.MinWidth(100));
-            GUILayout.Label("]", GUILayout.ExpandWidth(false));
+            GUILayout.Label("]", IMGUIUtils.LayoutOptionsExpandWidthFalse);
             GUI.color = Color.white;
-            clicked |= GUILayout.Button(_dataString, GUI.skin.label, GUILayout.ExpandWidth(true));
+            clicked |= GUILayout.Button(_dataString, GUI.skin.label, IMGUIUtils.LayoutOptionsExpandWidthTrue);
             return clicked;
         }
 

@@ -87,9 +87,9 @@ namespace RuntimeUnityEditor.Core.ChangeHistory
                             GUI.color = Color.white;
                         }
 
-                        GUILayout.TextField(change.GetDisplayString(), GUI.skin.label, GUILayout.ExpandWidth(true));
+                        GUILayout.TextField(change.GetDisplayString(), GUI.skin.label, IMGUIUtils.LayoutOptionsExpandWidthTrue);
 
-                        if (change.CanUndo && GUILayout.Button(_undoContent, GUILayout.ExpandWidth(false)))
+                        if (change.CanUndo && GUILayout.Button(_undoContent, IMGUIUtils.LayoutOptionsExpandWidthFalse))
                         {
                             try
                             {
@@ -101,7 +101,7 @@ namespace RuntimeUnityEditor.Core.ChangeHistory
                             }
                         }
 
-                        if (!change.Target.IsNullOrDestroyed() && GUILayout.Button(_inspectContent, GUILayout.ExpandWidth(false)))
+                        if (!change.Target.IsNullOrDestroyed() && GUILayout.Button(_inspectContent, IMGUIUtils.LayoutOptionsExpandWidthFalse))
                             Inspector.Inspector.Instance.Push(new InstanceStackEntry(change.Target, change.GetDisplayString()), true);
                     }
                     GUILayout.EndHorizontal();
