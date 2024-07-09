@@ -18,6 +18,8 @@ namespace RuntimeUnityEditor.Core.Utils
     {
         public static bool Contains(this string s, string searchText, StringComparison sc)
         {
+            if (string.IsNullOrEmpty(s) || string.IsNullOrEmpty(searchText))
+                return false;
             return s.IndexOf(searchText, sc) >= 0;
         }
 
