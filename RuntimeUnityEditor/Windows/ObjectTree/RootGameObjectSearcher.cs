@@ -436,13 +436,11 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
                 if (timer.ElapsedMilliseconds > 20)
                 {
-                    timer.Reset();
                     _indexingTimer.Stop();
 
                     yield return null;
 
                     _indexingTimer.Start();
-                    timer.Start();
 
                     _searchResults = DoSearch();
 
@@ -451,6 +449,9 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                         RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, "Restarting indexing...");
                         goto Restart;
                     }
+
+                    timer.Reset();
+                    timer.Start();
                 }
             }
 
