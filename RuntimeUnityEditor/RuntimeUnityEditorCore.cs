@@ -166,7 +166,7 @@ namespace RuntimeUnityEditor.Core
         internal static MonoBehaviour PluginObject => _initSettings.PluginMonoBehaviour;
         internal static ILoggerWrapper Logger => _initSettings.LoggerWrapper;
 
-        private static InitSettings _initSettings;
+        internal static InitSettings _initSettings;
         private readonly List<IFeature> _initializedFeatures = new List<IFeature>();
         private KeyCode _showHotkey = KeyCode.F12;
 
