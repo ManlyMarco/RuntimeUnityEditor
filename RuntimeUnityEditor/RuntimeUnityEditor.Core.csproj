@@ -99,10 +99,12 @@
     <Compile Include="Features\Gizmos\lib\Gizmos.cs" />
     <Compile Include="Features\Gizmos\lib\GizmosInstance.cs" />
     <Compile Include="Utils\Abstractions\InitSettings.cs" />
+    <Compile Include="Utils\ImguiComboBox.cs" />
     <Compile Include="Utils\MovingAverage.cs" />
     <Compile Include="Utils\ObjectDumper\Dumper.cs" />
     <Compile Include="Utils\ObjectDumper\MeshExport.cs" />
     <Compile Include="Utils\ObjectDumper\ObjectDumperExtensions.cs" />
+    <Compile Include="Utils\ThreadingExtensions.cs" />
     <Compile Include="WindowBase.cs" />
     <Compile Include="Features\WireframeFeature.cs" />
     <Compile Include="Features\ContextMenu.cs" />
@@ -164,7 +166,6 @@
     <Compile Include="Windows\Inspector\Entries\Contents\ReadonlyCacheEntry.cs" />
     <Compile Include="Utils\UI\InterfaceMaker.cs" />
     <Compile Include="Utils\ResourceUtils.cs" />
-    <Compile Include="Utils\SceneDumper.cs" />
     <Compile Include="Windows\Inspector\ToStringConverter.cs" />
     <Compile Include="Utils\TypeNameExtensions.cs" />
     <Compile Include="Utils\Abstractions\UnityFeatureHelper.cs" />

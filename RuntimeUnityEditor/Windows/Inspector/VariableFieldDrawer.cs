@@ -79,7 +79,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                 }
                 else if (canSetValue && ToStringConverter.CanEditValue(setting, value))
                 {
-                    DrawGenericEditableValue(setting, value, GUILayout.ExpandWidth(true));
+                    DrawGenericEditableValue(setting, value, IMGUIUtils.LayoutOptionsExpandWidthTrue);
                 }
                 else
                 {
@@ -92,7 +92,7 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         private static void DrawUnknownField(object value)
         {
-            GUILayout.TextArea(ToStringConverter.ObjectToString(value), GUI.skin.label, GUILayout.ExpandWidth(true));
+            GUILayout.TextArea(ToStringConverter.ObjectToString(value), GUI.skin.label, IMGUIUtils.LayoutOptionsExpandWidthTrue);
         }
 
         public static void ClearCache()
@@ -118,7 +118,7 @@ namespace RuntimeUnityEditor.Core.Inspector
         private static void DrawBoolField(ICacheEntry setting, object o)
         {
             var boolVal = (bool)setting.GetValue();
-            var result = GUILayout.Toggle(boolVal, boolVal ? "True" : "False", GUILayout.ExpandWidth(true));
+            var result = GUILayout.Toggle(boolVal, boolVal ? "True" : "False", IMGUIUtils.LayoutOptionsExpandWidthTrue);
             if (result != boolVal)
                 setting.SetValue(result);
         }
@@ -129,7 +129,7 @@ namespace RuntimeUnityEditor.Core.Inspector
             var allValues = enumValues.Cast<Enum>().Select(x => new { name = x.ToString(), val = Convert.ToInt64(x) }).ToArray();
 
             // Vertically stack Horizontal groups of the options to deal with the options taking more width than is available in the window
-            GUILayout.BeginVertical(GUILayout.ExpandWidth(true));
+            GUILayout.BeginVertical(IMGUIUtils.LayoutOptionsExpandWidthTrue);
             {
                 for (var index = 0; index < allValues.Length;)
                 {
@@ -173,7 +173,7 @@ namespace RuntimeUnityEditor.Core.Inspector
         private static void DrawComboboxField(ICacheEntry setting, IList list, object value)
         {
             var buttonText = new GUIContent(value.ToString());
-            var dispRect = GUILayoutUtility.GetRect(buttonText, GUI.skin.button, GUILayout.ExpandWidth(true));
+            var dispRect = GUILayoutUtility.GetRect(buttonText, GUI.skin.button, IMGUIUtils.LayoutOptionsExpandWidthTrue);
 
             if (!_comboBoxCache.TryGetValue(setting, out var box))
             {
@@ -264,8 +264,8 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         private static float DrawSingleVectorSlider(float setting, string label)
         {
-            GUILayout.Label(label, GUILayout.ExpandWidth(false));
-            float.TryParse(GUILayout.TextField(setting.ToString("F4", CultureInfo.InvariantCulture), GUILayout.ExpandWidth(true)), NumberStyles.Any, CultureInfo.InvariantCulture, out var x);
+            GUILayout.Label(label, IMGUIUtils.LayoutOptionsExpandWidthFalse);
+            float.TryParse(GUILayout.TextField(setting.ToString("F4", CultureInfo.InvariantCulture), IMGUIUtils.LayoutOptionsExpandWidthTrue), NumberStyles.Any, CultureInfo.InvariantCulture, out var x);
             return x;
         }
 
@@ -280,14 +280,14 @@ namespace RuntimeUnityEditor.Core.Inspector
                 _colorCache[obj] = cacheEntry;
             }
 
-            GUILayout.Label("R", GUILayout.ExpandWidth(false));
-            setting.r = GUILayout.HorizontalSlider(setting.r, 0f, 1f, GUILayout.ExpandWidth(true));
-            GUILayout.Label("G", GUILayout.ExpandWidth(false));
-            setting.g = GUILayout.HorizontalSlider(setting.g, 0f, 1f, GUILayout.ExpandWidth(true));
-            GUILayout.Label("B", GUILayout.ExpandWidth(false));
-            setting.b = GUILayout.HorizontalSlider(setting.b, 0f, 1f, GUILayout.ExpandWidth(true));
-            GUILayout.Label("A", GUILayout.ExpandWidth(false));
-            setting.a = GUILayout.HorizontalSlider(setting.a, 0f, 1f, GUILayout.ExpandWidth(true));
+            GUILayout.Label("R", IMGUIUtils.LayoutOptionsExpandWidthFalse);
+            setting.r = GUILayout.HorizontalSlider(setting.r, 0f, 1f, IMGUIUtils.LayoutOptionsExpandWidthTrue);
+            GUILayout.Label("G", IMGUIUtils.LayoutOptionsExpandWidthFalse);
+            setting.g = GUILayout.HorizontalSlider(setting.g, 0f, 1f, IMGUIUtils.LayoutOptionsExpandWidthTrue);
+            GUILayout.Label("B", IMGUIUtils.LayoutOptionsExpandWidthFalse);
+            setting.b = GUILayout.HorizontalSlider(setting.b, 0f, 1f, IMGUIUtils.LayoutOptionsExpandWidthTrue);
+            GUILayout.Label("A", IMGUIUtils.LayoutOptionsExpandWidthFalse);
+            setting.a = GUILayout.HorizontalSlider(setting.a, 0f, 1f, IMGUIUtils.LayoutOptionsExpandWidthTrue);
 
             GUILayout.Space(4);
 
@@ -319,7 +319,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                 cacheEntry.Last = setting;
             }
 
-            GUILayout.Label(cacheEntry.Tex, GUILayout.ExpandWidth(false));
+            GUILayout.Label(cacheEntry.Tex, IMGUIUtils.LayoutOptionsExpandWidthFalse);
         }
 
         private sealed class ColorCacheEntry
@@ -340,7 +340,7 @@ namespace RuntimeUnityEditor.Core.Inspector
 
             GUILayout.FlexibleSpace();
 
-            if (ObjectView.ObjectViewWindow.Initialized && GUILayout.Button("View", GUILayout.ExpandWidth(false)))
+            if (ObjectView.ObjectViewWindow.Initialized && GUILayout.Button("View", IMGUIUtils.LayoutOptionsExpandWidthFalse))
                 ObjectView.ObjectViewWindow.Instance.SetShownObject(tex, tex.name);
         }
 
@@ -369,11 +369,12 @@ namespace RuntimeUnityEditor.Core.Inspector
                     extraData += $"TextureRect={spr.textureRect}";
             }
 
-            GUILayout.Label($"Name={spr.name} Rect={spr.rect} Pivot={spr.pivot} Packed={spr.packed} {extraData}");
+            // pivot is not supported in Unity 4.x
+            GUILayout.Label($"Name={spr.name} Rect={spr.rect} Pivot={spr.TryGetPropertyValue(nameof(Sprite.pivot)) ?? "UNSUPPORTED"} Packed={spr.packed} {extraData}");
 
             GUILayout.FlexibleSpace();
 
-            if (ObjectView.ObjectViewWindow.Initialized && GUILayout.Button("View", GUILayout.ExpandWidth(false)))
+            if (ObjectView.ObjectViewWindow.Initialized && GUILayout.Button("View", IMGUIUtils.LayoutOptionsExpandWidthFalse))
                 ObjectView.ObjectViewWindow.Instance.SetShownObject(spr.GetVisibleTexture(), objectName);
         }
 
@@ -401,32 +402,32 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         private static void DrawMethodInvokeField(MethodCacheEntry method)
         {
-            if (GUILayout.Button(_buttonInvokeContent, GUILayout.ExpandWidth(false)))
+            if (GUILayout.Button(_buttonInvokeContent, IMGUIUtils.LayoutOptionsExpandWidthFalse))
                 ShowInvokeWindow(method.MethodInfo, method.Instance);
 
-            GUILayout.Label(method.ParameterString, GUILayout.ExpandWidth(true));
+            GUILayout.Label(method.ParameterString, IMGUIUtils.LayoutOptionsExpandWidthTrue);
         }
         private static void DrawEventInvokeField(EventCacheEntry @event)
         {
             var eventInfo = @event.EventInfo;
 
-            GUILayout.Label("Invoke event method: ", GUILayout.ExpandWidth(false));
-            if (GUILayout.Button("Add", GUILayout.ExpandWidth(false)))
+            GUILayout.Label("Invoke event method: ", IMGUIUtils.LayoutOptionsExpandWidthFalse);
+            if (GUILayout.Button("Add", IMGUIUtils.LayoutOptionsExpandWidthFalse))
                 ShowInvokeWindow(eventInfo.GetAddMethod(true), @event.Instance);
 
-            if (GUILayout.Button("Remove", GUILayout.ExpandWidth(false)))
+            if (GUILayout.Button("Remove", IMGUIUtils.LayoutOptionsExpandWidthFalse))
                 ShowInvokeWindow(eventInfo.GetRemoveMethod(true), @event.Instance);
 
             // Raise method is always null in C# assemblies, but exists if assembly was compiled from VB.NET, F# or C++/CLI
             var raiseMethod = eventInfo.GetRaiseMethod(true);
-            if (raiseMethod != null && GUILayout.Button("Raise", GUILayout.ExpandWidth(false)))
+            if (raiseMethod != null && GUILayout.Button("Raise", IMGUIUtils.LayoutOptionsExpandWidthFalse))
                 ShowInvokeWindow(raiseMethod, @event.Instance);
 
             var backingDelegate = (Delegate)@event.GetValue();
             if (backingDelegate != null)
             {
                 GUILayout.Space(10);
-                //if (GUILayout.Button("Raise", GUILayout.ExpandWidth(false)))
+                //if (GUILayout.Button("Raise", IMGUIUtils.LayoutOptionsExpandWidthFalse))
                 //    ShowInvokeWindow(backingDelegate.DynamicInvoke(), @event.Instance);
 
                 var invocationList = backingDelegate.GetInvocationList();
@@ -436,7 +437,7 @@ namespace RuntimeUnityEditor.Core.Inspector
 
             GUILayout.FlexibleSpace();
 
-            //GUILayout.Label(method.ParameterString, GUILayout.ExpandWidth(true));
+            //GUILayout.Label(method.ParameterString, IMGUIUtils.LayoutOptionsExpandWidthTrue);
         }
 
         public static void ShowInvokeWindow(MethodInfo method, object instance, Type[] genericArguments = null, ParameterInfo[] parameters = null)
@@ -466,7 +467,7 @@ namespace RuntimeUnityEditor.Core.Inspector
 
             if (v == null)
             {
-                GUILayout.Label("NULL / Empty", GUILayout.ExpandWidth(true));
+                GUILayout.Label("NULL / Empty", IMGUIUtils.LayoutOptionsExpandWidthTrue);
                 return;
             }
 
@@ -478,7 +479,7 @@ namespace RuntimeUnityEditor.Core.Inspector
             var invocationList = v.GetInvocationList();
 
             //todo v.Method is null, work on delegate directly
-            if (GUILayout.Button(_buttonInvokeContent, GUILayout.ExpandWidth(false)))
+            if (GUILayout.Button(_buttonInvokeContent, IMGUIUtils.LayoutOptionsExpandWidthFalse))
             {
                 if (invokeM != null)
                     ShowInvokeWindow(invokeM, v);
@@ -486,10 +487,10 @@ namespace RuntimeUnityEditor.Core.Inspector
                     ShowInvokeWindow(dynInvokeM, v, null, v.Method.GetParameters());
             }
 
-            if (GUILayout.Button(invocationList.Length + " delegate(s)", GUILayout.ExpandWidth(false)))
+            if (GUILayout.Button(invocationList.Length + " delegate(s)", IMGUIUtils.LayoutOptionsExpandWidthFalse))
                 Inspector.Instance.Push(new InstanceStackEntry(invocationList, cacheEntry.Name() + " Invocation List", cacheEntry), false);
 
-            GUILayout.Label(MethodCacheEntry.GetParameterPreviewString(invokeM), GUILayout.ExpandWidth(true));
+            GUILayout.Label(MethodCacheEntry.GetParameterPreviewString(invokeM), IMGUIUtils.LayoutOptionsExpandWidthTrue);
         }
 
         public static void DrawInvokeWindow()
@@ -530,7 +531,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                             GUILayout.BeginHorizontal();
                             GUILayout.Label("#" + index, GUILayout.Width(indexColWidth));
                             GUILayout.Label(genericArg.FullDescription(), GUILayout.Width((_currentlyInvokingRect.width - indexColWidth) / 2.3f));
-                            _currentlyInvokingArgsValues[index] = GUILayout.TextField(_currentlyInvokingArgsValues[index], GUILayout.ExpandWidth(true));
+                            _currentlyInvokingArgsValues[index] = GUILayout.TextField(_currentlyInvokingArgsValues[index], IMGUIUtils.LayoutOptionsExpandWidthTrue);
                             GUILayout.EndHorizontal();
                         }
                     }
@@ -546,7 +547,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                             GUILayout.BeginHorizontal();
                             GUILayout.Label("#" + index, GUILayout.Width(indexColWidth));
                             GUILayout.Label(parameter.ParameterType.FullDescription() + " " + parameter.Name, GUILayout.Width((_currentlyInvokingRect.width - indexColWidth) / 2.3f));
-                            _currentlyInvokingParamsValues[index] = GUILayout.TextField(_currentlyInvokingParamsValues[index], GUILayout.ExpandWidth(true));
+                            _currentlyInvokingParamsValues[index] = GUILayout.TextField(_currentlyInvokingParamsValues[index], IMGUIUtils.LayoutOptionsExpandWidthTrue);
                             GUILayout.EndHorizontal();
                         }
                     }
@@ -558,8 +559,8 @@ namespace RuntimeUnityEditor.Core.Inspector
 
                 GUILayout.BeginHorizontal(GUI.skin.box);
                 {
-                    GUILayout.Label("Invoke result: ", GUILayout.ExpandWidth(false));
-                    GUILayout.TextArea(_currentlyInvokingException != null ? _currentlyInvokingException.GetType().Name + " - " + _currentlyInvokingException.Message : _currentlyInvokingResult == null ? "None / NULL" : _currentlyInvokingResult.ToString(), GUI.skin.label, GUILayout.ExpandWidth(true));
+                    GUILayout.Label("Invoke result: ", IMGUIUtils.LayoutOptionsExpandWidthFalse);
+                    GUILayout.TextArea(_currentlyInvokingException != null ? _currentlyInvokingException.GetType().Name + " - " + _currentlyInvokingException.Message : _currentlyInvokingResult == null ? "None / NULL" : _currentlyInvokingResult.ToString(), GUI.skin.label, IMGUIUtils.LayoutOptionsExpandWidthTrue);
                 }
                 GUILayout.EndHorizontal();
 

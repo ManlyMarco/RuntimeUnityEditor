@@ -18,6 +18,8 @@ namespace RuntimeUnityEditor.Core.Utils
     {
         public static bool Contains(this string s, string searchText, StringComparison sc)
         {
+            if (string.IsNullOrEmpty(s) || string.IsNullOrEmpty(searchText))
+                return false;
             return s.IndexOf(searchText, sc) >= 0;
         }
 
@@ -57,6 +59,16 @@ namespace RuntimeUnityEditor.Core.Utils
         public static object CallPrivate(this object self, string name, params object[] p)
         {
             return self.GetType().GetMethod(name, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy).Invoke(self, p);
+        }
+
+        public static object TryGetFieldValue(this object self, string name)
+        {
+            return AccessTools.Field(self.GetType(), name)?.GetValue(self);
+        }
+
+        public static object TryGetPropertyValue(this object self, string name, object[] index = null)
+        {
+            return AccessTools.Property(self.GetType(), name)?.GetValue(self, index);
         }
 
         public static void ExecuteDelayed(this MonoBehaviour self, Action action, int waitCount = 1)

@@ -4,7 +4,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace RuntimeUnityEditor.Core.Utils.Abstractions
 {
@@ -19,6 +21,19 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
         static UnityFeatureHelper()
         {
             SupportsScenes = _scene != null && _sceneManager != null;
+
+            if (SupportsScenes)
+            {
+                try
+                {
+                    _ = SceneProxyMethods.GetSceneCount();
+                }
+                catch
+                {
+                    SupportsScenes = false;
+                }
+            }
+
             if (!SupportsScenes)
                 RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "UnityEngine.SceneManager and/or UnityEngine.SceneManagement.Scene are not available, some features will be disabled");
 
@@ -48,10 +63,122 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
             }
         }
 
+        #region Scenes
+
         /// <summary>
-        /// UnityEngine.SceneManagement.SceneManager is available, used by <see cref="GetSceneGameObjects"/>.
+        /// UnityEngine.SceneManagement.SceneManager is available, used by <see cref="GetActiveSceneGameObjects"/>.
         /// </summary>
         public static bool SupportsScenes { get; private set; }
+
+        /// <summary>
+        /// Get root game objects in active scene, or nothing if game doesn't support this.
+        /// </summary>
+        public static GameObject[] GetActiveSceneGameObjects()
+        {
+            return SupportsScenes ? SceneProxyMethods.GetActiveSceneGameObjects() : new GameObject[0];
+        }
+
+        public static int sceneCount => SupportsScenes ? SceneProxyMethods.GetSceneCount() : 0;
+
+        public static bool GetSceneName(this GameObject go, out string sceneName)
+        {
+            if (SupportsScenes)
+            {
+                sceneName = SceneProxyMethods.GetSceneName(go);
+                return true;
+            }
+
+            sceneName = null;
+            return false;
+        }
+
+        public static GameObject[] GetSceneRootObjects(int sceneLoadIndex)
+        {
+            if (!SupportsScenes) return new GameObject[0];
+            return SceneProxyMethods.GetRootGameObjects(sceneLoadIndex);
+        }
+
+        public static SceneWrapper GetSceneAt(int sceneLoadIndex)
+        {
+            if (!SupportsScenes) return default;
+            return SceneProxyMethods.GetSceneAt(sceneLoadIndex);
+        }
+
+        public static bool UnloadScene(string sceneName)
+        {
+            if (!SupportsScenes) return false;
+            return SceneProxyMethods.UnloadScene(sceneName);
+        }
+
+        public readonly struct SceneWrapper
+        {
+            public SceneWrapper(string name, int buildIndex, int rootCount, bool isLoaded, bool isDirty, string path)
+            {
+                this.name = name;
+                this.buildIndex = buildIndex;
+                this.rootCount = rootCount;
+                this.isLoaded = isLoaded;
+                this.isDirty = isDirty;
+                this.path = path;
+            }
+
+            public readonly string name;
+            public readonly int buildIndex;
+            public readonly int rootCount;
+            public readonly bool isLoaded;
+            public readonly bool isDirty;
+            public readonly string path;
+
+            public override string ToString()
+            {
+                return $"Name: {name}\nBuildIndex: {buildIndex}\nRootCount: {rootCount}\nIsLoaded: {isLoaded}\nIsDirty: {isDirty}\nPath: {path}";
+            }
+        }
+
+        /// <summary>
+        /// Proxy methods for SceneManager and Scene to avoid exceptions in old Unity versions (mostly 4.x) that do not support them.
+        /// By fencing all references here and never calling them directly it's possible to have no reflection overhead when they are available.
+        /// The NoInlining attribute is necessary for this to work reliably, because the JIT might inline the calls all the way back to the original caller, which creates an impossible to catch TypeLoadException.
+        /// </summary>
+        private static class SceneProxyMethods
+        {
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static SceneWrapper GetSceneAt(int sceneLoadIndex)
+            {
+                var scene = SceneManager.GetSceneAt(sceneLoadIndex);
+                return new SceneWrapper(scene.name, scene.buildIndex, scene.rootCount, scene.isLoaded, scene.isDirty, scene.path);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static GameObject[] GetRootGameObjects(int sceneLoadIndex)
+            {
+                var scene = SceneManager.GetSceneAt(sceneLoadIndex);
+                return scene.GetRootGameObjects();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static bool UnloadScene(string sceneName)
+            {
+                return SceneManager.UnloadScene(sceneName);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static int GetSceneCount() => SceneManager.sceneCount;
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static string GetSceneName(GameObject go)
+            {
+                return go.scene.name;
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static GameObject[] GetActiveSceneGameObjects()
+            {
+                return SceneManager.GetActiveScene().GetRootGameObjects();
+            }
+        }
+
+        #endregion
 
         /// <summary>
         /// TextEditor.cursorIndex is available.
@@ -63,36 +190,6 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
         /// </summary>
         public static bool SupportsRepl { get; }
 
-        /// <summary>
-        /// Get root game objects in active scene, or nothing if game doesn't support this.
-        /// </summary>
-        public static GameObject[] GetSceneGameObjects()
-        {
-            try
-            {
-                return GetSceneGameObjectsInternal();
-            }
-            catch (Exception)
-            {
-                SupportsScenes = false;
-                return new GameObject[0];
-            }
-        }
-
-        private static GameObject[] GetSceneGameObjectsInternal()
-        {
-            // Reflection for compatibility with Unity 4.x
-            var activeScene = _sceneManager.GetMethod("GetActiveScene", BindingFlags.Static | BindingFlags.Public);
-            if (activeScene == null) throw new ArgumentNullException(nameof(activeScene));
-            var scene = activeScene.Invoke(null, null);
-            
-            var rootGameObjects = scene.GetType().GetMethod("GetRootGameObjects", BindingFlags.Instance | BindingFlags.Public, null, new Type[]{}, null);
-            if (rootGameObjects == null) throw new ArgumentNullException(nameof(rootGameObjects));
-            var objects = rootGameObjects.Invoke(scene, null);
-
-            return (GameObject[])objects;
-        }
-        
         /// <summary>
         /// Figure out where the log file is written to and open it.
         /// </summary>
@@ -141,8 +238,8 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
             candidates.Clear();
             // Fall back to more aggresive brute search
             // BepInEx 5.x log file, can be "LogOutput.log.1" or higher if multiple game instances run
-            candidates.AddRange(Directory.GetFiles(rootDir,"LogOutput.log*", SearchOption.AllDirectories));
-            candidates.AddRange(Directory.GetFiles(rootDir,"output_log.txt", SearchOption.AllDirectories));
+            candidates.AddRange(Directory.GetFiles(rootDir, "LogOutput.log*", SearchOption.AllDirectories));
+            candidates.AddRange(Directory.GetFiles(rootDir, "output_log.txt", SearchOption.AllDirectories));
             latestLog = candidates.Where(File.Exists).OrderByDescending(File.GetLastWriteTimeUtc).FirstOrDefault();
             if (TryOpen(latestLog)) return;
 
@@ -172,6 +269,36 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
             }
 
             return tex;
+        }
+
+        /// <summary>
+        /// Throws if not available
+        /// </summary>
+        public static string systemCopyBuffer
+        {
+            get => SystemCopyBufferProxy.systemCopyBuffer;
+            set => SystemCopyBufferProxy.systemCopyBuffer = value;
+        }
+
+        /// <see cref="SceneProxyMethods"/>
+        private static class SystemCopyBufferProxy
+        {
+            public static string systemCopyBuffer
+            {
+                [MethodImpl(MethodImplOptions.NoInlining)] get => GUIUtility.systemCopyBuffer;
+                [MethodImpl(MethodImplOptions.NoInlining)] set => GUIUtility.systemCopyBuffer = value;
+            }
+        }
+
+        /// <summary>
+        /// Throws if Camera.onPreRender and Camera.onPostRender are not available.
+        /// They are not available in Unity 4.x
+        /// </summary>
+        public static void EnsureCameraRenderEventsAreAvailable()
+        {
+            var cameraType = typeof(Camera);
+            if (cameraType.GetField(nameof(Camera.onPreRender), BindingFlags.Static | BindingFlags.Public) == null || cameraType.GetField(nameof(Camera.onPostRender), BindingFlags.Static | BindingFlags.Public) == null)
+                throw new NotSupportedException("Camera.onPreRender and/or Camera.onPostRender are not available");
         }
     }
 }

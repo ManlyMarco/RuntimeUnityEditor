@@ -33,6 +33,10 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         private bool _scrollTreeToSelected;
         private float _scrollTarget = -1f;
 
+        private bool _searchNames = true;
+        private InitSettings.Setting<bool> _searchComponents;
+        private InitSettings.Setting<bool> _searchProperties;
+
         private RootGameObjectSearcher _gameObjectSearcher;
         private readonly Dictionary<Image, Texture2D> _imagePreviewCache = new Dictionary<Image, Texture2D>();
         private static readonly GUILayoutOption _drawVector3FieldWidth = GUILayout.Width(38);
@@ -71,6 +75,9 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             Title = "Object Browser";
             _gameObjectSearcher = new RootGameObjectSearcher();
             DefaultScreenPosition = ScreenPartition.Right;
+
+            _searchComponents = initSettings.RegisterSetting(Title, "Search component names", true, "Include names of components on a GameObject when searching with the search box.");
+            _searchProperties = initSettings.RegisterSetting(Title, "Search component properties", false, "Include values of properties of components on a GameObject when searching with the search box. Very slow and may have side effects!");
         }
 
         /// <summary>
@@ -120,6 +127,8 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
         private void DisplayObjectTreeHelper(GameObject go, int indent, ref int currentCount, ref int notVisibleCount)
         {
+            if (go == null) return;
+
             currentCount++;
 
             var needsHeightMeasure = _singleObjectTreeItemHeight == 0f;
@@ -145,7 +154,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 {
                     GUI.color = Color.cyan;
                 }
-                else if (go.scene.name == null && !go.activeInHierarchy)
+                else if (go.GetSceneName(out var sceneName) && sceneName == null && !go.activeInHierarchy)
                 {
                     GUI.color = new Color(0.6f, 0.6f, 0.4f, 1);
                 }
@@ -162,7 +171,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                     {
                         if (go.transform.childCount != 0)
                         {
-                            if (GUILayout.Toggle(_openedObjects.Contains(go), "", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Toggle(_openedObjects.Contains(go), "", IMGUIUtils.LayoutOptionsExpandWidthFalse))
                                 _openedObjects.Add(go);
                             else
                                 _openedObjects.Remove(go);
@@ -230,6 +239,8 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 DisplayObjectProperties();
             }
             GUILayout.EndVertical();
+
+            _sceneDropdown.DrawDropdownIfOpen();
         }
 
         private void DisplayObjectProperties()
@@ -246,11 +257,11 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
                     GUILayout.BeginHorizontal();
                     {
-                        GUILayout.Label("Search components ", GUILayout.ExpandWidth(false));
+                        GUILayout.Label("Search components ", IMGUIUtils.LayoutOptionsExpandWidthFalse);
 
-                        _searchTextComponents = GUILayout.TextField(_searchTextComponents, GUILayout.ExpandWidth(true));
+                        _searchTextComponents = GUILayout.TextField(_searchTextComponents, IMGUIUtils.LayoutOptionsExpandWidthTrue);
 
-                        if (GUILayout.Button("Clear", GUILayout.ExpandWidth(false)))
+                        if (GUILayout.Button("Clear", IMGUIUtils.LayoutOptionsExpandWidthFalse))
                             _searchTextComponents = string.Empty;
                     }
                     GUILayout.EndHorizontal();
@@ -289,7 +300,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                     GUILayout.Toggle(selectedGameObject.isStatic, "isStatic");
 
                     GUI.changed = false;
-                    var newVal = GUILayout.Toggle(selectedGameObject.activeSelf, "Active", GUILayout.ExpandWidth(false));
+                    var newVal = GUILayout.Toggle(selectedGameObject.activeSelf, "Active", IMGUIUtils.LayoutOptionsExpandWidthFalse);
                     if (GUI.changed)
                         Change.Action($"{{0}}.SetActive({newVal});", selectedGameObject, o => o.SetActive(newVal), o => o.SetActive(!newVal));
 
@@ -360,7 +371,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 if (component is Behaviour bh)
                 {
                     GUI.changed = false;
-                    var enabledNew = GUILayout.Toggle(bh.enabled, "", GUILayout.ExpandWidth(false));
+                    var enabledNew = GUILayout.Toggle(bh.enabled, "", IMGUIUtils.LayoutOptionsExpandWidthFalse);
                     if (GUI.changed)
                         Change.MemberAssignment(bh, enabledNew, b => b.enabled);
                 }
@@ -549,94 +560,168 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                         _scrollTarget = Mathf.Min(_scrollTarget, _singleObjectTreeItemHeight * currentCount + _singleObjectTreeItemMargin - _objectTreeHeight);
                 }
                 GUILayout.EndScrollView();
+
+                DisplaySceneControls();
             }
             GUILayout.EndVertical();
         }
 
+        private void UpdateSearch()
+        {
+            _gameObjectSearcher.Search(_searchText, _searchNames, _searchComponents.Value, _searchProperties.Value, false);
+            _treeScrollPosition = Vector2.zero;
+        }
+
+        private readonly GUIContent _searchLabelContent = new GUIContent("Search:");
+        private readonly GUIContent _searchClearButtonContent = new GUIContent("Clear");
+        private readonly GUIContent _searchNamesContent = new GUIContent("Names", "Include names of GameObjects when searching with the search box.");
+        private readonly GUIContent _searchComponentsContent = new GUIContent("Components", "Include names of components on a GameObject when searching with the search box.");
+        private readonly GUIContent _searchPropertiesContent = new GUIContent("Properties", "Include values of properties and fields of components on a GameObject when searching with the search box. Very slow and may have side effects!");
+        private readonly GUIContent _searchStaticsButtonContent = new GUIContent("Statics", "Search for static classes by their name. Results are opened in inspector.");
+        private static readonly string[] _spinner = { "|", "/", "-", "\\" };
         private void DisplayTreeSearchBox()
         {
-            GUILayout.BeginHorizontal();
+            //todo
+            // add info markings to list items on right
+            //   scene, prefab, etc
+
+            GUILayout.BeginVertical(GUI.skin.box);
             {
-                GUI.SetNextControlName("searchbox");
-                _searchText = GUILayout.TextField(_searchText, GUILayout.ExpandWidth(true));
-
-                if (GUILayout.Button("Clear", GUILayout.ExpandWidth(false)))
+                GUILayout.BeginHorizontal();
                 {
-                    _searchText = string.Empty;
-                    _gameObjectSearcher.Search(_searchText, false, false);
-                    SelectAndShowObject(SelectedTransform);
-                }
+                    GUILayout.Label(_searchLabelContent, IMGUIUtils.LayoutOptionsExpandWidthFalse);
 
-                GUILayout.Space(3);
+                    GUI.changed = false;
 
-                if (SelectedTransform == null) GUI.enabled = false;
-                if (GUILayout.Button("Dump obj", GUILayout.ExpandWidth(false)))
-                    SceneDumper.DumpObjects(SelectedTransform?.gameObject);
-                GUI.enabled = true;
-            }
-            GUILayout.EndHorizontal();
+                    GUI.SetNextControlName("searchbox");
+                    _searchText = GUILayout.TextField(_searchText, IMGUIUtils.LayoutOptionsExpandWidthTrue);
 
-            GUILayout.BeginHorizontal();
-            {
-                GUILayout.Label("Search");
-                if (GUILayout.Button("Names"))
-                {
-                    _gameObjectSearcher.Search(_searchText, false, false);
-                    _treeScrollPosition = Vector2.zero;
-                    //_searchTextComponents = _searchText;
-                }
+                    // Show indicator that search results are still being updated
+                    if (_gameObjectSearcher.BusyIndexing)
+                        GUILayout.Label(_spinner[Mathf.FloorToInt(((Time.time * 2) % 1) / 0.25f)], GUILayout.Width(5));
 
-                if (Event.current.isKey && (Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter) && GUI.GetNameOfFocusedControl() == "searchbox")
-                {
-                    _gameObjectSearcher.Search(_searchText, false, false);
-                    _treeScrollPosition = Vector2.zero;
-                    //_searchTextComponents = _searchText;
-                    Event.current.Use();
-                }
-
-                if (GUILayout.Button("Components"))
-                {
-                    _gameObjectSearcher.Search(_searchText, true, false);
-                    _treeScrollPosition = Vector2.zero;
-                    //_searchTextComponents = _searchText;
-                }
-
-                if (GUILayout.Button("Properties"))
-                {
-                    _treeScrollPosition = Vector2.zero;
-                    _gameObjectSearcher.Search(_searchText, true, true);
-                    //_searchTextComponents = _searchText;
-                }
-
-                if (GUILayout.Button("Statics"))
-                {
-                    if (string.IsNullOrEmpty(_searchText))
+                    if (GUI.changed)
+                        UpdateSearch();
+                    if (GUILayout.Button(_searchClearButtonContent, IMGUIUtils.LayoutOptionsExpandWidthFalse))
                     {
-                        RuntimeUnityEditorCore.Logger.Log(LogLevel.Message | LogLevel.Warning, "Can't search for empty string");
+                        _searchText = string.Empty;
+                        UpdateSearch();
+                        SelectAndShowObject(SelectedTransform);
                     }
-                    else
+                }
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                {
+                    GUI.changed = false;
+                    _searchNames = GUILayout.Toggle(_searchNames, _searchNamesContent);
+                    _searchComponents.Value = GUILayout.Toggle(_searchComponents.Value, _searchComponentsContent);
+                    _searchProperties.Value = GUILayout.Toggle(_searchProperties.Value, _searchPropertiesContent);
+                    if (GUI.changed)
+                        UpdateSearch();
+
+                    GUILayout.FlexibleSpace();
+
+                    if (GUILayout.Button(_searchStaticsButtonContent, IMGUIUtils.LayoutOptionsExpandWidthFalse))
                     {
-                        var matchedTypes = AppDomain.CurrentDomain.GetAssemblies()
-                            .SelectMany(Extensions.GetTypesSafe)
-                            .Where(x => x.GetSourceCodeRepresentation().Contains(_searchText, StringComparison.OrdinalIgnoreCase));
-
-                        var stackEntries = matchedTypes.Select(t => new StaticStackEntry(t, t.GetSourceCodeRepresentation())).ToList();
-
-                        if (stackEntries.Count == 0)
+                        if (string.IsNullOrEmpty(_searchText))
                         {
-                            RuntimeUnityEditorCore.Logger.Log(LogLevel.Message | LogLevel.Warning, "No static type names contained the search string");
+                            RuntimeUnityEditorCore.Logger.Log(LogLevel.Message | LogLevel.Warning, "Can't search for empty string");
                         }
                         else
                         {
-                            Inspector.Inspector.Instance.Push(new InstanceStackEntry(stackEntries, "Static type search"), true);
-                            if (stackEntries.Count == 1)
-                                Inspector.Inspector.Instance.Push(stackEntries.Single(), false);
+                            var matchedTypes = AppDomain.CurrentDomain.GetAssemblies()
+                                                        .SelectMany(Extensions.GetTypesSafe)
+                                                        .Where(x => x.GetSourceCodeRepresentation().Contains(_searchText, StringComparison.OrdinalIgnoreCase));
+
+                            var stackEntries = matchedTypes.Select(t => new StaticStackEntry(t, t.GetSourceCodeRepresentation())).ToList();
+
+                            if (stackEntries.Count == 0)
+                            {
+                                RuntimeUnityEditorCore.Logger.Log(LogLevel.Message | LogLevel.Warning, "No static type names contained the search string");
+                            }
+                            else
+                            {
+                                Inspector.Inspector.Instance.Push(new InstanceStackEntry(stackEntries, "Static type search"), true);
+                                if (stackEntries.Count == 1)
+                                    Inspector.Inspector.Instance.Push(stackEntries.Single(), false);
+                            }
                         }
                     }
                 }
+                GUILayout.EndHorizontal();
+            }
+            GUILayout.EndVertical();
+        }
+
+        #region Scene stuff
+
+        private readonly ImguiComboBox _sceneDropdown = new ImguiComboBox();
+        private static readonly GUIContent _sceneDropdownAllScenesContent = new GUIContent("All scenes", "Show GameObjects from all loaded scenes.\n\nSelect a scene from the dropdown to only show GameObjects that belong to that scene (they will be destroyed if the scene is unloaded).");
+        private GUIContent _sceneDropdownCurrentContent = _sceneDropdownAllScenesContent;
+        private readonly GUIContent _sceneUnloadButtonContent = new GUIContent("Unload", "Attempt to unload currently selected scene. It may fail if there is only one scene loaded.");
+        private readonly GUIContent _sceneLabelContent = new GUIContent("Scene: ", "Multiple scenes can be loaded at the same time, in which case objects that belong to them all exist at the same time." +
+                                                                                   "\nThe dropdown lists all currently loaded scenes. Select one of them to only show objects that belong to it." +
+                                                                                   "\n\nWhen a scene is unloaded, all of its objects are marked to be destroyed (in some cases they are not cleaned up until Resources.UnloadUnusedResources).");
+        private void DisplaySceneControls()
+        {
+            if (!UnityFeatureHelper.SupportsScenes) return;
+
+            GUILayout.BeginHorizontal(GUI.skin.box);
+            {
+                GUILayout.Label(_sceneLabelContent, IMGUIUtils.LayoutOptionsExpandWidthFalse);
+
+                var loadedScenes = Enumerable.Range(0, UnityFeatureHelper.sceneCount).Select(UnityFeatureHelper.GetSceneAt);
+
+                _sceneDropdown.Show(_sceneDropdownCurrentContent,
+                                    () => Enumerable.Repeat(_sceneDropdownAllScenesContent, 1).Concat(loadedScenes.Select((x, i) => GetSceneContent(i, x))).ToArray(),
+                                    i =>
+                                    {
+                                        try
+                                        {
+                                            var sceneIndex = i - 1;
+                                            _sceneDropdownCurrentContent = sceneIndex < 0 ? _sceneDropdownAllScenesContent : GetSceneContent(sceneIndex, UnityFeatureHelper.GetSceneAt(sceneIndex));
+                                            _gameObjectSearcher.SceneIndexFilter = sceneIndex;
+
+                                            UpdateSearch();
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            _sceneDropdownCurrentContent = _sceneDropdownAllScenesContent;
+                                            _gameObjectSearcher.SceneIndexFilter = -1;
+                                            RuntimeUnityEditorCore.Logger.Log(LogLevel.Message | LogLevel.Warning, "Failed to select scene from dropdown, it may have been unloaded");
+                                            RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, e);
+                                        }
+                                    });
+
+                var guiEnabled = GUI.enabled;
+                if (_gameObjectSearcher.SceneIndexFilter < 0 || _gameObjectSearcher.SceneIndexFilter >= UnityFeatureHelper.sceneCount) GUI.enabled = false;
+
+                if (GUILayout.Button(_sceneUnloadButtonContent, IMGUIUtils.LayoutOptionsExpandWidthFalse))
+                {
+                    var scene = UnityFeatureHelper.GetSceneAt(_gameObjectSearcher.SceneIndexFilter);
+                    if (scene.isLoaded)
+                    {
+                        UnityFeatureHelper.UnloadScene(scene.name);
+                        _gameObjectSearcher.SceneIndexFilter = -1;
+                        _sceneDropdownCurrentContent = _sceneDropdownAllScenesContent;
+                    }
+                }
+                GUI.enabled = guiEnabled;
+
+                //todo add scene manager
+                //if (GUILayout.Button("Manage", IMGUIUtils.LayoutOptionsExpandWidthFalse))
+                //{
+                //    
+                //}
             }
             GUILayout.EndHorizontal();
+            return;
+
+            GUIContent GetSceneContent(int i, UnityFeatureHelper.SceneWrapper x) => new GUIContent($"#{i} {x.name}", x.ToString());
         }
+
+        #endregion
 
         /// <summary>
         /// Switch the tree into reference search mode.

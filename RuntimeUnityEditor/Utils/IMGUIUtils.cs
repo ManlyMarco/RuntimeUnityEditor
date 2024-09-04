@@ -8,6 +8,9 @@ namespace RuntimeUnityEditor.Core.Utils
     /// </summary>
     public static class IMGUIUtils
     {
+        public static readonly GUILayoutOption[] LayoutOptionsExpandWidthTrue = { GUILayout.ExpandWidth(true) };
+        public static readonly GUILayoutOption[] LayoutOptionsExpandWidthFalse = { GUILayout.ExpandWidth(false) };
+
         private static Texture2D SolidBoxTex { get; set; }
 
         /// <summary>

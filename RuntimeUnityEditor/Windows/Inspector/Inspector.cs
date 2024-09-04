@@ -185,12 +185,12 @@ namespace RuntimeUnityEditor.Core.Inspector
             {
                 GUILayout.BeginHorizontal();
                 {
-                    GUILayout.BeginHorizontal(GUI.skin.box, GUILayout.ExpandWidth(true));
+                    GUILayout.BeginHorizontal(GUI.skin.box, IMGUIUtils.LayoutOptionsExpandWidthTrue);
                     {
-                        GUILayout.Label("Filter:", GUILayout.ExpandWidth(false));
+                        GUILayout.Label("Filter:", IMGUIUtils.LayoutOptionsExpandWidthFalse);
 
                         GUI.SetNextControlName(SearchBoxName);
-                        SearchString = GUILayout.TextField(SearchString, GUILayout.ExpandWidth(true));
+                        SearchString = GUILayout.TextField(SearchString, IMGUIUtils.LayoutOptionsExpandWidthTrue);
 
                         if (_focusSearchBox)
                         {
@@ -206,7 +206,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                         _showDeclaredOnly = GUILayout.Toggle(_showDeclaredOnly, "Only declared");
 
                         /* todo
-                        GUILayout.Label("Find:", GUILayout.ExpandWidth(false));
+                        GUILayout.Label("Find:", IMGUIUtils.LayoutOptionsExpandWidthFalse);
                         foreach (var obj in new[]
                         {
                                 new KeyValuePair<object, string>(EditorUtilities.GetInstanceClassScanner().OrderBy(x => x.Name()), "Instances"),
@@ -217,7 +217,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                             })
                         {
                             if (obj.Key == null) continue;
-                            if (GUILayout.Button(obj.Value, GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button(obj.Value, IMGUIUtils.LayoutOptionsExpandWidthFalse))
                                 Push(new InstanceStackEntry(obj.Key, obj.Value), true);
                         }*/
                     }
@@ -257,7 +257,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                             if (currentTab == tab)
                                 GUI.backgroundColor = Color.cyan;
 
-                            if (GUILayout.Button($"Tab {index + 1}: {LimitStringLengthForPreview(tab?.CurrentStackItem?.Name, 18)}", GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button($"Tab {index + 1}: {LimitStringLengthForPreview(tab?.CurrentStackItem?.Name, 18)}", IMGUIUtils.LayoutOptionsExpandWidthFalse))
                             {
                                 // todo custom context menu for the tab bar? IMGUIUtils.IsMouseRightClick()
                                 if (IMGUIUtils.IsMouseWheelClick())
@@ -293,7 +293,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                             if (stackEntry == currentTab.CurrentStackItem)
                                 GUI.backgroundColor = Color.cyan;
 
-                            if (GUILayout.Button(LimitStringLengthForPreview(stackEntry.Name, 90), GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button(LimitStringLengthForPreview(stackEntry.Name, 90), IMGUIUtils.LayoutOptionsExpandWidthFalse))
                             {
                                 if (IMGUIUtils.IsMouseRightClick())
                                     stackEntry.ShowContextMenu();
@@ -305,7 +305,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                             }
 
                             if (i + 1 < stackEntries.Length)
-                                GUILayout.Label(">", GUILayout.ExpandWidth(false));
+                                GUILayout.Label(">", IMGUIUtils.LayoutOptionsExpandWidthFalse);
 
                             GUI.backgroundColor = defaultGuiColor;
                         }
@@ -322,7 +322,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                             GUILayout.Space(2);
                             GUILayout.Label("Member name", GUI.skin.box, _inspectorNameWidth);
                             GUILayout.Space(1);
-                            GUILayout.Label("Value", GUI.skin.box, GUILayout.ExpandWidth(true));
+                            GUILayout.Label("Value", GUI.skin.box, IMGUIUtils.LayoutOptionsExpandWidthTrue);
                         }
                         GUILayout.EndHorizontal();
 
@@ -451,7 +451,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                 catch (Exception ex)
                 {
                     RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, $"[{Title}] Failed to draw setting {entry?.Name()} - {ex.Message}");
-                    GUILayout.TextArea(ex.Message, GUI.skin.label, GUILayout.ExpandWidth(true));
+                    GUILayout.TextArea(ex.Message, GUI.skin.label, IMGUIUtils.LayoutOptionsExpandWidthTrue);
                 }
             }
             GUILayout.EndHorizontal();
