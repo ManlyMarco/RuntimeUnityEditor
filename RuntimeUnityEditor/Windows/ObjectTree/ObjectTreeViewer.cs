@@ -482,9 +482,15 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                             for (var i = 0; i < eventObj.GetPersistentEventCount(); ++i)
                                 GUILayout.Label(ToStringConverter.EventEntryToString(eventObj, i));
 
-                            var calls = (IList)eventObj.GetPrivateExplicit<UnityEventBase>("m_Calls").GetPrivate("m_RuntimeCalls");
-                            foreach (var call in calls)
-                                GUILayout.Label(ToStringConverter.ObjectToString(call.GetPrivate("Delegate")));
+                            try
+                            {
+                                var calls = (IList)eventObj.GetPrivateExplicit<UnityEventBase>("m_Calls").GetPrivate("m_RuntimeCalls");
+                                foreach (var call in calls)
+                                    GUILayout.Label(ToStringConverter.ObjectToString(call.GetPrivate("Delegate")));
+                            }
+                            catch (NullReferenceException)
+                            {
+                            }
 
                             GUILayout.FlexibleSpace();
                             if (GUILayout.Button("?"))
@@ -497,9 +503,15 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                             for (var i = 0; i < eventObj.GetPersistentEventCount(); ++i)
                                 GUILayout.Label(ToStringConverter.EventEntryToString(b.onValueChanged, i));
 
-                            var calls = (IList)b.onValueChanged.GetPrivateExplicit<UnityEventBase>("m_Calls").GetPrivate("m_RuntimeCalls");
-                            foreach (var call in calls)
-                                GUILayout.Label(ToStringConverter.ObjectToString(call.GetPrivate("Delegate")));
+                            try
+                            {
+                                var calls = (IList)b.onValueChanged.GetPrivateExplicit<UnityEventBase>("m_Calls").GetPrivate("m_RuntimeCalls");
+                                foreach (var call in calls)
+                                    GUILayout.Label(ToStringConverter.ObjectToString(call.GetPrivate("Delegate")));
+                            }
+                            catch (NullReferenceException)
+                            {
+                            }
 
                             GUILayout.FlexibleSpace();
                             if (GUILayout.Button("?"))
