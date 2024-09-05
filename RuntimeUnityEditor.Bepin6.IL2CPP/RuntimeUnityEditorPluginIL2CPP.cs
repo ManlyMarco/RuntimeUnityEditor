@@ -2,6 +2,7 @@
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
+using RuntimeUnityEditor.Bepin6.LogViewer;
 using RuntimeUnityEditor.Core;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
@@ -29,6 +30,8 @@ namespace RuntimeUnityEditor.Bepin6.IL2CPP
             }
             
             _coreInstance = new RuntimeUnityEditorCore(new Bep5InitSettings(this));
+
+            _coreInstance.AddFeature(new LogViewerWindow());
         }
 
         private class RuntimeUnityEditorHelper : MonoBehaviour

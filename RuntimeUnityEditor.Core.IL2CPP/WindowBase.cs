@@ -161,19 +161,20 @@ namespace RuntimeUnityEditor.Core
                 }
 
                 _tooltipContent.text = GUI.tooltip;
-                var height = _tooltipStyle.CalcHeight(_tooltipContent, TooltipWidth) + 10;
+                var tooltipWidth = Mathf.Min(TooltipWidth, WindowRect.width);
+                var height = _tooltipStyle.CalcHeight(_tooltipContent, tooltipWidth) + 10;
 
                 var currentEvent = Event.current;
 
-                var x = currentEvent.mousePosition.x + TooltipWidth > area.width
-                    ? area.width - TooltipWidth
+                var x = currentEvent.mousePosition.x + tooltipWidth > area.width
+                    ? area.width - tooltipWidth
                     : currentEvent.mousePosition.x;
 
                 var y = currentEvent.mousePosition.y + 25 + height > area.height
                     ? currentEvent.mousePosition.y - height
                     : currentEvent.mousePosition.y + 25;
 
-                GUI.Box(new Rect(x, y, TooltipWidth, height), GUI.tooltip, _tooltipStyle);
+                GUI.Box(new Rect(x, y, tooltipWidth, height), GUI.tooltip, _tooltipStyle);
             }
         }
 

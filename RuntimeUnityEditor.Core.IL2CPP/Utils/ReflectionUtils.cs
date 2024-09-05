@@ -75,7 +75,7 @@ namespace RuntimeUnityEditor.Core.Utils
 
         public static string MethodCallToSourceRepresentation(object instance, MethodBase methodInfo, ICollection<string> parameterStrings)
         {
-            var generics = methodInfo.GetGenericArguments();
+            var generics = methodInfo.GetGenericArgumentsSafe();
             var genericsString = generics.Length == 0 ? "" : "<" + string.Join(", ", generics.Select(x => x.FullDescription()).ToArray()) + ">";
             return $"{instance?.GetType().FullDescription() ?? methodInfo.DeclaringType?.FullDescription() ?? "<Unknown>"}.{methodInfo.Name}{genericsString}({string.Join(", ", Enumerable.ToArray<string>(ClipboardWindow.ResolveMethodParameters(parameterStrings)))})";
         }

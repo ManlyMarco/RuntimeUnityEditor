@@ -448,7 +448,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                 _currentlyInvokingResult = null;
                 _currentlyInvokingException = null;
                 _currentlyInvokingRect.Set(0, 0, 0, 0);
-                _currentlyInvokingArgs = genericArguments ?? method?.GetGenericArguments();
+                _currentlyInvokingArgs = genericArguments ?? method?.GetGenericArgumentsSafe();
                 _currentlyInvokingParams = parameters ?? method?.GetParameters();
                 _currentlyInvokingArgsValues.Clear();
                 _currentlyInvokingParamsValues.Clear();

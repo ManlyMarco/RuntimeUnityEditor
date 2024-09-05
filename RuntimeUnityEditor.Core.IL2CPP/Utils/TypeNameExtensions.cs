@@ -40,7 +40,7 @@ namespace RuntimeUnityEditor.Core.Utils
             if (type.IsGenericType)
             {
                 // Fill the list with nulls to preserve the depth
-                var genargNames = type.GetGenericArguments().Select(type1 => GetSourceCodeRepresentationInt(type1, new List<Type>(Enumerable.Repeat<Type>(null, travesed.Count))));
+                var genargNames = type.GetGenericArgumentsSafe().Select(type1 => GetSourceCodeRepresentationInt(type1, new List<Type>(Enumerable.Repeat<Type>(null, travesed.Count))));
                 var idx = type.Name.IndexOf('`');
                 var typename = idx > 0 ? type.Name.Substring(0, idx) : type.Name;
                 return $"{prefixName}{typename}<{string.Join(", ", genargNames.ToArray())}>";
@@ -79,7 +79,7 @@ namespace RuntimeUnityEditor.Core.Utils
                         $"{(methodInfo.IsPublic ? "public " : methodInfo.IsPrivate ? "private " : methodInfo.IsFamily ? "protected " : methodInfo.IsAssembly ? "internal " : "non-public ")}{(methodInfo.IsStatic ? "static " : "instance ")}method\n" +
                         $"Name: {methodInfo.Name}\n" +
                         $"Declared in: {methodInfo.DeclaringType.FullDescription()}\n" +
-                        $"Generic arguments: {methodInfo.GetGenericArguments().Join(p => p.FullDescription(), ", ")}\n" +
+                        $"Generic arguments: {methodInfo.GetGenericArgumentsSafe().Join(p => p.FullDescription(), ", ")}\n" +
                         $"Parameters: {methodInfo.GetParameters().Join(p => p.ParameterType.FullDescription() + " " + p.Name, ", ")}\n" +
                         $"Return type: {methodInfo.ReturnType.FullDescription()}";
                 case EventInfo eventInfo:
@@ -105,5 +105,39 @@ namespace RuntimeUnityEditor.Core.Utils
                     return null;
             }
         }
+
+        /// <inheritdoc cref="Type.GetGenericArguments"/>
+        public static Type[] GetGenericArgumentsSafe(this Type type)
+        {
+            try
+            {
+                return type.GetGenericArguments();
+            }
+            catch (Exception e)
+            {
+                if (type.IsGenericType || type.IsGenericTypeDefinition)
+                    RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "GetGenericArguments failed: " + e);
+
+                return new[] { typeof(FailedToGetGenericArguments) };
+            }
+        }
+
+        /// <inheritdoc cref="MethodBase.GetGenericArguments"/>
+        public static Type[] GetGenericArgumentsSafe(this MethodBase methodInfo)
+        {
+            try
+            {
+                return methodInfo.GetGenericArguments();
+            }
+            catch (Exception e)
+            {
+                if (methodInfo.IsGenericMethod || methodInfo.IsGenericMethodDefinition)
+                    RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "GetGenericArguments failed: " + e);
+
+                return new[] { typeof(FailedToGetGenericArguments) };
+            }
+        }
     }
 }
+
+internal static class FailedToGetGenericArguments { }

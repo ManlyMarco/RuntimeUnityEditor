@@ -65,11 +65,20 @@ namespace RuntimeUnityEditor.Core
 
         public static object? TryAutoCast(this Il2CppSystem.Object component)
         {
-            var il2CppType = component.GetIl2CppType();
+            if (component == null) throw new ArgumentNullException(nameof(component));
 
-            var monoType = TryGetMonoType(il2CppType);
-            if (monoType != null)
-                return _mIl2CppObjectBaseCast.MakeGenericMethod(monoType).Invoke(component, null);
+            try
+            {
+                var il2CppType = component.GetIl2CppType();
+
+                var monoType = TryGetMonoType(il2CppType);
+                if (monoType != null)
+                    return _mIl2CppObjectBaseCast.MakeGenericMethod(monoType).Invoke(component, null);
+            }
+            catch (Exception e)
+            {
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, $"TryAutoCast failed for type {component.GetType().FullName}: {e}");
+            }
 
             return null;
         }

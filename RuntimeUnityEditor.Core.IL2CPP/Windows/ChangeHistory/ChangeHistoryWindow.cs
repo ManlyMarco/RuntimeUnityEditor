@@ -42,14 +42,28 @@ namespace RuntimeUnityEditor.Core.ChangeHistory
 
                 if (GUILayout.Button("Copy all to clipboard"))
                 {
-                    GUIUtility.systemCopyBuffer = string.Join("\n", Change.Changes.Select(c => c.GetDisplayString()).ToArray());
-                    RuntimeUnityEditorCore.Logger.Log(LogLevel.Message, $"Copied {Change.Changes.Count} changes to clipboard");
+                    try
+                    {
+                        UnityFeatureHelper.systemCopyBuffer = string.Join("\n", Change.Changes.Select(c => c.GetDisplayString()).ToArray());
+                        RuntimeUnityEditorCore.Logger.Log(LogLevel.Message, $"Copied {Change.Changes.Count} changes to clipboard");
+                    }
+                    catch (Exception e)
+                    {
+                        RuntimeUnityEditorCore.Logger.Log(LogLevel.Message | LogLevel.Error, "Failed to copy to clipboard: " + e.Message);
+                    }
                 }
 
                 if (GUILayout.Button("...as pseudo-code"))
                 {
-                    GUIUtility.systemCopyBuffer = string.Join("\n", Change.Changes.Select(ConvertChangeToPseudoCodeString).ToArray());
-                    RuntimeUnityEditorCore.Logger.Log(LogLevel.Message, $"Copied {Change.Changes.Count} changes to clipboard (converted to pseudo-code)");
+                    try
+                    {
+                        UnityFeatureHelper.systemCopyBuffer = string.Join("\n", Change.Changes.Select(ConvertChangeToPseudoCodeString).ToArray());
+                        RuntimeUnityEditorCore.Logger.Log(LogLevel.Message, $"Copied {Change.Changes.Count} changes to clipboard (converted to pseudo-code)");
+                    }
+                    catch (Exception e)
+                    {
+                        RuntimeUnityEditorCore.Logger.Log(LogLevel.Message | LogLevel.Error, "Failed to copy to clipboard: " + e.Message);
+                    }
                 }
 
                 GUILayout.FlexibleSpace();
@@ -73,9 +87,9 @@ namespace RuntimeUnityEditor.Core.ChangeHistory
                             GUI.color = Color.white;
                         }
 
-                        GUILayout.TextField(change.GetDisplayString(), GUI.skin.label, GUILayout.ExpandWidth(true));
+                        GUILayout.TextField(change.GetDisplayString(), GUI.skin.label, IMGUIUtils.LayoutOptionsExpandWidthTrue);
 
-                        if (change.CanUndo && GUILayout.Button(_undoContent, GUILayout.ExpandWidth(false)))
+                        if (change.CanUndo && GUILayout.Button(_undoContent, IMGUIUtils.LayoutOptionsExpandWidthFalse))
                         {
                             try
                             {
@@ -87,7 +101,7 @@ namespace RuntimeUnityEditor.Core.ChangeHistory
                             }
                         }
 
-                        if (!change.Target.IsNullOrDestroyed() && GUILayout.Button(_inspectContent, GUILayout.ExpandWidth(false)))
+                        if (!change.Target.IsNullOrDestroyed() && GUILayout.Button(_inspectContent, IMGUIUtils.LayoutOptionsExpandWidthFalse))
                             Inspector.Inspector.Instance.Push(new InstanceStackEntry(change.Target, change.GetDisplayString()), true);
                     }
                     GUILayout.EndHorizontal();

@@ -98,11 +98,11 @@ namespace RuntimeUnityEditor.Core
 
             GUILayout.Label("|");
 
-            GUILayout.Label("Time", GUILayout.ExpandWidth(false));
+            GUILayout.Label("Time", IMGUIUtils.LayoutOptionsExpandWidthFalse);
 
-            if (GUILayout.Button(">", GUILayout.ExpandWidth(false)))
+            if (GUILayout.Button(">", IMGUIUtils.LayoutOptionsExpandWidthFalse))
                 Time.timeScale = 1;
-            if (GUILayout.Button("||", GUILayout.ExpandWidth(false)))
+            if (GUILayout.Button("||", IMGUIUtils.LayoutOptionsExpandWidthFalse))
                 Time.timeScale = 0;
 
             if (float.TryParse(GUILayout.TextField(Time.timeScale.ToString("F2", CultureInfo.InvariantCulture), GUILayout.Width(38)), NumberStyles.Any, CultureInfo.InvariantCulture, out var newVal))
@@ -114,7 +114,7 @@ namespace RuntimeUnityEditor.Core
 
             GUILayout.Label("|");
 
-            if (GUILayout.Button("Log", GUILayout.ExpandWidth(false)))
+            if (GUILayout.Button("Log", IMGUIUtils.LayoutOptionsExpandWidthFalse))
                 UnityFeatureHelper.OpenLog();
 
             AssetBundleManagerHelper.DrawButtonIfAvailable();

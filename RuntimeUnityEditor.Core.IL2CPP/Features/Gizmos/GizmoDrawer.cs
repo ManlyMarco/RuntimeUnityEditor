@@ -23,6 +23,8 @@ namespace RuntimeUnityEditor.Core.Gizmos
 
         protected override void Initialize(InitSettings initSettings)
         {
+            UnityFeatureHelper.EnsureCameraRenderEventsAreAvailable();
+            
             Enabled = false;
             DisplayName = "Gizmos";
             ObjectTreeViewer.Instance.TreeSelectionChanged += UpdateState;
@@ -73,6 +75,8 @@ namespace RuntimeUnityEditor.Core.Gizmos
                     _drawList.Add(new KeyValuePair<Action<Component>, Component>(DrawTransformGizmo, component));
                 else if (component is Collider)
                     _drawList.Add(new KeyValuePair<Action<Component>, Component>(DrawColliderGizmo, component));
+                else if (component is Projector)
+                    _drawList.Add(new KeyValuePair<Action<Component>, Component>(DrawProjectorGizmo, component));
                 else if (_dbcType != null && component.GetType() == _dbcType)
                     _drawList.Add(new KeyValuePair<Action<Component>, Component>(DrawDynamicBoneColliderGizmo, component));
 
@@ -190,6 +194,57 @@ namespace RuntimeUnityEditor.Core.Gizmos
                     break;
             }
             DrawWireCapsule(transform.TransformPoint(center), transform.TransformPoint(center2), radius, color);
+        }
+
+        private static void DrawProjectorGizmo(Component obj)
+        {
+            if (obj && obj is Projector projector)
+            {
+                float startRange, endRange;
+                if (projector.orthographic)
+                {
+                    startRange = projector.orthographicSize;
+                    endRange = projector.orthographicSize;
+                }
+                else
+                {
+                    startRange = projector.nearClipPlane * Mathf.Tan(Mathf.PI / 180f * projector.fieldOfView / 2f);
+                    endRange = projector.farClipPlane * Mathf.Tan(Mathf.PI / 180f * projector.fieldOfView / 2f);
+                }
+
+                Vector3 forward = projector.transform.rotation * Vector3.forward;
+                Vector3 up = projector.transform.rotation * Vector3.up;
+                Vector3 right = projector.transform.rotation * Vector3.right;
+
+                Vector3 startTopRight, startBottomRight, startTopLeft, startBottomLeft, endTopRight, endBottomRight, endTopLeft, endBottomLeft;
+                startTopRight = projector.transform.position + forward * projector.nearClipPlane + (up + right * projector.aspectRatio) * startRange;
+                startBottomRight = projector.transform.position + forward * projector.nearClipPlane + (-up + right * projector.aspectRatio) * startRange;
+                startTopLeft = projector.transform.position + forward * projector.nearClipPlane + (up - right * projector.aspectRatio) * startRange;
+                startBottomLeft = projector.transform.position + forward * projector.nearClipPlane + (-up - right * projector.aspectRatio) * startRange;
+
+                endTopRight = projector.transform.position + forward * projector.farClipPlane + (up + right * projector.aspectRatio) * endRange;
+                endBottomRight = projector.transform.position + forward * projector.farClipPlane + (-up + right * projector.aspectRatio) * endRange;
+                endTopLeft = projector.transform.position + forward * projector.farClipPlane + (up - right * projector.aspectRatio) * endRange;
+                endBottomLeft = projector.transform.position + forward * projector.farClipPlane + (-up - right * projector.aspectRatio) * endRange;
+
+                //Draw near clip plane
+                lib.Gizmos.Line(startTopRight, startBottomRight, Color.red);
+                lib.Gizmos.Line(startBottomRight, startBottomLeft, Color.red);
+                lib.Gizmos.Line(startBottomLeft, startTopLeft, Color.red);
+                lib.Gizmos.Line(startTopLeft, startTopRight, Color.red);
+
+                //Draw far clip plane
+                lib.Gizmos.Line(endTopRight, endBottomRight, Color.red);
+                lib.Gizmos.Line(endBottomRight, endBottomLeft, Color.red);
+                lib.Gizmos.Line(endBottomLeft, endTopLeft, Color.red);
+                lib.Gizmos.Line(endTopLeft, endTopRight, Color.red);
+
+                //Draw connection between near and far clip planes
+                lib.Gizmos.Line(startTopRight, endTopRight, Color.red);
+                lib.Gizmos.Line(startBottomRight, endBottomRight, Color.red);
+                lib.Gizmos.Line(startTopLeft, endTopLeft, Color.red);
+                lib.Gizmos.Line(startBottomLeft, endBottomLeft, Color.red);
+            }
         }
 
         // Based on code by Qriva

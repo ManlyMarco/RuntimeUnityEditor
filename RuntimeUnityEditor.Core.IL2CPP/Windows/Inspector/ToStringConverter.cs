@@ -70,7 +70,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                     var baseType = valueType.GetGenericTypeDefinition();
                     if (baseType == typeof(KeyValuePair<,>) || baseType == typeof(Il2CppSystem.Collections.Generic.KeyValuePair<,>))
                     {
-                        //var argTypes = baseType.GetGenericArguments();
+                        //var argTypes = baseType.GetGenericArgumentsSafe();
                         var kvpKey = valueType.GetProperty("Key")?.GetValue(value, null);
                         var kvpValue = valueType.GetProperty("Value")?.GetValue(value, null);
                         return $"[{ObjectToString(kvpKey)} | {ObjectToString(kvpValue)}]";

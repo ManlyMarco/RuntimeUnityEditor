@@ -107,7 +107,7 @@ namespace RuntimeUnityEditor.Core.REPL
                 if (methodInfo.ContainsGenericParameters)
                 {
                     sb.Append("<");
-                    foreach (var genericArgument in methodInfo.GetGenericArguments())
+                    foreach (var genericArgument in methodInfo.GetGenericArgumentsSafe())
                     {
                         if (putComma)
                             sb.Append(", ");

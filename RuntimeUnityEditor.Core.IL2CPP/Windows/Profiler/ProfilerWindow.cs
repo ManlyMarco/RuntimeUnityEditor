@@ -27,8 +27,6 @@ namespace RuntimeUnityEditor.Core.Profiler
         private static readonly GUILayoutOption[] _cRanW2 = { GUILayout.MinWidth(RanW), GUILayout.MaxWidth(RanW) };
         private static readonly GUILayoutOption[] _cTicksW = { GUILayout.MinWidth(50), GUILayout.MaxWidth(50) };
         private static readonly GUILayoutOption[] _cInsW = { GUILayout.MinWidth(50), GUILayout.MaxWidth(50) };
-        private static readonly GUILayoutOption[] _expandW = { GUILayout.ExpandWidth(true) };
-        private static readonly GUILayoutOption[] _expandWno = { GUILayout.ExpandWidth(false) };
         private static readonly GUIContent _cColOrder = new GUIContent("#", null, "Relative order of execution in a frame. Methods are called one by one on the main unity thread in this order.\n\nMethods that did not run during this frame are also included, so this number does not equal how many methods were called on this frame.");
         private static readonly GUIContent _cColRan = new GUIContent("Ran", null,"Left toggle indicates if this method was executed in this frame (all Harmony patches were called, and the original method was called if not disabled by a Harmony patch).\n\nRight toggle indicates if the original method was executed (original method being skipped is usually caused by a false postfix in a Harmony patch)");
         private static readonly GUIContent _cColTime = new GUIContent("Time", null,"Time spent executing this method (all Harmony patches included).\n\nBy default it's shown in ticks (smallest measurable unit of time). Resolution of ticks depends on Stopwatch.Frequency, but usually 10000 = 1ms.\n\nHigh values will drop FPS. If the value is much higher on some frames it can be felt as the game stuttering.\n\nIn methods running on every frame this should be as low as possible.");
@@ -96,21 +94,21 @@ namespace RuntimeUnityEditor.Core.Profiler
 
             GUILayout.BeginHorizontal();
             {
-                GUILayout.BeginHorizontal(GUI.skin.box, _expandW);
+                GUILayout.BeginHorizontal(GUI.skin.box, IMGUIUtils.LayoutOptionsExpandWidthTrue);
                 {
-                    GUILayout.Label("Search: ", _expandWno);
-                    _searchText = GUILayout.TextField(_searchText, _expandW);
-                    if (GUILayout.Button("Clear", _expandWno)) _searchText = "";
+                    GUILayout.Label("Search: ", IMGUIUtils.LayoutOptionsExpandWidthFalse);
+                    _searchText = GUILayout.TextField(_searchText, IMGUIUtils.LayoutOptionsExpandWidthTrue);
+                    if (GUILayout.Button("Clear", IMGUIUtils.LayoutOptionsExpandWidthFalse)) _searchText = "";
                     _searchHighlightMode = GUILayout.Toggle(_searchHighlightMode, "Highlight mode");
                     _searchCaseSensitive = GUILayout.Toggle(_searchCaseSensitive, "Case sensitive");
                 }
                 GUILayout.EndHorizontal();
 
-                GUILayout.BeginHorizontal(GUI.skin.box, _expandWno);
+                GUILayout.BeginHorizontal(GUI.skin.box, IMGUIUtils.LayoutOptionsExpandWidthFalse);
                 {
                     GUILayout.Label("Order: ");
                     GUI.changed = false;
-                    _ordering = GUILayout.SelectionGrid(_ordering, _orderingStrings, 4, _expandWno);
+                    _ordering = GUILayout.SelectionGrid(_ordering, _orderingStrings, 4, IMGUIUtils.LayoutOptionsExpandWidthFalse);
                     if (GUI.changed) _needResort = true;
                 }
                 GUILayout.EndHorizontal();
@@ -136,7 +134,7 @@ namespace RuntimeUnityEditor.Core.Profiler
                     GUILayout.Label(_cColMem, _cGcW);
                     if( _aggregation )
                         GUILayout.Label(_cColIns, _cInsW);
-                    GUILayout.Label(_cColName, _expandW);
+                    GUILayout.Label(_cColName, IMGUIUtils.LayoutOptionsExpandWidthTrue);
                 }
                 GUILayout.EndHorizontal();
 
@@ -200,9 +198,9 @@ namespace RuntimeUnityEditor.Core.Profiler
                                     GUILayout.Label(num.ToString(), _cInsW);
                                     GUI.color = origColor;
                                 }
-
+                                
                                 GUI.color = dispNameColor;
-                                GUILayout.Label(pd.DisplayName, _expandW); //fullname
+                                GUILayout.Label(pd.DisplayName, IMGUIUtils.LayoutOptionsExpandWidthTrue); //fullname
                                 GUI.color = origColor;
 
                                 GUILayout.FlexibleSpace();
@@ -258,7 +256,7 @@ namespace RuntimeUnityEditor.Core.Profiler
                     {
                         try
                         {
-                            var genericType = t.MakeGenericType(t.GetGenericArguments().Select(x => x.BaseType).ToArray());
+                            var genericType = t.MakeGenericType(t.GetGenericArgumentsSafe().Select(x => x.BaseType).ToArray());
                             //RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, $"[Profiler] Hooking in generic class {t.FullName} -> {genericType.FullName}");
                             return genericType;
                         }
@@ -310,7 +308,7 @@ namespace RuntimeUnityEditor.Core.Profiler
 
                 _currentExecutionCount = 0;
 
-                if (_ordering == 1 || _ordering == 2)
+                if (_ordering == 1 || _ordering == 2 )
                     _needResort = true;
 
                 if (!_pause)

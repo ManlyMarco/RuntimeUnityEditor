@@ -25,7 +25,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         internal static string GetParameterPreviewString(MethodBase methodInfo)
         {
             var parameterString = string.Empty;
-            var strGenerics = methodInfo.GetGenericArguments().Join(p => p.FullDescription(), ", ");
+            var strGenerics = methodInfo.GetGenericArgumentsSafe().Join(p => p.FullDescription(), ", ");
             if (strGenerics.Length > 0) parameterString += "<" + strGenerics + ">";
             var strParams = methodInfo.GetParameters().Join(p => p.ParameterType.FullDescription() + " " + p.Name, ", ");
             parameterString += "(" + strParams + ")";

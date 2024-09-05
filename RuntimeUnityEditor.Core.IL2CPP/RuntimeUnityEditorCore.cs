@@ -24,7 +24,7 @@ namespace RuntimeUnityEditor.Core
         /// Beware that this is a const and it will be burned as a string into your assembly at build time.
         /// To see the version that is currently installed use <see cref="InstalledVersion"/>.
         /// </summary>
-        public const string Version = "5.3.0";
+        public const string Version = "5.4";
 
         /// <summary>
         /// Get the currently installed version at runtime.
@@ -207,7 +207,7 @@ namespace RuntimeUnityEditor.Core
                             if (feature is Taskbar)
                                 throw new InvalidOperationException("WindowManager somehow failed to initialize! I am die, thank you forever.", e);
 
-                            Logger.Log(LogLevel.Warning, $"Failed to initialize {feature.GetType().Name} - " + e);
+                            Logger.Log(LogLevel.Warning, $"Failed to initialize {feature.GetType().Name} - {(e is NotSupportedException ? e.Message : e.ToString())}");
                         }
                     }
 
