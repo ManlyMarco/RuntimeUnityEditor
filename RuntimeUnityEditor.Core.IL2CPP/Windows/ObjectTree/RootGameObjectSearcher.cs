@@ -505,7 +505,6 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             foreach (var prop in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
                                      .Where(x => x.CanRead && x.PropertyType != _boolType && !_nameBlacklist.Contains(x.Name)))
             {
-                Console.WriteLine(prop.Name);
                 try { sb.AppendLine(prop.GetValue(c, null)?.ToString()); }
                 catch { /* Skip invalid values */ }
             }
