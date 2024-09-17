@@ -8,7 +8,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
 using HarmonyLib;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
@@ -179,6 +178,18 @@ namespace RuntimeUnityEditor.Core.Utils.ObjectDumper
                     {
                         InternalDump(indentationLevel + 2, fieldInfo.Name, invocationException, writer, referenceLookup, structValueLookupCopy, false);
                     }
+                }
+
+                writer.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}   }}", indent));
+            }
+
+            if (value is System.Collections.IEnumerable en)
+            {
+                writer.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}   IEenumerable {{", indent));
+                var index = 0;
+                foreach (object obj in en)
+                {
+                    InternalDump(indentationLevel + 2, $"index={index++:D2}", obj, writer, referenceLookup, structValueLookup, true);
                 }
 
                 writer.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}   }}", indent));

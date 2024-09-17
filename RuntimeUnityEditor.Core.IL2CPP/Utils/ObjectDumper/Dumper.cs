@@ -183,6 +183,18 @@ namespace RuntimeUnityEditor.Core.Utils.ObjectDumper
                 writer.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}   }}", indent));
             }
 
+            if (value is System.Collections.IEnumerable en)
+            {
+                writer.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}   IEenumerable {{", indent));
+                var index = 0;
+                foreach (object obj in en)
+                {
+                    InternalDump(indentationLevel + 2, $"index={index++:D2}", obj, writer, referenceLookup, structValueLookup, true);
+                }
+
+                writer.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}   }}", indent));
+            }
+
             writer.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}}}", indent));
         }
     }
