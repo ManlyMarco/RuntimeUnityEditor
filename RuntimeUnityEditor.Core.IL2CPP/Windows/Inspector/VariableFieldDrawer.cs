@@ -43,8 +43,13 @@ namespace RuntimeUnityEditor.Core.Inspector
         public static void DrawSettingValue(ICacheEntry setting, object value)
         {
             if (Event.current.isKey && (Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter)) _userHasHitReturn = true;
-
-            if (setting is MethodCacheEntry mce)
+            
+            if (value is Exception)
+            {
+                // todo check if setting type is exception and draw it differently from an actual exception
+                DrawUnknownField(value);
+            }
+            else if (setting is MethodCacheEntry mce)
             {
                 DrawMethodInvokeField(mce);
             }
