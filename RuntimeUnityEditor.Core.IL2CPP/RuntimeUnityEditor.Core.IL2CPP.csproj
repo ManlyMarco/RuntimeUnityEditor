@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>disable</ImplicitUsings>
-    <Nullable>enable</Nullable>
+    <Nullable>disable</Nullable>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <RootNamespace>RuntimeUnityEditor.Core</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -27,13 +27,6 @@
     <None Remove="RuntimeUnityEditor.Core.csproj.DotSettings" />
     <None Remove="RuntimeUnityEditor.Core.nuspec" />
     <None Remove="RuntimeUnityEditor.csproj.DotSettings" />
-    <None Remove="Utils\UI\guisharp-box.png" />
-    <None Remove="Utils\UI\guisharp-window.png" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="Utils\UI\guisharp-box.png" />
-    <EmbeddedResource Include="Utils\UI\guisharp-window.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -56,5 +49,7 @@
       <Private>False</Private>
     </Reference>
   </ItemGroup>
+
+  <Import Project="..\RuntimeUnityEditor.Core\RuntimeUnityEditor.Core.projitems" Label="Shared" />
 
 </Project>

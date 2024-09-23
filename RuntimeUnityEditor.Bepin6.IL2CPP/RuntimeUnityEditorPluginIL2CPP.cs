@@ -29,7 +29,7 @@ namespace RuntimeUnityEditor.Bepin6.IL2CPP
                 TomlTypeConverter.AddConverter(typeof(Rect), new TypeConverter { ConvertToObject = converter.ConvertToObject, ConvertToString = converter.ConvertToString });
             }
             
-            _coreInstance = new RuntimeUnityEditorCore(new Bep5InitSettings(this));
+            _coreInstance = new RuntimeUnityEditorCore(new Bep6InitSettings(this));
 
             _coreInstance.AddFeature(new LogViewerWindow());
         }
@@ -53,12 +53,12 @@ namespace RuntimeUnityEditor.Bepin6.IL2CPP
             }
         }
 
-        private sealed class Bep5InitSettings : InitSettings
+        private sealed class Bep6InitSettings : InitSettings
         {
             private readonly RuntimeUnityEditorPluginIL2CPP _instance;
             private readonly RuntimeUnityEditorHelper _helper;
 
-            public Bep5InitSettings(RuntimeUnityEditorPluginIL2CPP instance)
+            public Bep6InitSettings(RuntimeUnityEditorPluginIL2CPP instance)
             {
                 _instance = instance ?? throw new ArgumentNullException(nameof(instance));
                 _helper = instance.AddComponent<RuntimeUnityEditorHelper>();
