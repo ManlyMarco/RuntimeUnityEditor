@@ -29,12 +29,12 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
                     {
                         try
                         {
-                        Input.GetKeyDown(KeyCode.A);
-                        _current = new LegacyInputSystem();
-                        RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, "[UnityInput] Using LegacyInputSystem");
-                    }
-                    catch (InvalidOperationException)
-                    {
+                            Input.GetKeyDown(KeyCode.A);
+                            _current = new LegacyInputSystem();
+                            RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, "[UnityInput] Using LegacyInputSystem");
+                        }
+                        catch (InvalidOperationException)
+                        {
                             var newInputSystem = new NewInputSystem();
                             newInputSystem.GetKeyDown(KeyCode.A); //todo needs a test
                             _current = newInputSystem;

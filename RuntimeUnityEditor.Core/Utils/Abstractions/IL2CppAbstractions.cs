@@ -2,9 +2,7 @@
 using System.Linq;
 using UnityEngine;
 #if IL2CPP
-using BepInEx.Unity.IL2CPP;
 using Il2CppInterop.Runtime.Injection;
-using Il2CppInterop.Runtime.InteropTypes;
 #endif
 
 namespace RuntimeUnityEditor.Core
@@ -77,6 +75,7 @@ namespace RuntimeUnityEditor.Core
         public static Coroutine AbstractStartCoroutine(this MonoBehaviour monoBehaviour, IEnumerator routine)
         {
 #if IL2CPP
+            // TODO Remove all direct dependencies on BepInEx
             return monoBehaviour.StartCoroutine(BepInEx.Unity.IL2CPP.Utils.Collections.CollectionExtensions.WrapToIl2Cpp(routine));
 #else
             return monoBehaviour.StartCoroutine(routine);

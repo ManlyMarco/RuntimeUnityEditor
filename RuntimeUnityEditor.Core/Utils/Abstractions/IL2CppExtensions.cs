@@ -50,6 +50,7 @@ namespace RuntimeUnityEditor.Core
             {
                 try
                 {
+                    // TODO Remove all direct dependencies on BepInEx
                     // Only available since bleeding edge build #680
                     var interopAssPath = AccessTools.PropertyGetter(typeof(IL2CPPChainloader).Assembly.GetType("BepInEx.Unity.IL2CPP.Il2CppInteropManager"), "IL2CPPInteropAssemblyPath")?.Invoke(null, null) as string;
                     if (interopAssPath == null) throw new InvalidOperationException("Interop assembly path is not available");
