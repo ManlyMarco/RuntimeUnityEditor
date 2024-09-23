@@ -30,6 +30,10 @@ RUE is available for different mod loaders in separate builds. They are largely 
 Note: If the plugin fails to load under BepInEx 4 with a type load exception, move RuntimeUnityEditor.Core.dll to BepInEx/core folder.
 
 ### BepInEx (IL2CPP)
+**WARNING:** This is a beta build that is unstable and with many features broken. It is likely to not work in many (most?) IL2CPP games, as it relies on unstripped UnityEngine.IMGUIModule.dll (and possibly other game-specific differences). It works in HoneyCome if used together with the [IMGUIModule.Il2Cpp.CoreCLR.Patcher](https://github.com/IllusionMods/BepisPlugins/releases/tag/r19.3.2) which can be used with some other games with some degree of success.
+
+IL2CPP bug reports will be largely ignored, while PRs to fix issues will be greatly appreciated.
+
 1. If you don't have it already, install and configure BepInEx v6 (at least be.664). You can download it [here](https://github.com/BepInEx/BepInEx).
 2. Download the latest RUE release for your version of BepInEx from the [Releases](https://github.com/ManlyMarco/RuntimeUnityEditor/releases) page (make sure it's the IL2CPP version).
 3. Extract the release archive from the archive directly into your game directory (you should already have a BepInEx folder there from previous step). Replace files if asked.
@@ -46,6 +50,7 @@ Note: If the plugin fails to load under BepInEx 4 with a type load exception, mo
 - If no text is visible anywhere in RUE windows, most likely the `Arial.ttf` font is missing from the system (Unity UI default font, may be different in some games). This can happen when running a game on Linux with [misconfigured wine](https://github.com/ManlyMarco/RuntimeUnityEditor/issues/55).
 - The C# REPL console is only available in a subset of games. This is because mcs (the current REPL backend) does not work with `.NET Standard` runtime used by default in more recent versions of Unity (because of missing features). There is no fix, the backend will have to be changed, possibly to Lua.
 - The wireframe toggle might not work in some games because of an incompatible rendering setup.
+- The IL2CPP version is broken in `insert your game name here`.
 
 
 ## How to build
