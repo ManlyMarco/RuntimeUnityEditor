@@ -87,8 +87,7 @@ namespace RuntimeUnityEditor.Core.Inspector
             {
                 if (IMGUIUtils.IsMouseRightClick())
                 {
-                    if (val != null)
-                        ContextMenu.Instance.Show(val, field.GetMemberInfo(false));
+                    ContextMenu.Instance.Show(val, field.GetMemberInfo(false));
                 }
                 else if (canEnterValue || val is Exception)
                 {
@@ -202,9 +201,9 @@ namespace RuntimeUnityEditor.Core.Inspector
                         _showProperties = GUILayout.Toggle(_showProperties, "Properties");
                         _showMethods = GUILayout.Toggle(_showMethods, "Methods");
                         _showEvents = GUILayout.Toggle(_showEvents, "Events");
-                        #if IL2CPP
+#if IL2CPP
                         _showNative = GUILayout.Toggle(_showNative, "Native");
-                        #endif
+#endif
                         _showDeclaredOnly = GUILayout.Toggle(_showDeclaredOnly, "Only declared");
 
                         /* todo
@@ -400,11 +399,11 @@ namespace RuntimeUnityEditor.Core.Inspector
                         switch (x)
                         {
                             case PropertyCacheEntry p when !_showProperties || _showDeclaredOnly && !p.IsDeclared:
-                            #if IL2CPP
+#if IL2CPP
                             case FieldCacheEntry f when !_showFields || _showDeclaredOnly && !f.IsDeclared || !_showNative && f.FieldInfo.IsStatic && f.Type() == typeof(IntPtr):
-                            #else
+#else
                             case FieldCacheEntry f when !_showFields || _showDeclaredOnly && !f.IsDeclared:
-                            #endif
+#endif
                             case MethodCacheEntry m when !_showMethods || _showDeclaredOnly && !m.IsDeclared:
                             case EventCacheEntry e when !_showEvents || _showDeclaredOnly && !e.IsDeclared:
                                 return false;

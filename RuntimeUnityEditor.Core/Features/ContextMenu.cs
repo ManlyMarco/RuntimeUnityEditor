@@ -33,10 +33,10 @@ namespace RuntimeUnityEditor.Core
         /// </summary>
         public override bool Enabled
         {
-            get => base.Enabled && _obj != null;
+            get => base.Enabled && (_obj != null || _objMemberInfo != null);
             set
             {
-                if (value && _obj == null)
+                if (value && _obj == null && _objMemberInfo == null)
                     value = false;
                 base.Enabled = value;
             }
@@ -55,7 +55,7 @@ namespace RuntimeUnityEditor.Core
             {
                 new MenuEntry("! Destroyed unity Object !", obj => obj is UnityEngine.Object uobj && !uobj, null),
 
-                new MenuEntry("Preview", o => ObjectViewWindow.Initialized && ObjectViewWindow.Instance.CanPreview(o), o => ObjectViewWindow.Instance.SetShownObject(o, _objName)),
+                new MenuEntry("Preview", o => o != null && ObjectViewWindow.Initialized && ObjectViewWindow.Instance.CanPreview(o), o => ObjectViewWindow.Instance.SetShownObject(o, _objName)),
 
                 new MenuEntry("Show event details", o => o is UnityEventBase && ObjectViewWindow.Initialized,
                               o => ObjectViewWindow.Instance.SetShownObject(ReflectionUtils.GetEventDetails((UnityEventBase)o), o + " - Event details")),
@@ -64,7 +64,7 @@ namespace RuntimeUnityEditor.Core
 
                 new MenuEntry(),
 
-                new MenuEntry("Send to inspector", o => Inspector.Inspector.Initialized, o =>
+                new MenuEntry("Send to inspector", o => o != null && Inspector.Inspector.Initialized, o =>
                 {
                     if (o is Type t)
                         Inspector.Inspector.Instance.Push(new StaticStackEntry(t, _objName), true);
@@ -72,11 +72,11 @@ namespace RuntimeUnityEditor.Core
                         Inspector.Inspector.Instance.Push(new InstanceStackEntry(o, _objName), true);
                 }),
 
-                new MenuEntry("Send to REPL", o => REPL.ReplWindow.Initialized, o => REPL.ReplWindow.Instance.IngestObject(o)),
+                new MenuEntry("Send to REPL", o => o != null && REPL.ReplWindow.Initialized, o => REPL.ReplWindow.Instance.IngestObject(o)),
 
                 new MenuEntry(),
 
-                new MenuEntry("Copy to clipboard", o => Clipboard.ClipboardWindow.Initialized, o =>
+                new MenuEntry("Copy to clipboard", o => o != null && Clipboard.ClipboardWindow.Initialized, o =>
                 {
                     if (Clipboard.ClipboardWindow.Contents.LastOrDefault() != o)
                         Clipboard.ClipboardWindow.Contents.Add(o);
@@ -150,16 +150,16 @@ namespace RuntimeUnityEditor.Core
                 new MenuEntry("Export mesh to .obj (Baked)", o => o is Renderer r && MeshExport.CanExport(r), o => MeshExport.ExportObj((Renderer)o, true, false)),
                 new MenuEntry("Export mesh to .obj (World)", o => o is Renderer r && MeshExport.CanExport(r), o => MeshExport.ExportObj((Renderer)o, true, true)),
 
-                new MenuEntry("Dump object to file...", o => true, o => Dumper.DumpToTempFile(o, _objName)),
+                new MenuEntry("Dump object to file...", o => o != null, o => Dumper.DumpToTempFile(o, _objName)),
 
                 new MenuEntry("Destroy", o => o is UnityEngine.Object uo && uo, o => Change.Action("(ContextMenu)::UnityEngine.Object.Destroy({0})", o is Transform t ? t.gameObject : (UnityEngine.Object)o, UnityEngine.Object.Destroy)),
 
                 new MenuEntry(),
 
-                new MenuEntry("Find references in scene", o => ObjectViewWindow.Initialized && o.GetType().IsClass, o => ObjectTreeViewer.Instance.FindReferencesInScene(o)),
+                new MenuEntry("Find references in scene", o => o != null && ObjectViewWindow.Initialized && o.GetType().IsClass, o => ObjectTreeViewer.Instance.FindReferencesInScene(o)),
 
                 new MenuEntry("Find member in dnSpy", o => DnSpyHelper.IsAvailable && _objMemberInfo != null, o => DnSpyHelper.OpenInDnSpy(_objMemberInfo)),
-                new MenuEntry("Find member type in dnSpy", o => DnSpyHelper.IsAvailable, o => DnSpyHelper.OpenInDnSpy(o.GetType()))
+                new MenuEntry("Find member type in dnSpy", o => o != null && DnSpyHelper.IsAvailable, o => DnSpyHelper.OpenInDnSpy(o.GetType()))
             });
 
             _windowId = base.GetHashCode();
@@ -192,7 +192,7 @@ namespace RuntimeUnityEditor.Core
             _windowRect = new Rect(clickPoint.x, clickPoint.y, 100, 100); // Unity4 only has the 4xfloat constructor
 #endif
 
-            if (obj != null)
+            if (obj != null || objMemberInfo != null)
             {
                 _obj = obj;
                 _objMemberInfo = objMemberInfo;

@@ -107,7 +107,7 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
             if (type == null) throw new ArgumentNullException(nameof(type));
 
             if (type.ToString().Contains(','))
-                throw new Exception("Unsupported type with generic parameters");
+                throw new Exception("Unsupported type with generic parameters: " + type.FullName);
             var refString = $"\"{type.Assembly.Location}\" --select T:{type.FullName}";
             return refString;
         }
@@ -135,23 +135,18 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
             if (declaringType.FullName == null) throw new ArgumentException("null DeclaringType.FullName");
 
             // TODO support for generic types
+            if (declaringType.FullName.Contains(',')) throw new Exception("Unsupported type with generic parameters: " + declaringType.FullName);
             switch (entry)
             {
                 case MethodBase m:
-                    if (m.ToString().Contains(',') || declaringType.FullName.Contains(','))
-                        throw new Exception("Unsupported type or method with generic parameters");
-                    return $"\"{declaringType.Assembly.Location}\" --select M:{declaringType.FullName}.{m.ToString().Split(new[] { ' ' }, 2).Last()}";
+                    var methodNameStr = m.ToString();
+                    if (methodNameStr.Contains(',')) throw new Exception("Unsupported method with generic parameters: " + m);
+                    return $"\"{declaringType.Assembly.Location}\" --select M:{declaringType.FullName}.{methodNameStr.Split(new[] { ' ' }, 2).Last()}";
                 case PropertyInfo p:
-                    if (declaringType.FullName.Contains(','))
-                        throw new Exception("Unsupported type with generic parameters");
                     return $"\"{declaringType.Assembly.Location}\" --select P:{declaringType.FullName}.{p.Name}";
                 case FieldInfo f:
-                    if (declaringType.FullName.Contains(','))
-                        throw new Exception("Unsupported type with generic parameters");
                     return $"\"{declaringType.Assembly.Location}\" --select F:{declaringType.FullName}.{f.Name}";
                 case EventInfo e:
-                    if (declaringType.FullName.Contains(','))
-                        throw new Exception("Unsupported type with generic parameters");
                     return $"\"{declaringType.Assembly.Location}\" --select E:{declaringType.FullName}.{e.Name}";
                 default:
                     throw new Exception("Unknown MemberInfo " + entry.GetType().FullName);
