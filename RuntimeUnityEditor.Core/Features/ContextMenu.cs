@@ -188,25 +188,25 @@ namespace RuntimeUnityEditor.Core
                 {
                     if (o == null) return false;
                     var target = getMethod(o, _objMemberInfo);
-                    return target != null && !BreakpointsWindow.IsAttached(target, o);
-                }, o => BreakpointsWindow.AttachBreakpoint(getMethod(o, _objMemberInfo), o));
+                    return target != null && !Breakpoints.Breakpoints.IsAttached(target, o);
+                }, o => Breakpoints.Breakpoints.AttachBreakpoint(getMethod(o, _objMemberInfo), o));
                 yield return new MenuEntry("Detach " + name + " breakpoint (this instance)", o =>
                 {
                     if (o == null) return false;
                     var target = getMethod(o, _objMemberInfo);
-                    return target != null && BreakpointsWindow.IsAttached(target, o);
-                }, o => BreakpointsWindow.DetachBreakpoint(getMethod(o, _objMemberInfo), o));
+                    return target != null && Breakpoints.Breakpoints.IsAttached(target, o);
+                }, o => Breakpoints.Breakpoints.DetachBreakpoint(getMethod(o, _objMemberInfo), o));
 
                 yield return new MenuEntry("Attach " + name + " breakpoint (all instances)", o =>
                 {
                     var target = getMethod(o, _objMemberInfo);
-                    return target != null && !BreakpointsWindow.IsAttached(target, null);
-                }, o => BreakpointsWindow.AttachBreakpoint(getMethod(o, _objMemberInfo), null));
+                    return target != null && !Breakpoints.Breakpoints.IsAttached(target, null);
+                }, o => Breakpoints.Breakpoints.AttachBreakpoint(getMethod(o, _objMemberInfo), null));
                 yield return new MenuEntry("Detach " + name + " breakpoint (all instances)", o =>
                 {
                     var target = getMethod(o, _objMemberInfo);
-                    return target != null && BreakpointsWindow.IsAttached(target, null);
-                }, o => BreakpointsWindow.DetachBreakpoint(getMethod(o, _objMemberInfo), null));
+                    return target != null && Breakpoints.Breakpoints.IsAttached(target, null);
+                }, o => Breakpoints.Breakpoints.DetachBreakpoint(getMethod(o, _objMemberInfo), null));
             }
         }
 

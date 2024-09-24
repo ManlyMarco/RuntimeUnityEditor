@@ -1,8 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Reflection;
 using HarmonyLib;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.Utils;
@@ -14,129 +10,15 @@ namespace RuntimeUnityEditor.Core.Breakpoints
     // TODO aggregate results, etc.
     public class BreakpointsWindow : Window<BreakpointsWindow>
     {
-        #region Functionality
-
-        private static readonly Harmony _harmony = new Harmony("RuntimeUnityEditor.Core.Breakpoints");
-        private static readonly Dictionary<MethodBase, PatchInfo> _appliedPatches = new Dictionary<MethodBase, PatchInfo>();
-        private static readonly HarmonyMethod _handlerMethodRet = new HarmonyMethod(typeof(BreakpointsWindow), nameof(BreakpointHandlerReturn));
-        private static readonly HarmonyMethod _handlerMethodNoRet = new HarmonyMethod(typeof(BreakpointsWindow), nameof(BreakpointHandlerNoReturn));
-
-        private static readonly List<BrekapointHit> _hits = new List<BrekapointHit>();
-
-        private sealed class PatchInfo
-        {
-            public MethodBase Target { get; }
-            public MethodInfo Patch { get; }
-            public List<object> InstanceFilters { get; } = new List<object>();
-
-            public PatchInfo(MethodBase target, MethodInfo patch, object instanceFilter)
-            {
-                Target = target;
-                Patch = patch;
-                if (instanceFilter != null)
-                    InstanceFilters.Add(instanceFilter);
-            }
-        }
-
-        private sealed class BrekapointHit
-        {
-            public BrekapointHit(PatchInfo origin, object instance, object[] args, object result, StackTrace trace)
-            {
-                Origin = origin;
-                Instance = instance;
-                Args = args;
-                Result = result;
-                Trace = trace;
-                TraceString = trace.ToString();
-                Time = DateTime.UtcNow;
-            }
-
-            public readonly PatchInfo Origin;
-            public readonly object Instance;
-            public readonly object[] Args;
-            public readonly object Result;
-            public readonly StackTrace Trace;
-            internal readonly string TraceString;
-            public readonly DateTime Time;
-        }
-
-        public static bool AttachBreakpoint(MethodBase target, object instance)
-        {
-            if (_appliedPatches.TryGetValue(target, out var pi))
-            {
-                if (instance != null)
-                    pi.InstanceFilters.Add(instance);
-                else
-                    pi.InstanceFilters.Clear();
-                return true;
-            }
-
-            var hasReturn = target is MethodInfo mi && mi.ReturnType != typeof(void);
-            var patch = _harmony.Patch(target, postfix: hasReturn ? _handlerMethodRet : _handlerMethodNoRet);
-            if (patch != null)
-            {
-                _appliedPatches[target] = new PatchInfo(target, patch, instance);
-                return true;
-            }
-
-            return false;
-        }
-
-        public static bool DetachBreakpoint(MethodBase target, object instance)
-        {
-            if (_appliedPatches.TryGetValue(target, out var pi))
-            {
-                if (instance == null)
-                    pi.InstanceFilters.Clear();
-                else
-                    pi.InstanceFilters.Remove(instance);
-
-                if (pi.InstanceFilters.Count == 0)
-                {
-                    _harmony.Unpatch(target, pi.Patch);
-                    _appliedPatches.Remove(target);
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private static void BreakpointHandlerReturn(object __instance, MethodBase __originalMethod, object[] __args, object __result)
-        {
-            AddHit(__instance, __originalMethod, __args, __result);
-        }
-        private static void BreakpointHandlerNoReturn(object __instance, MethodBase __originalMethod, object[] __args)
-        {
-            AddHit(__instance, __originalMethod, __args, null);
-        }
-        private static void AddHit(object __instance, MethodBase __originalMethod, object[] __args, object __result)
-        {
-            if (_appliedPatches.TryGetValue(__originalMethod, out var pi))
-            {
-                if (pi.InstanceFilters.Count == 0 || pi.InstanceFilters.Contains(__instance))
-                    _hits.Add(new BrekapointHit(pi, __instance, __args, __result, new StackTrace(1, true)));
-            }
-        }
-
-        public static bool IsAttached(MethodBase target, object instance)
-        {
-            if (_appliedPatches.TryGetValue(target, out var pi))
-            {
-                return instance == null && pi.InstanceFilters.Count == 0 || pi.InstanceFilters.Contains(instance);
-            }
-            return false;
-        }
-
-        #endregion
-
-        #region UI
+        private static readonly List<BreakpointHit> _hits = new List<BreakpointHit>();
 
         protected override void Initialize(InitSettings initSettings)
         {
             DisplayName = "Breakpoints";
             Title = "Breakpoint manager and breakpoint hit history";
             DefaultScreenPosition = ScreenPartition.CenterLower;
+
+            Breakpoints.OnBreakpointHit += hit => _hits.Add(hit);
         }
 
         protected override void LateUpdate()
@@ -151,26 +33,62 @@ namespace RuntimeUnityEditor.Core.Breakpoints
 
         private bool _showingHits = true;
         private int _maxHitsToKeep = 100;
+        private string _searchString = "";
 
         protected override void DrawContents()
         {
-            GUILayout.BeginHorizontal(GUI.skin.box);
+            GUILayout.BeginHorizontal();
             {
-                if (GUILayout.Toggle(!_showingHits, "Show active breakpoints"))
-                    _showingHits = false;
-                if (GUILayout.Toggle(_showingHits, "Show breakpoint hits"))
-                    _showingHits = true;
-                GUILayout.Space(10);
-                if (GUILayout.Button("Remove all"))
+                GUILayout.BeginHorizontal(GUI.skin.box);
                 {
-                    _harmony.UnpatchSelf();
-                    _appliedPatches.Clear();
+                    Breakpoints.Enabled = GUILayout.Toggle(Breakpoints.Enabled, "Enabled", IMGUIUtils.LayoutOptionsExpandWidthFalse);
+
+                    if (!Breakpoints.Enabled)
+                        GUI.color = Color.gray;
+
+                    GUILayout.Space(10);
+
+                    GUILayout.Label("Show ", IMGUIUtils.LayoutOptionsExpandWidthFalse);
+                    if (GUILayout.Toggle(!_showingHits, "active breakpoints", IMGUIUtils.LayoutOptionsExpandWidthFalse))
+                        _showingHits = false;
+                    if (GUILayout.Toggle(_showingHits, "breakpoint hits", IMGUIUtils.LayoutOptionsExpandWidthFalse))
+                        _showingHits = true;
+
+                    GUILayout.Space(10);
+
+                    if (_showingHits)
+                    {
+                        if (GUILayout.Button("Clear hits", IMGUIUtils.LayoutOptionsExpandWidthFalse))
+                            _hits.Clear();
+                    }
+                    else
+                    {
+                        if (GUILayout.Button("Remove all", IMGUIUtils.LayoutOptionsExpandWidthFalse))
+                            Breakpoints.DetachAll();
+                    }
                 }
-                if (GUILayout.Button("Clear hits"))
+                GUILayout.EndHorizontal();
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            {
+                GUILayout.BeginHorizontal(GUI.skin.box);
                 {
-                    _hits.Clear();
+                    GUILayout.Label("Search: ", IMGUIUtils.LayoutOptionsExpandWidthFalse);
+                    _searchString = GUILayout.TextField(_searchString, IMGUIUtils.LayoutOptionsExpandWidthTrue);
+
+                    GUILayout.Space(10);
+
+                    GUILayout.Label("Break attached debugger: ", IMGUIUtils.LayoutOptionsExpandWidthFalse);
+                    if (GUILayout.Toggle(Breakpoints.DebuggerBreaking == DebuggerBreakType.None, "No", IMGUIUtils.LayoutOptionsExpandWidthFalse))
+                        Breakpoints.DebuggerBreaking = DebuggerBreakType.None;
+                    if (GUILayout.Toggle(Breakpoints.DebuggerBreaking == DebuggerBreakType.ThrowCatch, new GUIContent("Throw an exception", null, $"Throw and catch a {nameof(BreakpointHitException)}. The most reliable way."), IMGUIUtils.LayoutOptionsExpandWidthFalse))
+                        Breakpoints.DebuggerBreaking = DebuggerBreakType.ThrowCatch;
+                    if (GUILayout.Toggle(Breakpoints.DebuggerBreaking == DebuggerBreakType.DebuggerBreak, new GUIContent("Debugger.Break", null, "This might not work with some debugging methods, and it might hard-crash some games."), IMGUIUtils.LayoutOptionsExpandWidthFalse))
+                        Breakpoints.DebuggerBreaking = DebuggerBreakType.DebuggerBreak;
                 }
-                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
             }
             GUILayout.EndHorizontal();
 
@@ -178,33 +96,41 @@ namespace RuntimeUnityEditor.Core.Breakpoints
                 DrawHits();
             else
                 DrawBreakpoints();
+
+            GUI.color = Color.white;
         }
 
         private void DrawBreakpoints()
         {
             _scrollPosBreakpoints = GUILayout.BeginScrollView(_scrollPosBreakpoints, false, true);
             {
-                if (_appliedPatches.Count > 0)
+                if (Breakpoints.AppliedPatches.Count > 0)
                 {
-                    foreach (var appliedPatch in _appliedPatches)
+                    foreach (var appliedPatch in Breakpoints.AppliedPatches)
                     {
+                        if (!string.IsNullOrEmpty(_searchString))
+                        {
+                            if (!appliedPatch.GetSearchableString().Contains(_searchString))
+                                continue;
+                        }
+
                         GUILayout.BeginHorizontal(GUI.skin.box);
                         {
-                            DrawHitOriginButton(appliedPatch.Value);
+                            DrawHitOriginButton(appliedPatch);
 
                             if (GUILayout.Button("Remove breakpoint", IMGUIUtils.LayoutOptionsExpandWidthFalse))
-                                DetachBreakpoint(appliedPatch.Key, null);
+                                Breakpoints.DetachBreakpoint(appliedPatch.Target, null);
 
-                            if (appliedPatch.Value.InstanceFilters.Count > 0)
+                            if (appliedPatch.InstanceFilters.Count > 0)
                             {
                                 GUILayout.Label("or remove watched instances:", IMGUIUtils.LayoutOptionsExpandWidthFalse);
 
-                                var instanceFilters = appliedPatch.Value.InstanceFilters;
+                                var instanceFilters = appliedPatch.InstanceFilters;
                                 for (var i = 0; i < instanceFilters.Count; i++)
                                 {
                                     var obj = instanceFilters[i];
                                     if (GUILayout.Button(obj.ToString(), GUILayout.Width(80)))
-                                        DetachBreakpoint(appliedPatch.Key, obj);
+                                        Breakpoints.DetachBreakpoint(appliedPatch.Target, obj);
                                 }
                             }
                         }
@@ -228,6 +154,12 @@ namespace RuntimeUnityEditor.Core.Breakpoints
                     for (int i = _hits.Count - 1; i >= 0; i--)
                     {
                         var hit = _hits[i];
+
+                        if (!string.IsNullOrEmpty(_searchString))
+                        {
+                            if (!hit.GetSearchableString().Contains(_searchString))
+                                continue;
+                        }
 
                         GUILayout.BeginHorizontal(GUI.skin.box);
                         {
@@ -269,7 +201,7 @@ namespace RuntimeUnityEditor.Core.Breakpoints
             GUILayout.EndScrollView();
         }
 
-        private static void DrawHitOriginButton(PatchInfo hitOrigin)
+        private static void DrawHitOriginButton(BreakpointPatchInfo hitOrigin)
         {
             if (GUILayout.Button(new GUIContent(hitOrigin.Target.Name, null, $"Target: {hitOrigin.Target.FullDescription()}\n\nClick to open in dnSpy, right click for more options."), GUI.skin.label, GUILayout.Width(150)))
             {
@@ -291,7 +223,5 @@ namespace RuntimeUnityEditor.Core.Breakpoints
                     Inspector.Inspector.Instance.Push(new InstanceStackEntry(obj, objName), true);
             }
         }
-
-        #endregion
     }
 }
