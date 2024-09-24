@@ -57,6 +57,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Utils\UI\InterfaceMaker.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)WindowBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)WindowManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)windows\breakpoints\BreakpointsWindow.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\ChangeHistory\Change.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\ChangeHistory\ChangeAction.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\ChangeHistory\ChangeAssignment.cs" />
@@ -97,5 +98,8 @@
   <ItemGroup>
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)Utils\UI\guisharp-box.png" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)Utils\UI\guisharp-window.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)Windows\Breakpoints\" />
   </ItemGroup>
 </Project>

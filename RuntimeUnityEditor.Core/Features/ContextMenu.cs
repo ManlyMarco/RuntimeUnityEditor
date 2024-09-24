@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
+using RuntimeUnityEditor.Core.Breakpoints;
 using RuntimeUnityEditor.Core.ChangeHistory;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.ObjectTree;
@@ -51,6 +52,7 @@ namespace RuntimeUnityEditor.Core
         /// <inheritdoc />
         protected override void Initialize(InitSettings initSettings)
         {
+            // TODO This mess needs a rewrite with a sane API
             MenuContents.AddRange(new[]
             {
                 new MenuEntry("! Destroyed unity Object !", obj => obj is UnityEngine.Object uobj && !uobj, null),
@@ -75,7 +77,12 @@ namespace RuntimeUnityEditor.Core
                 new MenuEntry("Send to REPL", o => o != null && REPL.ReplWindow.Initialized, o => REPL.ReplWindow.Instance.IngestObject(o)),
 
                 new MenuEntry(),
+            });
 
+            AddBreakpointControls(MenuContents);
+
+            MenuContents.AddRange(new[]
+            {
                 new MenuEntry("Copy to clipboard", o => o != null && Clipboard.ClipboardWindow.Initialized, o =>
                 {
                     if (Clipboard.ClipboardWindow.Contents.LastOrDefault() != o)
@@ -165,6 +172,42 @@ namespace RuntimeUnityEditor.Core
             _windowId = base.GetHashCode();
             Enabled = false;
             DisplayType = FeatureDisplayType.Hidden;
+        }
+
+        private void AddBreakpointControls(List<MenuEntry> menuContents)
+        {
+            menuContents.AddRange(AddGroup("call", (o, info) => info as MethodBase));
+            menuContents.AddRange(AddGroup("getter", (o, info) => info is PropertyInfo pi ? pi.GetGetMethod(true) : null));
+            menuContents.AddRange(AddGroup("setter", (o, info) => info is PropertyInfo pi ? pi.GetSetMethod(true) : null));
+            menuContents.Add(new MenuEntry());
+            return;
+
+            IEnumerable<MenuEntry> AddGroup(string name, Func<object, MemberInfo, MethodBase> getMethod)
+            {
+                yield return new MenuEntry("Attach " + name + " breakpoint (this instance)", o =>
+                {
+                    if (o == null) return false;
+                    var target = getMethod(o, _objMemberInfo);
+                    return target != null && !BreakpointsWindow.IsAttached(target, o);
+                }, o => BreakpointsWindow.AttachBreakpoint(getMethod(o, _objMemberInfo), o));
+                yield return new MenuEntry("Detach " + name + " breakpoint (this instance)", o =>
+                {
+                    if (o == null) return false;
+                    var target = getMethod(o, _objMemberInfo);
+                    return target != null && BreakpointsWindow.IsAttached(target, o);
+                }, o => BreakpointsWindow.DetachBreakpoint(getMethod(o, _objMemberInfo), o));
+
+                yield return new MenuEntry("Attach " + name + " breakpoint (all instances)", o =>
+                {
+                    var target = getMethod(o, _objMemberInfo);
+                    return target != null && !BreakpointsWindow.IsAttached(target, null);
+                }, o => BreakpointsWindow.AttachBreakpoint(getMethod(o, _objMemberInfo), null));
+                yield return new MenuEntry("Detach " + name + " breakpoint (all instances)", o =>
+                {
+                    var target = getMethod(o, _objMemberInfo);
+                    return target != null && BreakpointsWindow.IsAttached(target, null);
+                }, o => BreakpointsWindow.DetachBreakpoint(getMethod(o, _objMemberInfo), null));
+            }
         }
 
         /// <summary>
