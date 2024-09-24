@@ -192,12 +192,12 @@ namespace RuntimeUnityEditor.Core.Breakpoints
                         {
                             DrawHitOriginButton(appliedPatch.Value);
 
-                            if (GUILayout.Button("Remove breakpoint"))
+                            if (GUILayout.Button("Remove breakpoint", IMGUIUtils.LayoutOptionsExpandWidthFalse))
                                 DetachBreakpoint(appliedPatch.Key, null);
 
                             if (appliedPatch.Value.InstanceFilters.Count > 0)
                             {
-                                GUILayout.Label("or remove watched instances:");
+                                GUILayout.Label("or remove watched instances:", IMGUIUtils.LayoutOptionsExpandWidthFalse);
 
                                 var instanceFilters = appliedPatch.Value.InstanceFilters;
                                 for (var i = 0; i < instanceFilters.Count; i++)
