@@ -11,6 +11,7 @@ using UnityEngine;
 
 namespace RuntimeUnityEditor.Core.Breakpoints
 {
+    // TODO aggregate results, etc.
     public class BreakpointsWindow : Window<BreakpointsWindow>
     {
         #region Functionality
