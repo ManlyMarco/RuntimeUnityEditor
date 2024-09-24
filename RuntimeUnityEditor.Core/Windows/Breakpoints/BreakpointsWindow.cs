@@ -140,8 +140,8 @@ namespace RuntimeUnityEditor.Core.Breakpoints
 
         protected override void LateUpdate()
         {
-            if (_hits.Count > 100)
-                _hits.RemoveRange(0, _hits.Count - 100);
+            if (_hits.Count > _maxHitsToKeep)
+                _hits.RemoveRange(0, _hits.Count - _maxHitsToKeep);
 
             base.LateUpdate();
         }
@@ -149,6 +149,7 @@ namespace RuntimeUnityEditor.Core.Breakpoints
         private Vector2 _scrollPosHits, _scrollPosBreakpoints;
 
         private bool _showingHits = true;
+        private int _maxHitsToKeep = 100;
 
         protected override void DrawContents()
         {
@@ -182,7 +183,7 @@ namespace RuntimeUnityEditor.Core.Breakpoints
         {
             _scrollPosBreakpoints = GUILayout.BeginScrollView(_scrollPosBreakpoints, false, true);
             {
-                if(_appliedPatches.Count > 0)
+                if (_appliedPatches.Count > 0)
                 {
                     foreach (var appliedPatch in _appliedPatches)
                     {
@@ -221,7 +222,7 @@ namespace RuntimeUnityEditor.Core.Breakpoints
         {
             _scrollPosHits = GUILayout.BeginScrollView(_scrollPosHits, false, true);
             {
-                if(_hits.Count > 0)
+                if (_hits.Count > 0)
                 {
                     for (int i = _hits.Count - 1; i >= 0; i--)
                     {
@@ -261,7 +262,7 @@ namespace RuntimeUnityEditor.Core.Breakpoints
                 }
                 else
                 {
-                    GUILayout.Label("This window lists all breakpoint hits that were caught (in IL2CPP some purely native calls might be missed).\nA breakpoint is tiggered whenever a method/property is called. The stack trace as well as any parameters and result value of that trigger are then stored in the list of hits.\n\nTo add breakpoints right click on methods and properties, and look for the 'Attach breakpoint' options. It's easiest to do in inspector by right clicking on the member names.");
+                    GUILayout.Label("This window lists the last " + _maxHitsToKeep + " breakpoint hits that were caught (in IL2CPP some purely native calls can be missed and stacktraces may be crap).\nA breakpoint is tiggered whenever a method/property is called. The stack trace as well as any parameters and result value of that trigger are then stored in the list of hits.\n\nTo add breakpoints right click on methods and properties, and look for the 'Attach breakpoint' options. It's easiest to do in inspector by right clicking on the member names.");
                 }
             }
             GUILayout.EndScrollView();
