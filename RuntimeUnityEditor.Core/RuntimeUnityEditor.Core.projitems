@@ -57,6 +57,12 @@
     <Compile Include="$(MSBuildThisFileDirectory)Utils\UI\InterfaceMaker.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)WindowBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)WindowManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Breakpoints\BreakpointHit.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Breakpoints\BreakpointHitException.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Breakpoints\BreakpointPatchInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Breakpoints\Breakpoints.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)windows\breakpoints\BreakpointsWindow.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Breakpoints\DebuggerBreakType.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\ChangeHistory\Change.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\ChangeHistory\ChangeAction.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\ChangeHistory\ChangeAssignment.cs" />
