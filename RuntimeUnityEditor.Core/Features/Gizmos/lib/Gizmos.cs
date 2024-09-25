@@ -218,7 +218,7 @@ namespace RuntimeUnityEditor.Core.Gizmos.lib
         {
             get
             {
-                const string Delim = ",";
+                //const string Delim = ",";
                 if (_offset == null)
                 {
                     //todo use config
@@ -241,8 +241,8 @@ namespace RuntimeUnityEditor.Core.Gizmos.lib
             }
             set
             {
-                const string Delim = ",";
-                if (_offset != value)
+                //const string Delim = ",";
+                //if (_offset != value)
                 {
                     _offset = value;
                     //todo use config

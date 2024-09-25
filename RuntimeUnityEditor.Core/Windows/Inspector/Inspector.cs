@@ -68,7 +68,9 @@ namespace RuntimeUnityEditor.Core.Inspector
         private bool _showProperties = true;
         private bool _showMethods = true;
         private bool _showEvents = true;
+#if IL2CPP
         private bool _showNative;
+#endif
         private bool _showDeclaredOnly;
         private bool _showTooltips = true;
 

@@ -74,7 +74,7 @@ namespace RuntimeUnityEditor.Core.ChangeHistory
         /// </summary>
         /// <typeparam name="TObj">Type of the object that has its member(s) modified</typeparam>
         /// <typeparam name="TVal">Type of the value to be changed</typeparam>
-        /// <param name="actionNameFormat">String format of how this change is represented in the Change History window. {0} inserts type name of <see cref="TObj"/>, while {1} inserts <paramref name="newValue"/> (format string can be used, e.g. {1:00})</param>
+        /// <param name="actionNameFormat">String format of how this change is represented in the Change History window. {0} inserts type name of <typeparamref name="TObj"/>, while {1} inserts <paramref name="newValue"/> (format string can be used, e.g. {1:00})</param>
         /// <param name="target">Object that has its member(s) modified</param>
         /// <param name="newValue">New value to be set</param>
         /// <param name="set">Action used to set the new value</param>
@@ -91,11 +91,11 @@ namespace RuntimeUnityEditor.Core.ChangeHistory
         /// <summary>
         /// Assigns a new value by using the set delegate and tracks the change in the Change History window.
         /// Undo is possible by providing an undo value, by using a custom action, or by using the get delegate to automatically get the original value.
-        /// If none of the undo options are provided, undoing the change will set it to the default value of <see cref="TVal"/>.
+        /// If none of the undo options are provided, undoing the change will set it to the default value of <typeparamref name="TVal"/>.
         /// </summary>
         /// <typeparam name="TObj">Type of the object that has its member(s) modified</typeparam>
         /// <typeparam name="TVal">Type of the value to be changed</typeparam>
-        /// <param name="actionNameFormat">String format of how this change is represented in the Change History window. {0} inserts type name of <see cref="TObj"/>, while {1} inserts <paramref name="newValue"/> (format strings can be used, e.g. {0:00.0})</param>
+        /// <param name="actionNameFormat">String format of how this change is represented in the Change History window. {0} inserts type name of <typeparamref name="TObj"/>, while {1} inserts <paramref name="newValue"/> (format strings can be used, e.g. {0:00.0})</param>
         /// <param name="target">Object that has its member(s) modified</param>
         /// <param name="newValue">New value to be set</param>
         /// <param name="set">Action used to set the new value</param>
@@ -137,7 +137,7 @@ namespace RuntimeUnityEditor.Core.ChangeHistory
         /// Do an action and track it in the Change History window. Optionally undoable.
         /// </summary>
         /// <typeparam name="TObj">Type of the object that the action uses</typeparam>
-        /// <param name="actionNameFormat">String format of how this change is represented in the Change History window. {0} inserts type name of <see cref="TObj"/> (format strings can be used, e.g. {0:00.0})</param>
+        /// <param name="actionNameFormat">String format of how this change is represented in the Change History window. {0} inserts type name of <typeparamref name="TObj"/> (format strings can be used, e.g. {0:00.0})</param>
         /// <param name="target">Object that has its member(s) modified</param>
         /// <param name="action">Action invoked on the target object</param>
         /// <param name="undoAction">Action invoked on the target object to undo the change</param>

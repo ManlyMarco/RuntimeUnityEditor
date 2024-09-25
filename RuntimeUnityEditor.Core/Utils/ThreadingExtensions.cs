@@ -8,7 +8,7 @@ using UnityEngine;
 namespace RuntimeUnityEditor.Core.Utils
 {
     /// <summary>
-    /// Convenience extensions for utilizing multiple threads and using the <see cref="ThreadingHelper"/>.
+    /// Convenience extensions for utilizing multiple threads.
     /// </summary>
     public static class ThreadingExtensions
     {

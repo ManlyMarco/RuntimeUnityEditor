@@ -79,7 +79,6 @@ namespace RuntimeUnityEditor.Core.Gizmos.lib
         {
             if (hotReloaded || !instance)
             {
-                bool markDirty = false;
                 GizmosInstance[] gizmosInstances = FindObjectsOfType<GizmosInstance>();
                 for (int i = 0; i < gizmosInstances.Length; i++)
                 {
@@ -95,7 +94,6 @@ namespace RuntimeUnityEditor.Core.Gizmos.lib
                         else
                         {
                             DestroyImmediate(gizmosInstances[i]);
-                            markDirty = true;
                         }
                     }
                 }
@@ -105,18 +103,7 @@ namespace RuntimeUnityEditor.Core.Gizmos.lib
                 {
                     instance = new GameObject(typeof(GizmosInstance).FullName).AddComponent<GizmosInstance>();
                     instance.gameObject.hideFlags = HideFlags.HideInHierarchy | HideFlags.HideInInspector;
-
-                    markDirty = true;
                 }
-
-#if UNITY_EDITOR
-                //mark scene as dirty
-                if (markDirty && !Application.isPlaying)
-                {
-                    Scene scene = SceneManager.GetActiveScene();
-                    EditorSceneManager.MarkSceneDirty(scene);
-                }
-#endif
 
                 hotReloaded = false;
             }
