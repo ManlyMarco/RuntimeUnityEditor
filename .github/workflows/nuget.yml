@@ -11,6 +11,9 @@ jobs:
 
     runs-on: windows-latest
 
+    env:
+      NUGET_ENABLE_LEGACY_CSPROJ_PACK: true
+    
     steps:
     - name: Checkout
       uses: actions/checkout@v1
