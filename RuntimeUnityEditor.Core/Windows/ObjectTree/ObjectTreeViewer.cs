@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -489,13 +488,15 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
                             try
                             {
-                                var calls = (IList)eventObj.GetPrivateExplicit<UnityEventBase>("m_Calls").GetPrivate("m_RuntimeCalls");
+                                var calls = eventObj.GetPrivateExplicit<UnityEventBase>("m_Calls").GetPrivate("m_RuntimeCalls").CastToEnumerable();
                                 foreach (var call in calls)
                                     GUILayout.Label(ToStringConverter.ObjectToString(call.GetPrivate("Delegate")));
                             }
-                            catch (NullReferenceException)
-                            {
-                            }
+                            catch (NullReferenceException) { }
+#if IL2CPP
+                            catch (HarmonyLib.MemberNotFoundException) { /* IL2CPP stripped it probably */ }
+#endif
+                            catch (Exception e) { RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, e); }
 
                             GUILayout.FlexibleSpace();
                             if (GUILayout.Button("?"))
@@ -510,13 +511,15 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
                             try
                             {
-                                var calls = (IList)b.onValueChanged.GetPrivateExplicit<UnityEventBase>("m_Calls").GetPrivate("m_RuntimeCalls");
+                                var calls = b.onValueChanged.GetPrivateExplicit<UnityEventBase>("m_Calls").GetPrivate("m_RuntimeCalls").CastToEnumerable();
                                 foreach (var call in calls)
                                     GUILayout.Label(ToStringConverter.ObjectToString(call.GetPrivate("Delegate")));
                             }
-                            catch (NullReferenceException)
-                            {
-                            }
+                            catch (NullReferenceException) { }
+#if IL2CPP
+                            catch (HarmonyLib.MemberNotFoundException) { /* IL2CPP stripped it probably */ }
+#endif
+                            catch (Exception e) { RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, e); }
 
                             GUILayout.FlexibleSpace();
                             if (GUILayout.Button("?"))

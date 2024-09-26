@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using HarmonyLib;
 using RuntimeUnityEditor.Core.Clipboard;
+using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine.Events;
 
 namespace RuntimeUnityEditor.Core.Utils
@@ -52,11 +53,18 @@ namespace RuntimeUnityEditor.Core.Utils
                 if (m != null) mList.Add(new KeyValuePair<object, MethodInfo>(target, m));
             }
 
-            var calls = (IList)eventObj.GetPrivateExplicit("m_Calls").GetPrivate("m_RuntimeCalls");
-            foreach (var call in calls)
+            try
             {
-                if (call.GetPrivate("Delegate") is Delegate d)
-                    mList.Add(new KeyValuePair<object, MethodInfo>(d.Target, d.Method));
+                var calls = eventObj.GetPrivateExplicit("m_Calls").GetPrivate("m_RuntimeCalls").CastToEnumerable();
+                foreach (var call in calls)
+                {
+                    if (call.GetPrivate("Delegate") is Delegate d)
+                        mList.Add(new KeyValuePair<object, MethodInfo>(d.Target, d.Method));
+                }
+            }
+            catch (Exception e)
+            {
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, e);
             }
 
             var sb = new StringBuilder();
