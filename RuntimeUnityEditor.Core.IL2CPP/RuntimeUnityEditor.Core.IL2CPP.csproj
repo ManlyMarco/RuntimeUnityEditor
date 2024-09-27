@@ -8,7 +8,7 @@
     <RootNamespace>RuntimeUnityEditor.Core</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
-    <Version>5.5</Version>
+    <Version>5.5.1</Version> <!--Needed by the nuget package-->
 
     <OutputPath>..\bin\IL2CPP\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
