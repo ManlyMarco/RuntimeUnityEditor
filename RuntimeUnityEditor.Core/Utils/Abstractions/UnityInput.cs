@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
@@ -11,7 +12,7 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
     /// Abstraction layer over Unity's input systems for use in universal plugins that need to use hotkeys.
     /// It can use either Input or Unity.InputSystem, depending on what's available. Input is preferred.
     /// WARNING: Use only inside of Unity's main thread!
-    /// Copied from BepInEx 5.4.20 to keep support for other plugin loaders.
+    /// Copied from BepInEx to keep support for other plugin loaders.
     /// </summary>
     internal class UnityInput
     {
@@ -29,14 +30,12 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
                     {
                         try
                         {
-                            Input.GetKeyDown(KeyCode.A);
                             _current = new LegacyInputSystem();
                             RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, "[UnityInput] Using LegacyInputSystem");
                         }
-                        catch (InvalidOperationException)
+                        catch
                         {
                             var newInputSystem = new NewInputSystem();
-                            newInputSystem.GetKeyDown(KeyCode.A); //todo needs a test
                             _current = newInputSystem;
                             RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, "[UnityInput] Using NewInputSystem");
                         }
@@ -147,6 +146,9 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
 
     internal class NewInputSystem : IInputSystem
     {
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public NewInputSystem() => GetKeyDown(KeyCode.A);
+        
         public bool GetKey(string name) => GetControl(name)?.isPressed ?? false;
 
         public bool GetKey(KeyCode key) => GetControl(key)?.isPressed ?? false;
@@ -860,6 +862,9 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
 
     internal class LegacyInputSystem : IInputSystem
     {
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public LegacyInputSystem() => Input.GetKeyDown(KeyCode.A);
+        
         public bool GetKey(string name) => Input.GetKey(name);
 
         public bool GetKey(KeyCode key) => Input.GetKey(key);
