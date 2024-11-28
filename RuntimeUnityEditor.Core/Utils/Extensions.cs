@@ -17,7 +17,7 @@ namespace RuntimeUnityEditor.Core.Utils
     /// </summary>
     public static class Extensions
     {
-        public static bool Contains(this string s, string searchText, StringComparison sc)
+        public static bool REContains(this string s, string searchText, StringComparison sc)
         {
             if (string.IsNullOrEmpty(s) || string.IsNullOrEmpty(searchText))
                 return false;

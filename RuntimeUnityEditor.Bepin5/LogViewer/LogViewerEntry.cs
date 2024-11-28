@@ -87,9 +87,9 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
         {
             return (logLevelFilter & LogEventArgs.Level) != 0
                    && (string.IsNullOrEmpty(searchString)
-                       || _dataString.text.Contains(searchString, StringComparison.OrdinalIgnoreCase)
-                       || FilteredStackTraceString.Contains(searchString, StringComparison.OrdinalIgnoreCase)
-                       || LogEventArgs.Source.SourceName.Contains(searchString, StringComparison.OrdinalIgnoreCase));
+                       || _dataString.text.REContains(searchString, StringComparison.OrdinalIgnoreCase)
+                       || FilteredStackTraceString.REContains(searchString, StringComparison.OrdinalIgnoreCase)
+                       || LogEventArgs.Source.SourceName.REContains(searchString, StringComparison.OrdinalIgnoreCase));
         }
 
         #region Parsing
@@ -158,7 +158,7 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
                 {
                     if (typeName.StartsWith("BepInEx.", StringComparison.Ordinal) ||
                         typeName.StartsWith("System.", StringComparison.Ordinal) ||
-                        typeName.StartsWith("UnityEngine.", StringComparison.Ordinal) && mName.Contains("Log", StringComparison.Ordinal) ||
+                        typeName.StartsWith("UnityEngine.", StringComparison.Ordinal) && mName.REContains("Log", StringComparison.Ordinal) ||
                         typeName.StartsWith(nameof(RuntimeUnityEditor), StringComparison.Ordinal) && mName.Equals("Log", StringComparison.Ordinal))
                     {
                         //skipped++;
