@@ -1,6 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Reflection;
 using System.Text;
 using BepInEx.Logging;
@@ -8,7 +6,7 @@ using RuntimeUnityEditor.Core;
 using RuntimeUnityEditor.Core.Utils;
 using UnityEngine;
 
-namespace RuntimeUnityEditor.Bepin5.LogViewer
+namespace RuntimeUnityEditor.Bepin6.LogViewer
 {
     internal readonly struct LogViewerEntry
     {
@@ -22,10 +20,10 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
             Method = filteredStackTrace != null && filteredStackTrace.Length > 0 ? filteredStackTrace[0].GetMethod() : null;
 
             var tooltip = "Filtered stack trace of this log write:\n\n" + filteredStackTraceString;
-            _timeString = new GUIContent(DateTime.UtcNow.ToShortTimeString(), tooltip);
-            _logLevelString = new GUIContent(logEventArgs.Level.ToString(), tooltip);
-            _sourceNameString = new GUIContent(logEventArgs.Source.SourceName, tooltip);
-            _dataString = new GUIContent(logEventArgs.Data?.ToString() ?? "NULL", tooltip);
+            _timeString = new GUIContent(DateTime.UtcNow.ToShortTimeString(), null, tooltip);
+            _logLevelString = new GUIContent(logEventArgs.Level.ToString(), null, tooltip);
+            _sourceNameString = new GUIContent(logEventArgs.Source.SourceName, null, tooltip);
+            _dataString = new GUIContent(logEventArgs.Data?.ToString() ?? "NULL", null, tooltip);
             //ContentLevel = new GUIContent($"{_TimeString} [{_logLevelString,-7}:{_sourceSourceNameString,10}]", tooltip);
             //ContentText = new GUIContent(_dataString, tooltip);
         }
@@ -87,9 +85,9 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
         {
             return (logLevelFilter & LogEventArgs.Level) != 0
                    && (string.IsNullOrEmpty(searchString)
-                       || _dataString.text.REContains(searchString, StringComparison.OrdinalIgnoreCase)
-                       || FilteredStackTraceString.REContains(searchString, StringComparison.OrdinalIgnoreCase)
-                       || LogEventArgs.Source.SourceName.REContains(searchString, StringComparison.OrdinalIgnoreCase));
+                       || _dataString.text.Contains(searchString, StringComparison.OrdinalIgnoreCase)
+                       || FilteredStackTraceString.Contains(searchString, StringComparison.OrdinalIgnoreCase)
+                       || LogEventArgs.Source.SourceName.Contains(searchString, StringComparison.OrdinalIgnoreCase));
         }
 
         #region Parsing
@@ -158,7 +156,7 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
                 {
                     if (typeName.StartsWith("BepInEx.", StringComparison.Ordinal) ||
                         typeName.StartsWith("System.", StringComparison.Ordinal) ||
-                        typeName.StartsWith("UnityEngine.", StringComparison.Ordinal) && mName.REContains("Log", StringComparison.Ordinal) ||
+                        typeName.StartsWith("UnityEngine.", StringComparison.Ordinal) && mName.Contains("Log", StringComparison.Ordinal) ||
                         typeName.StartsWith(nameof(RuntimeUnityEditor), StringComparison.Ordinal) && mName.Equals("Log", StringComparison.Ordinal))
                     {
                         //skipped++;

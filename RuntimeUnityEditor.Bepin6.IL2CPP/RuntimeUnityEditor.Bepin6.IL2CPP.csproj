@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+
+    <OutputPath>..\bin\IL2CPP\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <Delete Files="$(OutputPath)\RuntimeUnityEditor.Bepin6.IL2CPP.deps.json" />
+    <Delete Files="$(OutputPath)\mcs.pdb" />
+  </Target>
+
+  <ItemGroup>
+    <None Include="..\LICENSE" Link="LICENSE">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\README.md" Link="README.md">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BepInEx.Unity.IL2CPP" Version="6.0.0-be.664" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RuntimeUnityEditor.Core.IL2CPP\RuntimeUnityEditor.Core.IL2CPP.csproj" />
+  </ItemGroup>
+
+</Project>

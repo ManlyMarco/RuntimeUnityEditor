@@ -1,62 +1,68 @@
-﻿using System;
-using BepInEx;
+﻿using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
-using RuntimeUnityEditor.Bepin5.LogViewer;
+using BepInEx.Unity.IL2CPP;
+using RuntimeUnityEditor.Bepin6.LogViewer;
 using RuntimeUnityEditor.Core;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
 
-namespace RuntimeUnityEditor.Bepin5
+namespace RuntimeUnityEditor.Bepin6.IL2CPP
 {
     /// <summary>
-    /// This is a loader plugin for BepInEx5.
+    /// This is a loader plugin for BepInEx6 (IL2CPP version).
     /// When referencing RuntimeUnityEditor from other code it's recommended to not reference this assembly and instead reference RuntimeUnityEditorCore directly.
     /// If you need your code to run after RUE is initialized, add a <code>[BepInDependency(RuntimeUnityEditorCore.GUID)]</code> attribute to your plugin.
     /// You can see if RuntimeUnityEditor has finished loading with <code>RuntimeUnityEditorCore.IsInitialized()</code>.
     /// </summary>
     [Obsolete("It's recommended to reference RuntimeUnityEditorCore directly")]
     [BepInPlugin(RuntimeUnityEditorCore.GUID, "Runtime Unity Editor", RuntimeUnityEditorCore.Version)]
-    public class RuntimeUnityEditor5 : BaseUnityPlugin
+    public class RuntimeUnityEditorPluginIL2CPP : BasePlugin
     {
-        private static RuntimeUnityEditorCore Instance { get; set; }
+        private static RuntimeUnityEditorCore _coreInstance = null!;
 
-        private void Start()
+        public override void Load()
         {
             if (!TomlTypeConverter.CanConvert(typeof(Rect)))
             {
-                var converter = RuntimeUnityEditor.Core.Utils.TomlTypeConverter.GetConverter(typeof(Rect));
+                var converter = Core.Utils.TomlTypeConverter.GetConverter(typeof(Rect));
                 TomlTypeConverter.AddConverter(typeof(Rect), new TypeConverter { ConvertToObject = converter.ConvertToObject, ConvertToString = converter.ConvertToString });
             }
+            
+            _coreInstance = new RuntimeUnityEditorCore(new Bep6InitSettings(this));
 
-            Instance = new RuntimeUnityEditorCore(new Bep5InitSettings(this));
-
-            Instance.AddFeature(new LogViewerWindow());
+            _coreInstance.AddFeature(new LogViewerWindow());
         }
 
-        private void Update()
+        private class RuntimeUnityEditorHelper : MonoBehaviour
         {
-            Instance.Update();
-        }
 
-        private void LateUpdate()
-        {
-            Instance.LateUpdate();
-        }
-
-        private void OnGUI()
-        {
-            Instance.OnGUI();
-        }
-
-        private sealed class Bep5InitSettings : InitSettings
-        {
-            private readonly RuntimeUnityEditor5 _instance;
-
-            public Bep5InitSettings(RuntimeUnityEditor5 instance)
+            private void Update()
             {
-                _instance = instance;
-                LoggerWrapper = new Logger5(_instance.Logger);
+                _coreInstance.Update();
+            }
+
+            private void LateUpdate()
+            {
+                _coreInstance.LateUpdate();
+            }
+
+            private void OnGUI()
+            {
+                _coreInstance.OnGUI();
+            }
+        }
+
+        private sealed class Bep6InitSettings : InitSettings
+        {
+            private readonly RuntimeUnityEditorPluginIL2CPP _instance;
+            private readonly RuntimeUnityEditorHelper _helper;
+
+            public Bep6InitSettings(RuntimeUnityEditorPluginIL2CPP instance)
+            {
+                _instance = instance ?? throw new ArgumentNullException(nameof(instance));
+                _helper = instance.AddComponent<RuntimeUnityEditorHelper>();
+                LoggerWrapper = new Logger6(_instance.Log);
             }
 
             public override Action<T> RegisterSetting<T>(string category, string name, T defaultValue, string description, Action<T> onValueUpdated)
@@ -67,16 +73,16 @@ namespace RuntimeUnityEditor.Bepin5
                 return x => s.Value = x;
             }
 
-            public override MonoBehaviour PluginMonoBehaviour => _instance;
+            public override MonoBehaviour PluginMonoBehaviour => _helper;
             public override ILoggerWrapper LoggerWrapper { get; }
             public override string ConfigPath => Paths.ConfigPath;
         }
 
-        private sealed class Logger5 : ILoggerWrapper
+        private sealed class Logger6 : ILoggerWrapper
         {
             private readonly ManualLogSource _logger;
 
-            public Logger5(ManualLogSource logger)
+            public Logger6(ManualLogSource logger)
             {
                 _logger = logger;
             }

@@ -1,0 +1,107 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>39cc0f9c-3dfa-4542-a680-a564f3089777</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>RuntimeUnityEditor.Core</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)AssemblyInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FeatureBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Features\ContextMenu.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Features\CursorUnlocker.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Features\Gizmos\GizmoDrawer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Features\Gizmos\lib\Constants.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Features\Gizmos\lib\Drawer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Features\Gizmos\lib\Drawers\ArcDrawer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Features\Gizmos\lib\Drawers\CubeDrawer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Features\Gizmos\lib\Drawers\LineDrawer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Features\Gizmos\lib\Drawers\PolygonDrawer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Features\Gizmos\lib\Drawers\SquareDrawer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Features\Gizmos\lib\Element.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Features\Gizmos\lib\Gizmos.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Features\Gizmos\lib\GizmosInstance.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Features\MouseInspect.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Features\WireframeFeature.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RuntimeUnityEditorCore.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ScreenPartition.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\Abstractions\AssetBundleManagerHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\Abstractions\DataUtility.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\Abstractions\DnSpyHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\Abstractions\IL2CppAbstractions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\Abstractions\ILoggerWrapper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\Abstractions\InitSettings.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\Abstractions\LogLevel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\Abstractions\OpenFileDialog.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\Abstractions\UnityFeatureHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\Abstractions\UnityInput.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\ComboBox.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\Extensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\Abstractions\IL2CppExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\ImguiComboBox.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\IMGUIUtils.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\MovingAverage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\ObjectDumper\Dumper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\ObjectDumper\MeshExport.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\ObjectDumper\ObjectDumperExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\OrderedSet.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\ReflectionUtils.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\ResourceUtils.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\TextureUtils.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\ThreadingExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\TomlTypeConverter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\TypeNameExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\UI\InterfaceMaker.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)WindowBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)WindowManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Breakpoints\BreakpointHit.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Breakpoints\BreakpointHitException.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Breakpoints\BreakpointPatchInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Breakpoints\Breakpoints.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)windows\breakpoints\BreakpointsWindow.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Breakpoints\DebuggerBreakType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\ChangeHistory\Change.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\ChangeHistory\ChangeAction.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\ChangeHistory\ChangeAssignment.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\ChangeHistory\ChangeHistoryWindow.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\ChangeHistory\IChange.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Clipboard\ClipboardWindow.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\CacheEntryBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\CallbackCacheEntey.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\EventCacheEntry.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\FieldCacheEntry.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\ICacheEntry.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\ListCacheEntry.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\MethodCacheEntry.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\PropertyCacheEntry.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\ReadonlyCacheEntry.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\ReadonlyListCacheEntry.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Inspector\InspectorStackEntryBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Inspector\InstanceStackEntry.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Inspector\StaticStackEntry.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Inspector.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Inspector.InspectorTab.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\InspectorHelpObject.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\ToStringConverter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\VariableFieldDrawer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\ObjectTree\ObjectTreeViewer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\ObjectTree\RootGameObjectSearcher.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\ObjectView\ObjectViewWindow.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Profiler\ProfilerWindow.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\REPL\MCS\ScriptEvaluator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\REPL\REPL.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\REPL\ReplHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\REPL\REPLWindow.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\REPL\Suggestion.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\REPL\SuggestionKind.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\REPL\TypeHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Taskbar.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)Utils\UI\guisharp-box.png" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)Utils\UI\guisharp-window.png" />
+  </ItemGroup>
+</Project>

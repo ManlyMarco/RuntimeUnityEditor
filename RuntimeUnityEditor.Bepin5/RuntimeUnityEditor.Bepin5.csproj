@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>RuntimeUnityEditor.Bepin5</RootNamespace>
     <AssemblyName>RuntimeUnityEditor.Bepin5</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <TargetFrameworkProfile />
@@ -22,6 +22,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>embedded</DebugType>
@@ -32,6 +33,7 @@
     <WarningLevel>4</WarningLevel>
     <DebugSymbols>true</DebugSymbols>
     <DocumentationFile>..\bin\BepInEx\plugins\RuntimeUnityEditor\RuntimeUnityEditor.Bepin5.xml</DocumentationFile>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="BepInEx, Version=5.0.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -53,15 +55,21 @@
     <Compile Include="RuntimeUnityEditor5.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\RuntimeUnityEditor\RuntimeUnityEditor.Core.csproj">
-      <Project>{a66a97b4-f32f-4748-8332-48f0876f0aac}</Project>
-      <Name>RuntimeUnityEditor.Core</Name>
-      <Private>False</Private>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
+    <None Include="..\LICENSE">
+      <Link>LICENSE</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\README.md">
+      <Link>README.md</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\RuntimeUnityEditor.Core.Mono\RuntimeUnityEditor.Core.Mono.csproj">
+      <Project>{a66a97b4-f32f-4748-8332-48f0876f0aac}</Project>
+      <Name>RuntimeUnityEditor.Core.Mono</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
