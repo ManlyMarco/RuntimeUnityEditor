@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using Mono.CSharp;
+using RuntimeUnityEditor.Core.Inspector;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.ObjectTree;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
@@ -259,6 +260,12 @@ namespace RuntimeUnityEditor.Core.REPL
         public static string dump(object @object)
         {
             return Dumper.DumpToTempFile(@object, "REPL_OBJECT");
+        }
+
+        [Documentation("registerToString<TObj>(Func<TObj, string>) - add a ToString converter for a Type to change how it's displayed in Inspector and some other places.")]
+        public static void registerToString<TObj>(Func<TObj, string> objectToString)
+        {
+            ToStringConverter.AddConverter(objectToString);
         }
 
         [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property)]

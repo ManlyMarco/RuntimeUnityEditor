@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using RuntimeUnityEditor.Core.Inspector;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
 using ColorUtility = RuntimeUnityEditor.Core.Utils.Abstractions.ColorUtility;
@@ -178,6 +179,7 @@ namespace RuntimeUnityEditor.Core.Utils
             }
 
             TypeConverters.Add(type, converter);
+            ToStringConverter._canCovertCache[type] = true;
             return true;
         }
 
