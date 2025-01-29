@@ -20,7 +20,7 @@ namespace RuntimeUnityEditor.Core.Inspector
             if (objectToString == null) throw new ArgumentNullException(nameof(objectToString));
 
             var type = typeof(TObj);
-            _toStringConverters.Add(type, o => objectToString.Invoke((TObj)o));
+            _toStringConverters[type] = o => objectToString.Invoke((TObj)o);
             _canCovertCache[type] = true;
         }
 
