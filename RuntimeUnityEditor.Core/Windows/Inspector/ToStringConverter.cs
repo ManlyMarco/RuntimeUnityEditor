@@ -17,7 +17,11 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         public static void AddConverter<TObj>(Func<TObj, string> objectToString)
         {
-            _toStringConverters.Add(typeof(TObj), o => objectToString.Invoke((TObj)o));
+            if (objectToString == null) throw new ArgumentNullException(nameof(objectToString));
+
+            var type = typeof(TObj);
+            _toStringConverters[type] = o => objectToString.Invoke((TObj)o);
+            _canCovertCache[type] = true;
         }
 
         public static string ObjectToString(object value)
@@ -108,7 +112,7 @@ namespace RuntimeUnityEditor.Core.Inspector
             return $"{eventObj.GetPersistentTarget(i)?.GetType().GetSourceCodeRepresentation() ?? "[NULL]"}.{eventObj.GetPersistentMethodName(i)}";
         }
 
-        private static readonly Dictionary<Type, bool> _canCovertCache = new Dictionary<Type, bool>();
+        internal static readonly Dictionary<Type, bool> _canCovertCache = new Dictionary<Type, bool>();
 
         public static bool CanEditValue(ICacheEntry field, object value)
         {
