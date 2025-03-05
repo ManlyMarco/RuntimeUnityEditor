@@ -23,7 +23,7 @@ namespace RuntimeUnityEditor.Core.Inspector
         private InspectorTab GetCurrentTab() => _currentTab ?? (_currentTab = _tabs.FirstOrDefault());
         private Vector2 _tabScrollPos = Vector2.zero;
 
-        private GUIStyle _alignedButtonStyle;
+        private GUIStyle _alignedButtonStyle, _alignedButtonStyleUnclickable;
 
         internal static int MaxWindowY => (int)Instance.WindowRect.height;
 
@@ -76,16 +76,20 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         private void DrawVariableNameEnterButton(ICacheEntry field)
         {
-            if (_alignedButtonStyle == null)
+            if (_alignedButtonStyle == null || _alignedButtonStyleUnclickable == null)
             {
                 _alignedButtonStyle = GUI.skin.button.CreateCopy();
                 _alignedButtonStyle.alignment = TextAnchor.MiddleLeft;
                 _alignedButtonStyle.wordWrap = true;
+                
+                _alignedButtonStyleUnclickable = _alignedButtonStyle.CreateCopy();
+                _alignedButtonStyleUnclickable.normal.background = null;
+                _alignedButtonStyleUnclickable.onNormal.background = null;
             }
 
             var canEnterValue = field.CanEnterValue();
             var val = field.GetValue();
-            if (GUILayout.Button(field.GetNameContent(), canEnterValue ? _alignedButtonStyle : GUI.skin.label, _inspectorNameWidth))
+            if (GUILayout.Button(field.GetNameContent(), canEnterValue ? _alignedButtonStyle : _alignedButtonStyleUnclickable, _inspectorNameWidth))
             {
                 if (IMGUIUtils.IsMouseRightClick())
                 {
