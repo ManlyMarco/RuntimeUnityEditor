@@ -254,10 +254,8 @@ namespace RuntimeUnityEditor.Core
         {
             if (objEntry == null) throw new ArgumentNullException(nameof(objEntry));
 
-            if (obj == null && objEntry.CanEnterValue())
+            if (obj == null && objEntry.CanEnterValue()) //todo this is a bit of a hack, maybe add a CanGetValue to ICacheEntry? This is conservative to avoid triggering side effects
                 obj = objEntry.GetValue();
-
-            if (obj == null) throw new ArgumentException($"{nameof(obj)} needs to be not null or {nameof(objEntry)} has to be gettable");
 
             string name;
             switch (objEntry)
@@ -309,11 +307,11 @@ namespace RuntimeUnityEditor.Core
             if (obj == null && getObj != null)
                 obj = getObj();
 
-            if (obj != null)
+            if (obj != null || memberInfo != null)
             {
                 _obj = obj;
                 _objMemberInfo = memberInfo ?? obj as MemberInfo;
-                _objName = memberFullName; //parentMemberInfo != null ? $"{parentMemberInfo.DeclaringType?.Name}.{parentMemberInfo.Name}" : obj.GetType().FullDescription();
+                _objName = memberFullName ?? (_objMemberInfo != null ? $"{_objMemberInfo.DeclaringType?.Name}.{_objMemberInfo.Name}" : obj?.GetType().FullDescription());
                 _setValue = setObj;
                 _getValue = getObj;
 
