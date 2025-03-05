@@ -21,6 +21,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         public override object GetValueToCache() => BackingField?.GetValue(Instance);
         protected override bool OnSetValue(object newValue) => throw new InvalidOperationException();
         public override Type Type() => EventInfo.EventHandlerType;
+        public override MemberInfo MemberInfo => EventInfo;
         public override bool CanSetValue() => false;
         public bool IsDeclared => Owner == EventInfo.DeclaringType;
     }

@@ -222,7 +222,7 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
                             {
                                 // todo better right click menu
                                 if (entry.Sender != null)
-                                    ContextMenu.Instance.Show(entry.Sender, null);
+                                    ContextMenu.Instance.Show(entry.Sender);
                                 else
                                     RuntimeUnityEditorCore.Logger.Log(Core.Utils.Abstractions.LogLevel.Warning, $"[{nameof(LogViewerWindow)}] Sender is null, cannot inspect");
                             }

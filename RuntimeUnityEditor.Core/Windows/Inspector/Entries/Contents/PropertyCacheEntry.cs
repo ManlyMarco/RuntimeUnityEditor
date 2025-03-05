@@ -58,6 +58,8 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
             return PropertyInfo.PropertyType;
         }
 
+        public override MemberInfo MemberInfo => PropertyInfo;
+
         public override bool CanSetValue()
         {
             return PropertyInfo.CanWrite && (_parent == null || _parent.CanSetValue());

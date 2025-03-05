@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
-using RuntimeUnityEditor.Core.Breakpoints;
 using RuntimeUnityEditor.Core.ChangeHistory;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.ObjectTree;
@@ -24,6 +23,8 @@ namespace RuntimeUnityEditor.Core
     {
         private object _obj;
         private MemberInfo _objMemberInfo;
+        private Func<object> _getValue;
+        private Action<object> _setValue;
         private string _objName;
 
         private Rect _windowRect;
@@ -115,41 +116,74 @@ namespace RuntimeUnityEditor.Core
 
                 new MenuEntry("Replace texture...",
                               o => o is Texture2D ||
-                                   (o is Material m && m.mainTexture != null) ||
-                                   (o is RawImage i && i.mainTexture != null) ||
-                                   (o is Renderer r && (r.sharedMaterial ?? r.material) != null && (r.sharedMaterial ?? r.material).mainTexture != null),
+                                   o is Texture && _setValue != null ||
+                                   o is Material ||
+                                   o is RawImage ||
+                                   (o is Renderer r && (r.sharedMaterial != null || r.material != null)),
                               o =>
                               {
                                   string filename = "null";
                                   var newTex = TextureUtils.LoadTextureFromFileWithDialog(ref filename);
 
-                                  if (o is Texture2D t)
+                                  if (o is Texture t)
                                   {
-                                      //todo GetRawTextureData is not available in Unity 4.x
-                                      t.LoadRawTextureData(newTex.GetRawTextureData());
-                                      t.Apply(true);
-                                      UnityEngine.Object.Destroy(newTex);
-                                      Change.Report($"(ContextMenu)::{_objName}.LoadImage(File.ReadAllBytes(\"{filename}\"))");
+                                      try
+                                      {
+                                          if (_setValue != null)
+                                          {
+                                              var current = _getValue?.Invoke();
+                                              Change.Action($"(ContextMenu)::{_objName} = Texture2D.LoadImage(File.ReadAllBytes(\"{filename}\"))", o, action: _ => _setValue(newTex), undoAction: current != null ? _ => _setValue(current) : (Action<object>)null);
+                                          }
+                                          else throw new NotImplementedException();
+                                      }
+                                      catch (Exception e)
+                                      {
+                                          if(!(e is NotImplementedException))
+                                              RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, e);
+
+                                          if (t is Texture2D t2d)
+                                          {
+                                              // Backup texture replace
+                                              try
+                                              {
+                                                  // GetRawTextureData is not available in Unity 4.x so it can't be touched directly
+                                                  new Action<Texture2D, Texture2D>((target, source) => { target.LoadRawTextureData(source.GetRawTextureData()); target.Apply(true); }).Invoke(t2d, newTex);
+                                                  Change.Report($"(ContextMenu)::{_objName}.LoadImage(File.ReadAllBytes(\"{filename}\"))");
+                                              }
+                                              catch (Exception e2)
+                                              {
+                                                  RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, e2);
+                                              }
+                                              finally
+                                              {
+                                                  UnityEngine.Object.Destroy(newTex);
+                                              }
+                                          }
+                                      }
                                   }
                                   else if (o is Material m)
                                   {
-                                      m.mainTexture = newTex;
-                                      Change.Report($"(ContextMenu)::{_objName}.mainTexture = Texture2D.LoadImage(File.ReadAllBytes(\"{filename}\"))");
+                                      Change.WithUndo($"(ContextMenu)::{_objName}.mainTexture = Texture2D.LoadImage(File.ReadAllBytes(\"{filename}\"))",
+                                                      m, newTex, (material, texture2D) => material.mainTexture = texture2D, oldValue: m.mainTexture);
                                   }
                                   else if (o is Image i && i.material != null)
                                   {
-                                      i.material.mainTexture = newTex;
-                                      Change.Report($"(ContextMenu)::{_objName}.mainTexture = Texture2D.LoadImage(File.ReadAllBytes(\"{filename}\"))");
+                                      Change.WithUndo($"(ContextMenu)::{_objName}.material.mainTexture = Texture2D.LoadImage(File.ReadAllBytes(\"{filename}\"))",
+                                                      i.material, newTex, (material, texture2D) => material.mainTexture = texture2D, oldValue: i.material.mainTexture);
                                   }
                                   else if (o is RawImage ri)
                                   {
-                                      ri.texture = newTex;
-                                      Change.Report($"(ContextMenu)::{_objName}.texture = Texture2D.LoadImage(File.ReadAllBytes(\"{filename}\"))");
+                                      Change.WithUndo($"(ContextMenu)::{_objName}.texture = Texture2D.LoadImage(File.ReadAllBytes(\"{filename}\"))",
+                                                      ri, newTex, (rawImage, texture2D) => rawImage.texture = texture2D, oldValue: ri.texture);
                                   }
                                   else if (o is Renderer r)
                                   {
-                                      (r.sharedMaterial ?? r.material).mainTexture = newTex;
-                                      Change.Report($"(ContextMenu)::{_objName}.mainTexture = Texture2D.LoadImage(File.ReadAllBytes(\"{filename}\"))");
+                                      if (r.sharedMaterial != null)
+                                          Change.WithUndo($"(ContextMenu)::{_objName}.sharedMaterial.mainTexture = Texture2D.LoadImage(File.ReadAllBytes(\"{filename}\"))",
+                                                          r.sharedMaterial, newTex, (material, texture2D) => material.mainTexture = texture2D, oldValue: r.sharedMaterial.mainTexture);
+                                      else
+                                          Change.WithUndo($"(ContextMenu)::{_objName}.material.mainTexture = Texture2D.LoadImage(File.ReadAllBytes(\"{filename}\"))",
+                                                          r.material, newTex, (material, texture2D) => material.mainTexture = texture2D, oldValue: r.material.mainTexture);
                                   }
                               }),
 
@@ -213,33 +247,75 @@ namespace RuntimeUnityEditor.Core
         /// <summary>
         /// Show the context menu at current cursor position.
         /// </summary>
-        /// <param name="obj">Object to show the menu for. Set to null to hide the menu.</param>
-        /// <param name="objMemberInfo">MemberInfo of wherever the object came from. Can be null.</param>
-        public void Show(object obj, MemberInfo objMemberInfo)
+        /// <param name="obj">Instance of the object to show the menu for. Can be null if objEntry can be used to get it instead.</param>
+        /// <param name="objEntry">Info about the member containing the displayed object.</param>
+
+        public void Show(object obj, ICacheEntry objEntry)
         {
-            var m = UnityInput.Current.mousePosition;
-            Show(obj, objMemberInfo, new Vector2(m.x, Screen.height - m.y));
+            if (objEntry == null) throw new ArgumentNullException(nameof(objEntry));
+
+            if (obj == null && objEntry.CanEnterValue())
+                obj = objEntry.GetValue();
+
+            if (obj == null) throw new ArgumentException($"{nameof(obj)} needs to be not null or {nameof(objEntry)} has to be gettable");
+
+            string name;
+            switch (objEntry)
+            {
+                case FieldCacheEntry f:
+                    name = $"{f.FieldInfo.DeclaringType?.Name}.{f.FieldInfo.Name}";
+                    break;
+                case PropertyCacheEntry p:
+                    name = $"{p.PropertyInfo.DeclaringType?.Name}.{p.PropertyInfo.Name}";
+                    break;
+                case null:
+                    name = obj.GetType().FullDescription();
+                    break;
+                default:
+                    name = objEntry.Name();
+                    break;
+            }
+
+            var entryValid = objEntry.CanSetValue();
+            Show(obj, objEntry.MemberInfo, name, entryValid ? objEntry.SetValue : (Action<object>)null, entryValid ? objEntry.GetValue : (Func<object>)null);
+        }
+        
+        /// <summary>
+        /// Show the context menu at current cursor position.
+        /// </summary>
+        /// <param name="obj">Object to show the menu for. Set to null to hide the menu.</param>
+        public void Show(object obj)
+        {
+            Show(obj, null, obj?.GetType().FullDescription(), null, null);
         }
 
         /// <summary>
         /// Show the context menu at a specific screen position.
         /// </summary>
-        /// <param name="obj">Object to show the menu for. Set to null to hide the menu.</param>
-        /// <param name="objMemberInfo">MemberInfo of wherever the object came from. Can be null.</param>
-        /// <param name="clickPoint">Screen position to show the menu at.</param>
-        public void Show(object obj, MemberInfo objMemberInfo, Vector2 clickPoint)
+        /// <param name="obj">Object to show the menu for. Set to null to hide the menu (getObj also needs to be null or it will be used to get the obj).</param>
+        /// <param name="memberInfo">MemberInfo of wherever the object came from. Can be null.</param>
+        /// <param name="memberFullName">Name to show in the title bar and in change history.</param>
+        /// <param name="setObj">Set value of the object</param>
+        /// <param name="getObj">Get current value of the object</param>
+        public void Show(object obj, MemberInfo memberInfo, string memberFullName, Action<object> setObj, Func<object> getObj)
         {
+            var m = UnityInput.Current.mousePosition;
+            var clickPoint = new Vector2(m.x, Screen.height - m.y);
 #if IL2CPP
             _windowRect = new Rect(clickPoint, new Vector2(100, 100)); // This one doesn't get stripped it seems
 #else
             _windowRect = new Rect(clickPoint.x, clickPoint.y, 100, 100); // Unity4 only has the 4xfloat constructor
 #endif
+            if (obj == null && getObj != null)
+                obj = getObj();
 
-            if (obj != null || objMemberInfo != null)
+            if (obj != null)
             {
                 _obj = obj;
-                _objMemberInfo = objMemberInfo;
-                _objName = objMemberInfo != null ? $"{objMemberInfo.DeclaringType?.Name}.{objMemberInfo.Name}" : obj.GetType().FullDescription();
+                _objMemberInfo = memberInfo ?? obj as MemberInfo;
+                _objName = memberFullName; //parentMemberInfo != null ? $"{parentMemberInfo.DeclaringType?.Name}.{parentMemberInfo.Name}" : obj.GetType().FullDescription();
+                _setValue = setObj;
+                _getValue = getObj;
 
                 _currentContents = MenuContents.Where(x => x.IsVisible(_obj)).ToList();
 
@@ -258,10 +334,18 @@ namespace RuntimeUnityEditor.Core
         /// <summary>
         /// Draw a GUILayout button that opens the context menu when clicked. It's only shown if the object is not null.
         /// </summary>
-        public void DrawContextButton(object obj, MemberInfo objMemberInfo)
+        public void DrawContextButton(object obj, ICacheEntry objEntry)
         {
             if (obj != null && GUILayout.Button("...", IMGUIUtils.LayoutOptionsExpandWidthFalse))
-                Show(obj, objMemberInfo);
+                Show(obj, objEntry);
+        }
+        /// <summary>
+        /// Draw a GUILayout button that opens the context menu when clicked. It's only shown if the object is not null.
+        /// </summary>
+        public void DrawContextButton(object obj, MemberInfo memberInfo, string memberFullName, Action<object> setObj, Func<object> getObj)
+        {
+            if (obj != null && GUILayout.Button("...", IMGUIUtils.LayoutOptionsExpandWidthFalse))
+                Show(obj, memberInfo, memberFullName, setObj, getObj);
         }
 
         /// <inheritdoc />

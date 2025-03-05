@@ -46,6 +46,8 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
             return FieldInfo.FieldType;
         }
 
+        public override MemberInfo MemberInfo => FieldInfo;
+
         public override bool CanSetValue()
         {
             return (FieldInfo.Attributes & FieldAttributes.Literal) == 0 && !FieldInfo.IsInitOnly && (_parent == null || _parent.CanSetValue());

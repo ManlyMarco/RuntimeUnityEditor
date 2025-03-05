@@ -20,7 +20,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries {
 
         public override void ShowContextMenu()
         {
-            ContextMenu.Instance.Show(Instance, Parent?.GetMemberInfo(false));
+            ContextMenu.Instance.Show(Instance, Parent);
         }
     }
 }

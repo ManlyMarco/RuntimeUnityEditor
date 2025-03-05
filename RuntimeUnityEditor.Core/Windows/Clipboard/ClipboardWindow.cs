@@ -68,12 +68,12 @@ namespace RuntimeUnityEditor.Core.Clipboard
                             var content = Contents[index];
 
                             if (GUILayout.Button(index.ToString(), GUI.skin.label, GUILayout.Width(widthIndex), GUILayout.ExpandWidth(false)) && IMGUIUtils.IsMouseRightClick())
-                                ContextMenu.Instance.Show(content, null);
+                                ContextMenu.Instance.Show(content);
 
                             var type = content?.GetType();
 
                             if (GUILayout.Button(type?.Name ?? "NULL", GUI.skin.label, GUILayout.Width(widthName), GUILayout.ExpandWidth(false)) && IMGUIUtils.IsMouseRightClick())
-                                ContextMenu.Instance.Show(content, null);
+                                ContextMenu.Instance.Show(content);
 
                             var prevEnabled = GUI.enabled;
                             GUI.enabled = type != null && typeof(IConvertible).IsAssignableFrom(type);
