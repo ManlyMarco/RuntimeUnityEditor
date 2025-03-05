@@ -244,17 +244,11 @@ namespace RuntimeUnityEditor.Core
             }
         }
 
-        // /// <summary>
-        // /// Show the context menu at current cursor position.
-        // /// </summary>
-        // /// <param name="obj">Object to show the menu for. Set to null to hide the menu.</param>
-        // /// <param name="parentMemberInfo">MemberInfo of wherever the object came from. Can be null.</param>
-        // /// <param name="parentInstance">Instance of type that contains MemberInfo of this object. Cane be null if parentMemberInfo is null or points to a static member.</param>
-        // public void Show(object obj, MemberInfo parentMemberInfo, object parentInstance)
-        // {
-        //     var m = UnityInput.Current.mousePosition;
-        //     Show(obj, parentMemberInfo, parentInstance, new Vector2(m.x, Screen.height - m.y));
-        // }
+        /// <summary>
+        /// Show the context menu at current cursor position.
+        /// </summary>
+        /// <param name="obj">Instance of the object to show the menu for. Can be null if objEntry can be used to get it instead.</param>
+        /// <param name="objEntry">Info about the member containing the displayed object.</param>
 
         public void Show(object obj, ICacheEntry objEntry)
         {
@@ -265,7 +259,7 @@ namespace RuntimeUnityEditor.Core
 
             if (obj == null) throw new ArgumentException($"{nameof(obj)} needs to be not null or {nameof(objEntry)} has to be gettable");
 
-            string name = null;
+            string name;
             switch (objEntry)
             {
                 case FieldCacheEntry f:
@@ -282,10 +276,14 @@ namespace RuntimeUnityEditor.Core
                     break;
             }
 
-            var entryValid = objEntry?.CanSetValue() == true;
-            Show(obj, objEntry?.MemberInfo, name, entryValid ? objEntry.SetValue : (Action<object>)null, entryValid ? objEntry.GetValue : (Func<object>)null);
+            var entryValid = objEntry.CanSetValue();
+            Show(obj, objEntry.MemberInfo, name, entryValid ? objEntry.SetValue : (Action<object>)null, entryValid ? objEntry.GetValue : (Func<object>)null);
         }
-
+        
+        /// <summary>
+        /// Show the context menu at current cursor position.
+        /// </summary>
+        /// <param name="obj">Object to show the menu for. Set to null to hide the menu.</param>
         public void Show(object obj)
         {
             Show(obj, null, obj?.GetType().FullDescription(), null, null);
@@ -294,8 +292,11 @@ namespace RuntimeUnityEditor.Core
         /// <summary>
         /// Show the context menu at a specific screen position.
         /// </summary>
-        /// <param name="obj">Object to show the menu for. Set to null to hide the menu.</param>
-        // /// <param name="clickPoint">Screen position to show the menu at.</param>
+        /// <param name="obj">Object to show the menu for. Set to null to hide the menu (getObj also needs to be null or it will be used to get the obj).</param>
+        /// <param name="memberInfo">MemberInfo of wherever the object came from. Can be null.</param>
+        /// <param name="memberFullName">Name to show in the title bar and in change history.</param>
+        /// <param name="setObj">Set value of the object</param>
+        /// <param name="getObj">Get current value of the object</param>
         public void Show(object obj, MemberInfo memberInfo, string memberFullName, Action<object> setObj, Func<object> getObj)
         {
             var m = UnityInput.Current.mousePosition;
@@ -338,10 +339,13 @@ namespace RuntimeUnityEditor.Core
             if (obj != null && GUILayout.Button("...", IMGUIUtils.LayoutOptionsExpandWidthFalse))
                 Show(obj, objEntry);
         }
-        public void DrawContextButton(object obj, MemberInfo memberInfo, string memberFullName, Action<object> _setObj, Func<object> _getObj)
+        /// <summary>
+        /// Draw a GUILayout button that opens the context menu when clicked. It's only shown if the object is not null.
+        /// </summary>
+        public void DrawContextButton(object obj, MemberInfo memberInfo, string memberFullName, Action<object> setObj, Func<object> getObj)
         {
             if (obj != null && GUILayout.Button("...", IMGUIUtils.LayoutOptionsExpandWidthFalse))
-                Show(obj, memberInfo, memberFullName, _setObj, _getObj);
+                Show(obj, memberInfo, memberFullName, setObj, getObj);
         }
 
         /// <inheritdoc />
