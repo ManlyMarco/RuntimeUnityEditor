@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 
 namespace RuntimeUnityEditor.Core.Inspector.Entries
 {
@@ -38,6 +39,8 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         {
             return typeof(void);
         }
+
+        public override MemberInfo MemberInfo => null;
 
         public override bool CanSetValue()
         {
@@ -80,6 +83,8 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         {
             return typeof(T);
         }
+
+        public override MemberInfo MemberInfo { get; }
 
         public override bool CanSetValue()
         {

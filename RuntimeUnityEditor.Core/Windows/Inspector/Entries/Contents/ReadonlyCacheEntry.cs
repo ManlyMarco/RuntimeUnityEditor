@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 
 namespace RuntimeUnityEditor.Core.Inspector.Entries
 {
@@ -28,6 +29,8 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         {
             return _type;
         }
+
+        public override MemberInfo MemberInfo => null;
 
         public override bool CanSetValue()
         {

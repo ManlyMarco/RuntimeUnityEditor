@@ -89,7 +89,7 @@ namespace RuntimeUnityEditor.Core.Inspector
             {
                 if (IMGUIUtils.IsMouseRightClick())
                 {
-                    ContextMenu.Instance.Show(val, field.GetMemberInfo(false));
+                    ContextMenu.Instance.Show(val, field);
                 }
                 else if (canEnterValue || val is Exception)
                 {

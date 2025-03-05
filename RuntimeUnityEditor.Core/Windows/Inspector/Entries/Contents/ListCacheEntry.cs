@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Reflection;
 using HarmonyLib;
 using RuntimeUnityEditor.Core.ChangeHistory;
 
@@ -39,6 +40,8 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         {
             return _type ?? (_type = GetValue()?.GetType());
         }
+
+        public override MemberInfo MemberInfo => null;
 
         public override bool CanSetValue()
         {

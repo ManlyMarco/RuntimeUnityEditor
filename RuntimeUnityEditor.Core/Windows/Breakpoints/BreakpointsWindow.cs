@@ -170,7 +170,7 @@ namespace RuntimeUnityEditor.Core.Breakpoints
                             if (GUILayout.Button(new GUIContent("Trace", null, hit.TraceString + "\n\nClick to copy to clipboard\nMiddle click to inspect\nRight click for more options"), GUI.skin.label, GUILayout.Width(60)))
                             {
                                 if (IMGUIUtils.IsMouseRightClick())
-                                    ContextMenu.Instance.Show(hit.Trace, null);
+                                    ContextMenu.Instance.Show(hit.Trace);
                                 else if (IMGUIUtils.IsMouseWheelClick())
                                     Inspector.Inspector.Instance.Push(new InstanceStackEntry(hit.Trace.GetFrames(), "StackTrace"), true);
                                 else
@@ -206,7 +206,7 @@ namespace RuntimeUnityEditor.Core.Breakpoints
             if (GUILayout.Button(new GUIContent(hitOrigin.Target.Name, null, $"Target: {hitOrigin.Target.FullDescription()}\n\nClick to open in dnSpy, right click for more options."), GUI.skin.label, GUILayout.Width(150)))
             {
                 if (IMGUIUtils.IsMouseRightClick())
-                    ContextMenu.Instance.Show(null, hitOrigin.Target);
+                    ContextMenu.Instance.Show(hitOrigin.Target);
                 else
                     DnSpyHelper.OpenInDnSpy(hitOrigin.Target);
             }
@@ -218,7 +218,7 @@ namespace RuntimeUnityEditor.Core.Breakpoints
             if (GUILayout.Button(new GUIContent(text, null, $"Name: {objName}\nType: {obj?.GetType().FullDescription() ?? "NULL"}\nToString: {text}\n\nClick to open in inspector, right click for more options."), GUI.skin.label, options) && obj != null)
             {
                 if (IMGUIUtils.IsMouseRightClick())
-                    ContextMenu.Instance.Show(obj, null);
+                    ContextMenu.Instance.Show(obj);
                 else
                     Inspector.Inspector.Instance.Push(new InstanceStackEntry(obj, objName), true);
             }

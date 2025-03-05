@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using UnityEngine;
 
 namespace RuntimeUnityEditor.Core.Inspector.Entries
@@ -40,6 +41,10 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         /// Member's field/return type.
         /// </summary>
         Type Type();
+        /// <summary>
+        /// Member's reflection info.
+        /// </summary>
+        MemberInfo MemberInfo { get; }
         /// <summary>
         /// Value of this member can be set.
         /// </summary>

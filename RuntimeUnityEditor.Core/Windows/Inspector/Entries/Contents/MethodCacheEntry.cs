@@ -54,6 +54,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         public void SetValue(object newValue) => throw new InvalidOperationException();
 
         public Type Type() => MethodInfo.ReturnType;
+        public MemberInfo MemberInfo => MethodInfo;
 
         public bool CanSetValue() => false;
 

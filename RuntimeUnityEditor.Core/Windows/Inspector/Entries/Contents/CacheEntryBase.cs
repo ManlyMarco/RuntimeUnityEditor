@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using RuntimeUnityEditor.Core.Utils;
 using UnityEngine;
 
@@ -43,6 +44,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         protected abstract bool OnSetValue(object newValue);
 
         public abstract Type Type();
+        public abstract MemberInfo MemberInfo { get; }
         public abstract bool CanSetValue();
 
         private readonly string _name;

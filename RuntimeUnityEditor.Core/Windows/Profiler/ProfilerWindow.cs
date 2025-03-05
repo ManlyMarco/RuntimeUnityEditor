@@ -27,11 +27,11 @@ namespace RuntimeUnityEditor.Core.Profiler
         private static readonly GUILayoutOption[] _cTicksW = { GUILayout.MinWidth(50), GUILayout.MaxWidth(50) };
         private static readonly GUILayoutOption[] _cInsW = { GUILayout.MinWidth(50), GUILayout.MaxWidth(50) };
         private static readonly GUIContent _cColOrder = new GUIContent("#", null, "Relative order of execution in a frame. Methods are called one by one on the main unity thread in this order.\n\nMethods that did not run during this frame are also included, so this number does not equal how many methods were called on this frame.");
-        private static readonly GUIContent _cColRan = new GUIContent("Ran", null,"Left toggle indicates if this method was executed in this frame (all Harmony patches were called, and the original method was called if not disabled by a Harmony patch).\n\nRight toggle indicates if the original method was executed (original method being skipped is usually caused by a false postfix in a Harmony patch)");
-        private static readonly GUIContent _cColTime = new GUIContent("Time", null,"Time spent executing this method (all Harmony patches included).\n\nBy default it's shown in ticks (smallest measurable unit of time). Resolution of ticks depends on Stopwatch.Frequency, but usually 10000 = 1ms.\n\nHigh values will drop FPS. If the value is much higher on some frames it can be felt as the game stuttering.\n\nIn methods running on every frame this should be as low as possible.");
-        private static readonly GUIContent _cColMem = new GUIContent("Mem", null,"Bytes of memory allocated in the managed heap during this method's execution (all Harmony patches included). The value is approximate and might be inaccurate, especially if there is code running on background threads.\n\nHigh values (usually caused by constantly allocating and discarding objects, e.g. using linq queries) will trigger garbage collections, causing the game to randomly stutter. Magnitude of the stutters can be lowered by very fast CPUs and the incremental GC being enabled (only Unity 2019+).\n\nIn methods running on every frame this should be 0 (or as close to 0 as possible).");
+        private static readonly GUIContent _cColRan = new GUIContent("Ran", null, "Left toggle indicates if this method was executed in this frame (all Harmony patches were called, and the original method was called if not disabled by a Harmony patch).\n\nRight toggle indicates if the original method was executed (original method being skipped is usually caused by a false postfix in a Harmony patch)");
+        private static readonly GUIContent _cColTime = new GUIContent("Time", null, "Time spent executing this method (all Harmony patches included).\n\nBy default it's shown in ticks (smallest measurable unit of time). Resolution of ticks depends on Stopwatch.Frequency, but usually 10000 = 1ms.\n\nHigh values will drop FPS. If the value is much higher on some frames it can be felt as the game stuttering.\n\nIn methods running on every frame this should be as low as possible.");
+        private static readonly GUIContent _cColMem = new GUIContent("Mem", null, "Bytes of memory allocated in the managed heap during this method's execution (all Harmony patches included). The value is approximate and might be inaccurate, especially if there is code running on background threads.\n\nHigh values (usually caused by constantly allocating and discarding objects, e.g. using linq queries) will trigger garbage collections, causing the game to randomly stutter. Magnitude of the stutters can be lowered by very fast CPUs and the incremental GC being enabled (only Unity 2019+).\n\nIn methods running on every frame this should be 0 (or as close to 0 as possible).");
         private static readonly GUIContent _cColIns = new GUIContent("Num", null, "Number of instances aggregated.");
-        private static readonly GUIContent _cColName = new GUIContent("Full method name", null,"Name format:\nName of GameObject that the component running this method is attached to > Full name of the component and name of the method (OnGUI event type)");
+        private static readonly GUIContent _cColName = new GUIContent("Full method name", null, "Name format:\nName of GameObject that the component running this method is attached to > Full name of the component and name of the method (OnGUI event type)");
         private static readonly WaitForEndOfFrame _waitForEndOfFrame = new WaitForEndOfFrame();
 
         private static readonly Dictionary<long, ProfilerInfo> _data = new Dictionary<long, ProfilerInfo>();
@@ -131,7 +131,7 @@ namespace RuntimeUnityEditor.Core.Profiler
                     GUILayout.Label(_cColRan, _cRanHeaderW);
                     GUILayout.Label(_cColTime, _cTicksW);
                     GUILayout.Label(_cColMem, _cGcW);
-                    if( _aggregation )
+                    if (_aggregation)
                         GUILayout.Label(_cColIns, _cInsW);
                     GUILayout.Label(_cColName, IMGUIUtils.LayoutOptionsExpandWidthTrue);
                 }
@@ -197,14 +197,14 @@ namespace RuntimeUnityEditor.Core.Profiler
                                     GUILayout.Label(num.ToString(), _cInsW);
                                     GUI.color = origColor;
                                 }
-                                
+
                                 GUI.color = dispNameColor;
                                 GUILayout.Label(pd.DisplayName, IMGUIUtils.LayoutOptionsExpandWidthTrue); //fullname
                                 GUI.color = origColor;
 
                                 GUILayout.FlexibleSpace();
 
-                                ContextMenu.Instance.DrawContextButton(pd.Owner, pd.Method);
+                                ContextMenu.Instance.DrawContextButton(pd.Owner, pd.Method, pd.FullName, null, null);
                                 DnSpyHelper.DrawDnSpyButtonIfAvailable(pd.Method);
                             }
                             GUILayout.EndHorizontal();
@@ -307,7 +307,7 @@ namespace RuntimeUnityEditor.Core.Profiler
 
                 _currentExecutionCount = 0;
 
-                if (_ordering == 1 || _ordering == 2 )
+                if (_ordering == 1 || _ordering == 2)
                     _needResort = true;
 
                 if (!_pause)
@@ -331,10 +331,10 @@ namespace RuntimeUnityEditor.Core.Profiler
 
                     IEnumerable<ProfilerInfo> infos = _data.Values;
 
-                    if ( _aggregation )
+                    if (_aggregation)
                     {
                         infos = infos
-                            .GroupBy(x => new KeyValuePair<string,bool>(x.FullName, x.SinceLastRun < 2))
+                            .GroupBy(x => new KeyValuePair<string, bool>(x.FullName, x.SinceLastRun < 2))
                             .Select(group =>
                                 group
                                     .Aggregate(new ProfilerInfo(group.First(), group.First().FullName),
@@ -434,7 +434,7 @@ namespace RuntimeUnityEditor.Core.Profiler
             }
 
             // for aggregate
-            public ProfilerInfo( ProfilerInfo parent, string fullName = null )
+            public ProfilerInfo(ProfilerInfo parent, string fullName = null)
             {
                 Method = parent.Method;
                 Owner = null;
@@ -448,7 +448,7 @@ namespace RuntimeUnityEditor.Core.Profiler
                 SinceLastRun = parent.SinceLastRun;
             }
 
-            static public ProfilerInfo Merge( ProfilerInfo x, ProfilerInfo y )
+            public static ProfilerInfo Merge(ProfilerInfo x, ProfilerInfo y)
             {
                 ProfilerInfo sum = new ProfilerInfo(x);
                 sum.TicksSpent.Sample(x.TicksSpent.GetAverage() + y.TicksSpent.GetAverage());

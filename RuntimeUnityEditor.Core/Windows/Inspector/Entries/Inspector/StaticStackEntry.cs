@@ -17,7 +17,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries {
 
         public override void ShowContextMenu()
         {
-            ContextMenu.Instance.Show(StaticType, null);
+            ContextMenu.Instance.Show(StaticType);
         }
     }
 }
