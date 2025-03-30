@@ -95,8 +95,7 @@ namespace RuntimeUnityEditor.Core
         /// </summary>
         protected string SettingCategory = "Features";
         private protected string _displayName;
-        private bool _enabled;
-        private Action<bool> _confEnabled;
+        private InitSettings.Setting<bool> _enabled;
 
         /// <inheritdoc />
         public virtual string DisplayName
@@ -105,25 +104,34 @@ namespace RuntimeUnityEditor.Core
             set => _displayName = value;
         }
 
+        private bool _initialEnabled = true;
         /// <summary>
         /// If this instance is enabled and can be shown (when RUE interface is enabled as a whole).
         /// </summary>
         public virtual bool Enabled
         {
-            get => _enabled;
+            get
+            {
+                if (_enabled != null)
+                    return _enabled.Value;
+                else
+                    return _initialEnabled;
+            }
             set
             {
-                if (_enabled != value)
+                if (_enabled == null)
+                {
+                    _initialEnabled = value;
+                }
+                else if (_enabled.Value != value)
                 {
                     // Need to get this before setting _enabled
                     var prevVisible = Visible;
-                    _enabled = value;
+                    _enabled.Value = value;
 
                     var nowVisible = Visible;
                     if (prevVisible != nowVisible)
                         OnVisibleChanged(nowVisible);
-
-                    _confEnabled?.Invoke(value);
                 }
             }
         }
@@ -151,7 +159,7 @@ namespace RuntimeUnityEditor.Core
         /// </summary>
         protected virtual void AfterInitialized(InitSettings initSettings)
         {
-            _confEnabled = initSettings.RegisterSetting(SettingCategory, DisplayName + " enabled", Enabled, string.Empty, b => Enabled = b);
+            _enabled = initSettings.RegisterSetting(SettingCategory, DisplayName + " enabled", _initialEnabled, string.Empty);
         }
 
         void IFeature.OnUpdate()

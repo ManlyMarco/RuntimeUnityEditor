@@ -17,8 +17,7 @@ namespace RuntimeUnityEditor.Core.ChangeHistory
         private static readonly GUIContent _undoContent = new GUIContent("Undo", null, "Attempt to undo this action. The more changes were made to the affected object since this change, the less reliable this will be.");
 
         private Vector2 _scrollPos;
-        private bool _showTimestamps = true;
-        private Action<bool> _showTimestampsCallback;
+        private InitSettings.Setting<bool> _showTimestamps;
 
         /// <inheritdoc />
         protected override void Initialize(InitSettings initSettings)
@@ -27,7 +26,7 @@ namespace RuntimeUnityEditor.Core.ChangeHistory
             Title = "Change History";
             DefaultScreenPosition = ScreenPartition.LeftLower;
 
-            _showTimestampsCallback = initSettings.RegisterSetting("Change History", "Show timestamps in Change History window", _showTimestamps, string.Empty, b => _showTimestamps = b);
+            _showTimestamps = initSettings.RegisterSetting("Change History", "Show timestamps in Change History window", true, string.Empty);
         }
 
         /// <inheritdoc />
@@ -69,8 +68,7 @@ namespace RuntimeUnityEditor.Core.ChangeHistory
                 GUILayout.FlexibleSpace();
 
                 GUI.changed = false;
-                _showTimestamps = GUILayout.Toggle(_showTimestamps, "Show timestamps");
-                if (GUI.changed) _showTimestampsCallback(_showTimestamps);
+                _showTimestamps.Value = GUILayout.Toggle(_showTimestamps.Value, "Show timestamps");
             }
             GUILayout.EndHorizontal();
 
@@ -80,7 +78,7 @@ namespace RuntimeUnityEditor.Core.ChangeHistory
                 {
                     GUILayout.BeginHorizontal(GUI.skin.box);
                     {
-                        if (_showTimestamps)
+                        if (_showTimestamps.Value)
                         {
                             GUI.color = new Color(0.67f, 0.67f, 0.67f);
                             GUILayout.Label(change.ChangeTime.ToString("HH:mm:ss"), GUILayout.MinWidth(50));

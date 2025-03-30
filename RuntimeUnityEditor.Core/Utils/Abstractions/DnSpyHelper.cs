@@ -13,59 +13,44 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
     /// </summary>
     public class DnSpyHelper : IFeature
     {
-        private static Action<string> _confPath;
-        private static Action<string> _confArgs;
+        private static InitSettings.Setting<string> _dnSpyPath;
+        private static InitSettings.Setting<string> _dnSpyArgs;
         void IFeature.OnInitialize(InitSettings initSettings)
         {
-            _confPath = initSettings.RegisterSetting("Inspector", "Path to dnSpy.exe", string.Empty, "Full path to dnSpy that will enable integration with Inspector. When correctly configured, you will see a new ^ buttons that will open the members in dnSpy.", x => DnSpyPath = x);
-            _confArgs = initSettings.RegisterSetting("Inspector", "Optional dnSpy arguments", string.Empty, "Additional parameters that are added to the end of each call to dnSpy.", x => DnSpyArgs = x);
+            _dnSpyPath = initSettings.RegisterSetting("Inspector", "Path to dnSpy.exe", string.Empty, "Full path to dnSpy that will enable integration with Inspector. When correctly configured, you will see a new ^ buttons that will open the members in dnSpy.");
+            _dnSpyPath.ValueChanged += OnPathChanged;
+            OnPathChanged(_dnSpyPath.Value);
+
+            _dnSpyArgs = initSettings.RegisterSetting("Inspector", "Optional dnSpy arguments", string.Empty, "Additional parameters that are added to the end of each call to dnSpy.");
         }
 
-        private static string _dnSpyPath = string.Empty;
+        private static void OnPathChanged(string newPath)
+        {
+            IsAvailable = false;
+            if (!string.IsNullOrEmpty(newPath))
+            {
+                if (File.Exists(newPath) && newPath.EndsWith("dnspy.exe", StringComparison.OrdinalIgnoreCase))
+                    IsAvailable = true;
+                else
+                    RuntimeUnityEditorCore.Logger.Log(LogLevel.Error | LogLevel.Message, "[DnSpyHelper] Invalid dnSpy path. The path has to point to 64bit dnSpy.exe");
+            }
+        }
+
         /// <summary>
         /// Path to dnSpy.exe
         /// </summary>
         public static string DnSpyPath
         {
-            get => _dnSpyPath;
-            set
-            {
-                var newValue = value?.Trim(' ', '"') ?? string.Empty;
-
-                if (newValue != _dnSpyPath)
-                {
-                    _dnSpyPath = newValue;
-
-                    IsAvailable = false;
-                    if (!string.IsNullOrEmpty(_dnSpyPath))
-                    {
-                        if (File.Exists(_dnSpyPath) && _dnSpyPath.EndsWith("dnspy.exe", StringComparison.OrdinalIgnoreCase))
-                            IsAvailable = true;
-                        else
-                            RuntimeUnityEditorCore.Logger.Log(LogLevel.Error | LogLevel.Message, "[DnSpyHelper] Invalid dnSpy path. The path has to point to 64bit dnSpy.exe");
-                    }
-
-                    _confPath?.Invoke(newValue);
-                }
-            }
+            get => _dnSpyPath?.Value ?? string.Empty;
+            set => _dnSpyPath.Value = value?.Trim(' ', '"') ?? string.Empty;
         }
-
-        private static string _dnSpyArgs = string.Empty;
         /// <summary>
         /// Arguments to use when launching dnSpy.
         /// </summary>
         public static string DnSpyArgs
         {
-            get => _dnSpyArgs;
-            set
-            {
-                var newValue = value?.Trim() ?? string.Empty;
-                if (newValue != _dnSpyArgs)
-                {
-                    _dnSpyArgs = newValue;
-                    _confArgs?.Invoke(newValue);
-                }
-            }
+            get => _dnSpyArgs?.Value ?? string.Empty;
+            set => _dnSpyArgs.Value = value?.Trim() ?? string.Empty;
         }
         /// <summary>
         /// Is dnSpy configured correctly and actually present on disk.
