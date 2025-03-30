@@ -83,7 +83,7 @@ namespace RuntimeUnityEditor.UMM
                 LoggerWrapper = new LoggerUMM(_instance.Logger);
             }
 
-            public override Action<T> RegisterSetting<T>(string category, string name, T defaultValue, string description, Action<T> onValueUpdated)
+            protected override Action<T> RegisterSetting<T>(string category, string name, T defaultValue, string description, Action<T> onValueUpdated)
             {
                 RuntimeUnityEditorSettings.Setting<T> setting;
                 if (!_settings.Get<T>(category, name, out setting))

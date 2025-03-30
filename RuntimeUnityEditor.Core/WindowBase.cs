@@ -58,8 +58,8 @@ namespace RuntimeUnityEditor.Core
         // ReSharper restore StaticMemberInGenericType
 
         private bool _canShow;
-        private Rect _windowRect;
-        private Action<Rect> _confRect;
+        private Rect _initialWindowRect;
+        private InitSettings.Setting<Rect> _windowRect;
 
         /// <summary>
         /// Create a new window instance, should only ever be called once.
@@ -75,7 +75,7 @@ namespace RuntimeUnityEditor.Core
         {
             base.AfterInitialized(initSettings);
             WindowId = base.GetHashCode();
-            _confRect = initSettings.RegisterSetting(SettingCategory, DisplayName + " window size", WindowRect, string.Empty, b => WindowRect = b);
+            _windowRect = initSettings.RegisterSetting(SettingCategory, DisplayName + " window size", _initialWindowRect, string.Empty);
 
 #pragma warning disable CS0618
             // Backwards compat with CheatTools
@@ -189,7 +189,7 @@ namespace RuntimeUnityEditor.Core
                     yield return null;
                     base.OnVisibleChanged(Visible);
                 }
-                
+
                 RuntimeUnityEditorCore.PluginObject.AbstractStartCoroutine(DelayedVisible());
             }
             else
@@ -265,14 +265,19 @@ namespace RuntimeUnityEditor.Core
         /// <inheritdoc cref="IWindow.WindowRect"/>
         public virtual Rect WindowRect
         {
-            get => _windowRect;
+            get
+            {
+                if (_windowRect != null)
+                    return _windowRect.Value;
+                else
+                    return _initialWindowRect;
+            }
             set
             {
-                if (_windowRect != value)
-                {
-                    _windowRect = value;
-                    _confRect?.Invoke(value);
-                }
+                if (_windowRect != null)
+                    _windowRect.Value = value;
+                else
+                    _initialWindowRect = value;
             }
         }
 

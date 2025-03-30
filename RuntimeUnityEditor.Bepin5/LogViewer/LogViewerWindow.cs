@@ -18,22 +18,14 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
     /// </summary>
     public sealed class LogViewerWindow : Window<LogViewerWindow>
     {
-        private bool _captureOnStartup;
-        private Action<bool> _captureOnStartupCallback;
+        private InitSettings.Setting<bool> _captureOnStartup;
         /// <summary>
         /// Enable on game startup
         /// </summary>
         public bool CaptureOnStartup
         {
-            get => _captureOnStartup;
-            set
-            {
-                if (_captureOnStartup != value)
-                {
-                    _captureOnStartup = value;
-                    _captureOnStartupCallback(value);
-                }
-            }
+            get => _captureOnStartup.Value;
+            set => _captureOnStartup.Value = value;
         }
 
         private bool _capture;
@@ -59,24 +51,14 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
             }
         }
 
-        private Action<LogLevel> _logLevelFilterCallback;
-        private LogLevel _logLevelFilter;
+        private InitSettings.Setting<LogLevel> _logLevelFilter;
         /// <summary>
         /// Which log levels to capture
         /// </summary>
         public LogLevel LogLevelFilter
         {
-            get => _logLevelFilter;
-            set
-            {
-                if (_logLevelFilter != value)
-                {
-                    _logLevelFilter = value;
-                    _logLevelFilterCallback(value);
-
-                    UpdateFilteredLogEntries();
-                }
-            }
+            get => _logLevelFilter.Value;
+            set => _logLevelFilter.Value = value;
         }
 
         private string _searchString;
@@ -118,11 +100,12 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
 
             _listener = new LogViewerListener(this);
 
-            _captureOnStartupCallback = initSettings.RegisterSetting("Log Viewer", "Enable capture on startup", false, "Start capturing log messages as soon as possible after game starts.", b => _captureOnStartup = b);
-            if (_captureOnStartup)
+            _captureOnStartup = initSettings.RegisterSetting("Log Viewer", "Enable capture on startup", false, "Start capturing log messages as soon as possible after game starts.");
+            if (_captureOnStartup.Value)
                 Capture = true;
 
-            _logLevelFilterCallback = initSettings.RegisterSetting("Log Viewer", "Log level filter", LogLevel.All, "Filter captured log messages by their log level.", level => _logLevelFilter = level);
+            _logLevelFilter = initSettings.RegisterSetting("Log Viewer", "Log level filter", LogLevel.All, "Filter captured log messages by their log level.");
+            _logLevelFilter.ValueChanged += _ => UpdateFilteredLogEntries();
 
             string GetTrimmedTypeName(ILogSource obj)
             {

@@ -59,18 +59,9 @@ namespace RuntimeUnityEditor.Core
         [Obsolete("Avoid changing the hotkey through code since it will overwrite user setting. Set the Show property instead if you need to show/hide RUE at specific times.")]
         public KeyCode ShowHotkey
         {
-            get => _showHotkey;
-            set
-            {
-                if (_showHotkey != value)
-                {
-                    _showHotkey = value;
-                    _onHotkeyChanged?.Invoke(value);
-                }
-            }
+            get =>_showHotkey?.Value ?? KeyCode.F12;
+            set => _showHotkey.Value = value;
         }
-
-        private readonly Action<KeyCode> _onHotkeyChanged;
 
         /// <summary> Obsolete, do not use. Will be removed soon. </summary>
         [Obsolete("Use window Instance instead", true)]
@@ -168,7 +159,7 @@ namespace RuntimeUnityEditor.Core
 
         private static InitSettings _initSettings;
         private readonly List<IFeature> _initializedFeatures = new List<IFeature>();
-        private KeyCode _showHotkey = KeyCode.F12;
+        private readonly InitSettings.Setting<KeyCode> _showHotkey;
 
         /// <summary>
         /// Initialize RuntimeUnityEditor. Can only be ran once. Must run on the main Unity thread.
@@ -187,7 +178,7 @@ namespace RuntimeUnityEditor.Core
 
                 try
                 {
-                    _onHotkeyChanged = initSettings.RegisterSetting("General", "Open/close runtime editor", KeyCode.F12, "", x => ShowHotkey = x);
+                    _showHotkey = initSettings.RegisterSetting("General", "Open/close runtime editor", KeyCode.F12, "");
 
                     var iFeatureType = typeof(IFeature);
                     // Create all instances first so they are accessible in Initialize methods in case there's crosslinking spaghetti

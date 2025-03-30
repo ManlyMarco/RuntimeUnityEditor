@@ -73,9 +73,8 @@ namespace RuntimeUnityEditor.Core.REPL
         {
             if (!UnityFeatureHelper.SupportsRepl) throw new InvalidOperationException("mcs is not supported on this Unity version");
 
-            var disable = false;
-            initSettings.RegisterSetting("General", "Disable REPL function", false, "Completely turn off REPL even if it's supported. Useful if mcs is causing compatibility issues (e.g. in rare cases it can crash the game when used together with some versions of RuntimeDetours in some Unity versions).", x => disable = x);
-            if (disable) throw new InvalidOperationException("REPL is disabled in config");
+            var disable = initSettings.RegisterSetting("General", "Disable REPL function", false, "Completely turn off REPL even if it's supported. Useful if mcs is causing compatibility issues (e.g. in rare cases it can crash the game when used together with some versions of RuntimeDetours in some Unity versions).");
+            if (disable.Value) throw new InvalidOperationException("REPL is disabled in config");
 
             var configPath = initSettings.ConfigPath;
             _autostartFilename = Path.Combine(configPath, "RuntimeUnityEditor.Autostart.cs");
@@ -85,9 +84,6 @@ namespace RuntimeUnityEditor.Core.REPL
             _sb.AppendLine("Welcome to C# REPL (read-evaluate-print loop)! Enter \"help\" to get a list of common methods.");
 
             _evaluator = new ScriptEvaluator(new StringWriter(_sb)) { InteractiveBaseClass = typeof(REPL) };
-
-            // todo save whole ui state in a generic way
-            _onEnabledChanged = initSettings.RegisterSetting("General", "Show REPL console", true, "", x => Enabled = x);
 
             initSettings.PluginMonoBehaviour.AbstractStartCoroutine(DelayedReplSetup());
 
@@ -566,21 +562,6 @@ namespace RuntimeUnityEditor.Core.REPL
         {
             _sb.Length = 0;
         }
-
-        /// <inheritdoc />
-        public override bool Enabled
-        {
-            get => base.Enabled;
-            set
-            {
-                if (base.Enabled != value)
-                {
-                    base.Enabled = value;
-                    _onEnabledChanged?.Invoke(value);
-                }
-            }
-        }
-        private Action<bool> _onEnabledChanged;
 
         /// <summary>
         /// Use to send an object into the REPL environment. User is given code to load the object in the input field.

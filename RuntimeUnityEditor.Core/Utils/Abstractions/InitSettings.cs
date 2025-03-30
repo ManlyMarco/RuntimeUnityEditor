@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace RuntimeUnityEditor.Core.Utils.Abstractions
@@ -20,7 +21,7 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
         /// <param name="description">What the setting does</param>
         /// <param name="onValueUpdated">Called when the setting changes, and immediately after this method finishes (with either the default value or the previously stored value).</param>
         /// <returns>An Action that can be used to set the setting's value</returns>
-        public abstract Action<T> RegisterSetting<T>(string category, string name, T defaultValue, string description, Action<T> onValueUpdated);
+        protected abstract Action<T> RegisterSetting<T>(string category, string name, T defaultValue, string description, Action<T> onValueUpdated);
         /// <summary>
         /// Instance MB of the plugin
         /// </summary>
@@ -41,7 +42,49 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
         /// <summary>
         /// Wrapper for a setting.
         /// </summary>
-        public sealed class Setting<T>
+        public abstract class SettingBase
+        {
+            private static readonly List<SettingBase> _events;
+            private static readonly System.Timers.Timer _timer;
+            static SettingBase()
+            {
+                _events = new List<SettingBase>(2);
+                _timer = new System.Timers.Timer(700);
+                _timer.AutoReset = false;
+                _timer.Stop();
+                _timer.Elapsed += (sender, e) =>
+                {
+                    lock (_events)
+                    {
+                        foreach (var setting in _events)
+                            setting.OnValueChanged();
+                        _events.Clear();
+                    }
+                };
+            }
+
+            /// <summary>
+            /// Queue a setting to be written back to the config system.
+            /// </summary>
+            protected static void QueueValueChanged(SettingBase setting)
+            {
+                lock (_events)
+                {
+                    if (!_events.Contains(setting))
+                        _events.Add(setting);
+                    _timer.Stop();
+                    _timer.Start();
+                }
+            }
+
+            /// <summary>
+            /// Called when the value of the setting changes.
+            /// </summary>
+            protected abstract void OnValueChanged();
+        }
+
+        /// <inheritdoc />
+        public sealed class Setting<T> : SettingBase
         {
             private T _value;
             /// <summary>
@@ -60,9 +103,15 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
                     if (!Equals(_value, value))
                     {
                         _value = value;
-                        ValueChanged?.Invoke(value);
+                        QueueValueChanged(this);
                     }
                 }
+            }
+
+            /// <inheritdoc />
+            protected override void OnValueChanged()
+            {
+                ValueChanged?.Invoke(_value);
             }
         }
         /// <inheritdoc cref="RegisterSetting{T}(string,string,T,string,Action{T})" />

@@ -65,7 +65,7 @@ namespace RuntimeUnityEditor.Bepin6.IL2CPP
                 LoggerWrapper = new Logger6(_instance.Log);
             }
 
-            public override Action<T> RegisterSetting<T>(string category, string name, T defaultValue, string description, Action<T> onValueUpdated)
+            protected override Action<T> RegisterSetting<T>(string category, string name, T defaultValue, string description, Action<T> onValueUpdated)
             {
                 var s = _instance.Config.Bind(category, name, defaultValue, description);
                 s.SettingChanged += (sender, args) => onValueUpdated(s.Value);
