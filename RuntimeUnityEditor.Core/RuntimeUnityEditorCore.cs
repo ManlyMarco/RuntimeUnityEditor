@@ -24,7 +24,7 @@ namespace RuntimeUnityEditor.Core
         /// Beware that this is a const and it will be burned as a string into your assembly at build time.
         /// To see the version that is currently installed use <see cref="InstalledVersion"/>.
         /// </summary>
-        public const string Version = "5.6"; // REMEMBER TO UPDATE Version IN IL2CPP CSPROJ TOO! TODO: Automate this
+        public const string Version = Constants.Version;
 
         /// <summary>
         /// Get the currently installed version at runtime.
