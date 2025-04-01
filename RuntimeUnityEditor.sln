@@ -19,6 +19,12 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "RuntimeUnityEditor.Core", "
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Plugins", "Plugins", "{0473093D-3F63-4CA6-8D56-4D03F37ECADE}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_Solution", "_Solution", "{65E5A8F9-5C31-4DA6-9D36-A802CDED1730}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -89,7 +95,7 @@ Global
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		RuntimeUnityEditor.Core\RuntimeUnityEditor.Core.projitems*{39cc0f9c-3dfa-4542-a680-a564f3089777}*SharedItemsImports = 13
-		RuntimeUnityEditor.Core\RuntimeUnityEditor.Core.projitems*{a66a97b4-f32f-4748-8332-48f0876f0aac}*SharedItemsImports = 4
+		RuntimeUnityEditor.Core\RuntimeUnityEditor.Core.projitems*{a66a97b4-f32f-4748-8332-48f0876f0aac}*SharedItemsImports = 5
 		RuntimeUnityEditor.Core\RuntimeUnityEditor.Core.projitems*{ad60bdd6-0a01-4d83-9da9-aedfda46158f}*SharedItemsImports = 5
 	EndGlobalSection
 EndGlobal

@@ -1,38 +1,65 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>disable</Nullable>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<OutputType>Library</OutputType>
 
-    <OutputPath>..\bin\IL2CPP\</OutputPath>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>disable</Nullable>
 
-    <DebugType>embedded</DebugType>
-  </PropertyGroup>
+		<OutputPath>..\bin\BepInEx6-IL2CPP\</OutputPath>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <Delete Files="$(OutputPath)\RuntimeUnityEditor.Bepin6.IL2CPP.deps.json" />
-    <Delete Files="$(OutputPath)\mcs.pdb" />
-  </Target>
+		<PluginSubDir>BepInEx\plugins\RuntimeUnityEditor</PluginSubDir>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <None Include="..\LICENSE" Link="LICENSE">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="..\README.md" Link="README.md">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+		<Optimize>true</Optimize>
+		<GenerateDocumentationFile>True</GenerateDocumentationFile>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="BepInEx.Unity.IL2CPP" Version="6.0.0-be.664" />
-  </ItemGroup>
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<Delete Files="$(OutputPath)\RuntimeUnityEditor.Bepin6.IL2CPP.deps.json" />
+		<Delete Files="$(OutputPath)\mcs.pdb" />
+	</Target>
 
-  <ItemGroup>
-    <ProjectReference Include="..\RuntimeUnityEditor.Core.IL2CPP\RuntimeUnityEditor.Core.IL2CPP.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="BepInEx.Unity.IL2CPP" Version="6.0.0-be.664">
+			<IncludeAssets>compile</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<!-- Have to include all packages that are inside the core projects or their IncludeAssets and PrivateAssets flags are ignored -->
+	<ItemGroup>
+		<PackageReference Include="IllusionLibs.HoneyCome.Il2Cppmscorlib" Version="2023.16.10">
+			<IncludeAssets>compile</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="IllusionLibs.HoneyCome.UnityEngine" Version="2021.3.14.2">
+			<IncludeAssets>compile</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="IllusionLibs.HoneyCome.UnityEngine.ImageConversionModule" Version="2021.3.14.2">
+			<IncludeAssets>compile</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="IllusionLibs.HoneyCome.UnityEngine.PhysicsModule" Version="2021.3.14.2">
+			<IncludeAssets>compile</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="IllusionLibs.HoneyCome.UnityEngine.Terrain" Version="2021.3.14.2">
+			<IncludeAssets>compile</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="IllusionLibs.HoneyCome.UnityEngine.UI" Version="2021.3.14.2">
+			<IncludeAssets>compile</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\RuntimeUnityEditor.Core.IL2CPP\RuntimeUnityEditor.Core.IL2CPP.csproj" />
+	</ItemGroup>
 
 </Project>
