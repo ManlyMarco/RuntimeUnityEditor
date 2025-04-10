@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RuntimeUnityEditor.Core.Mon
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RuntimeUnityEditor.Bepin5", "RuntimeUnityEditor.Bepin5\RuntimeUnityEditor.Bepin5.csproj", "{E64CB875-BAFA-4B0F-BDC9-E33A15D5A87E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mcs", "modules\mcs\mcs\mcs.csproj", "{E4989E4C-0875-4528-9031-08E2C0E70103}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mcs", "modules\mcs-unity\mcs.csproj", "{E4989E4C-0875-4528-9031-08E2C0E70103}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RuntimeUnityEditor.UMM", "RuntimeUnityEditor.UMM\RuntimeUnityEditor.UMM.csproj", "{BD33CA70-24B9-4E80-908F-3E3A3C264904}"
 EndProject

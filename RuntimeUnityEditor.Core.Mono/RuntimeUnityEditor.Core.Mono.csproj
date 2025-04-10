@@ -21,7 +21,7 @@
 	</Target>
 
 	<ItemGroup>
-		<ProjectReference Include="..\modules\mcs\mcs\mcs.csproj" />
+		<ProjectReference Include="..\modules\mcs-unity\mcs.csproj" />
 	</ItemGroup>
 
 	<Import Project="..\RuntimeUnityEditor.Core\RuntimeUnityEditor.Core.projitems" Label="Shared" />

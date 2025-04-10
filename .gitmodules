@@ -1,3 +1,3 @@
-[submodule "modules/mcs"]
-	path = modules/mcs
-	url = https://github.com/denikson/mcs-unity
+[submodule "modules/mcs-unity"]
+	path = modules/mcs-unity
+	url = https://github.com/aldelaro5/mcs-unity
