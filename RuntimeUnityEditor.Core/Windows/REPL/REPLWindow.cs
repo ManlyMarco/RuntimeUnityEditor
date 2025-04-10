@@ -215,9 +215,9 @@ namespace RuntimeUnityEditor.Core.REPL
                         foreach (var suggestion in _suggestions)
                         {
                             _completionsListingStyle.normal.textColor = suggestion.GetTextColor();
-                            if (GUILayout.Button(suggestion.Full, _completionsListingStyle, IMGUIUtils.LayoutOptionsExpandWidthTrue))
+                            if (GUILayout.Button(suggestion.Result, _completionsListingStyle, IMGUIUtils.LayoutOptionsExpandWidthTrue))
                             {
-                                AcceptSuggestion(suggestion.Addition);
+                                AcceptSuggestion(suggestion);
                                 break;
                             }
                         }
@@ -234,19 +234,25 @@ namespace RuntimeUnityEditor.Core.REPL
                     GUI.SetNextControlName("replInput");
                     _inputField = GUILayout.TextArea(_inputField);
 
-                    if (_refocus)
+                    if (Event.current.type == EventType.Repaint)
                     {
-                        _refocusCursorIndex = (int)ReflectionUtils.GetValue(_cursorIndex, _textEditor);
-                        _refocusSelectIndex = (int)ReflectionUtils.GetValue(_selectIndex, _textEditor);
-                        GUI.FocusControl("replInput");
-                        _refocus = false;
-                    }
-                    else if (_refocusCursorIndex >= 0)
-                    {
-                        ReflectionUtils.SetValue(_cursorIndex, _textEditor, _refocusCursorIndex);
-                        ReflectionUtils.SetValue(_selectIndex, _textEditor, _refocusSelectIndex);
+                        if (_refocus)
+                        {
+                            if (_refocusCursorIndex < 0)
+                            {
+                                _refocusCursorIndex = (int)ReflectionUtils.GetValue(_cursorIndex, _textEditor);
+                                _refocusSelectIndex = (int)ReflectionUtils.GetValue(_selectIndex, _textEditor);
+                            }
+                            GUI.FocusControl("replInput");
+                            _refocus = false;
+                        }
+                        else if (_refocusCursorIndex >= 0)
+                        {
+                            ReflectionUtils.SetValue(_cursorIndex, _textEditor, _refocusCursorIndex);
+                            ReflectionUtils.SetValue(_selectIndex, _textEditor, _refocusSelectIndex);
 
-                        _refocusCursorIndex = -1;
+                            _refocusCursorIndex = -1;
+                        }
                     }
 
                     if (GUILayout.Button("Run", IMGUIUtils.LayoutOptionsExpandWidthFalse))
@@ -312,15 +318,22 @@ namespace RuntimeUnityEditor.Core.REPL
             CheckReplInput();
         }
 
-        private void AcceptSuggestion(string suggestion)
+        private void AcceptSuggestion(Suggestion suggestion)
         {
             int cursorIndex = (int)ReflectionUtils.GetValue(_cursorIndex, _textEditor);
-            _inputField = _inputField.Insert(cursorIndex, suggestion);
-            _newCursorLocation = (int)ReflectionUtils.GetValue(_cursorIndex, _textEditor) + suggestion.Length;
+            if (cursorIndex - suggestion.Original.Length >= 0)
+            {
+                cursorIndex -= suggestion.Original.Length;
+                _inputField = _inputField.Remove(cursorIndex, suggestion.Original.Length);
+            }
+
+            _inputField = _inputField.Insert(cursorIndex, suggestion.Result);
+            _newCursorLocation = cursorIndex + suggestion.Result.Length;
             ClearSuggestions();
 
             _refocus = true;
-            _refocusCursorIndex = cursorIndex + suggestion.Length;
+            _refocusCursorIndex = _newCursorLocation;
+            _refocusSelectIndex = _newCursorLocation;
         }
 
         /// <summary>
@@ -374,12 +387,12 @@ namespace RuntimeUnityEditor.Core.REPL
 
                         _suggestions.AddRange(completions
                                               .Where(x => !string.IsNullOrEmpty(x))
-                                              .Select(x => new Suggestion(x, prefix, SuggestionKind.Unknown))
+                                              .Select(x => new Suggestion(x, prefix, Namespaces.Contains(x) ? SuggestionKind.Namespace : SuggestionKind.Unknown))
                         //.Where(x => !_namespaces.Contains(x.Full))
                         );
                     }
 
-                    _suggestions.AddRange(GetNamespaceSuggestions(input).OrderBy(x => x.Full));
+                    _suggestions.AddRange(GetNamespaceSuggestions(input).Except(_suggestions, Suggestion.OriginalComparer.Instance).OrderBy(x => x.Result));
                 }
 
                 _refocus = true;
@@ -575,27 +588,24 @@ namespace RuntimeUnityEditor.Core.REPL
             }
 
             REPL.InteropTempVar = obj;
-            _prevInput = _inputField = $"var {GetUniqueVarName("q")} = ({obj.GetType().GetSourceCodeRepresentation()}){nameof(REPL.InteropTempVar)}";
+            _prevInput = _inputField = $"var {GetUniqueVarName()} = ({obj.GetType().GetSourceCodeRepresentation()}){nameof(REPL.InteropTempVar)}";
             ClearSuggestions();
         }
 
-        private string GetUniqueVarName(string baseName)
+        private string GetUniqueVarName()
         {
-            var lastVarName = _evaluator.fields.Keys.Where(x => Regex.IsMatch(x, @"^q\d*$", RegexOptions.Singleline)).OrderBy(x => x.Length).ThenBy(x => x).LastOrDefault();
-            if (lastVarName != null)
+            var lastVarName = _evaluator.GetCompletions("q", out _).Max(x =>
             {
-                if (lastVarName.Length > 1)
+                var m = Regex.Match(x, @"^q(\d*)$", RegexOptions.Singleline);
+                if (m.Success)
                 {
-                    var i = int.Parse(lastVarName.Substring(1));
-                    baseName += i + 1;
+                    var value = m.Groups[1].Value;
+                    return string.IsNullOrEmpty(value) ? 0 : int.Parse(value);
                 }
-                else
-                {
-                    baseName += "1";
-                }
-            }
+                return -1;
+            });
 
-            return baseName;
+            return "q" + (lastVarName >= 0 ? (lastVarName + 1).ToString() : "");
         }
     }
 }
