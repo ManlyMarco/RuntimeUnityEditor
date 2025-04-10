@@ -19,10 +19,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Include="..\LICENSE" Link="LICENSE">
+		<None Include="..\LICENSE" Link="LICENSE" Visible="false">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Include="..\README.md" Link="README.md">
+		<None Include="..\README.md" Link="README.md" Visible="false">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
