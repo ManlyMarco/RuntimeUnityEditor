@@ -30,6 +30,7 @@ namespace RuntimeUnityEditor.Core.Inspector
 
             var type = typeof(TObj);
             _toStringConverters[type] = o => objectToString.Invoke((TObj)o);
+            _canConvertCache.Remove(typeof(TObj));
         }
 
         /// <summary>
@@ -124,7 +125,7 @@ namespace RuntimeUnityEditor.Core.Inspector
             return $"{eventObj.GetPersistentTarget(i)?.GetType().GetSourceCodeRepresentation() ?? "[NULL]"}.{eventObj.GetPersistentMethodName(i)}";
         }
 
-        internal static readonly Dictionary<Type, bool> _canCovertCache = new Dictionary<Type, bool>();
+        internal static readonly Dictionary<Type, bool> _canConvertCache = new Dictionary<Type, bool>();
 
         /// <summary>
         /// Check if the value can be converted to a string and back to the original type.
@@ -139,12 +140,12 @@ namespace RuntimeUnityEditor.Core.Inspector
             if (valueType == typeof(string))
                 return true;
 
-            if (_canCovertCache.TryGetValue(valueType, out var stored))
+            if (_canConvertCache.TryGetValue(valueType, out var stored))
                 return stored;
 
             if (TomlTypeConverter.GetConverter(valueType) != null)
             {
-                _canCovertCache[valueType] = true;
+                _canConvertCache[valueType] = true;
                 return true;
             }
 
@@ -152,12 +153,12 @@ namespace RuntimeUnityEditor.Core.Inspector
             {
                 var converted = ToStringConverter.ObjectToString(value);
                 _ = Convert.ChangeType(converted, valueType);
-                _canCovertCache[valueType] = true;
+                _canConvertCache[valueType] = true;
                 return true;
             }
             catch
             {
-                _canCovertCache[valueType] = false;
+                _canConvertCache[valueType] = false;
                 return false;
             }
         }
@@ -176,7 +177,10 @@ namespace RuntimeUnityEditor.Core.Inspector
             else
             {
                 var typeConverter = TomlTypeConverter.GetConverter(valueType);
-                converted = typeConverter != null ? typeConverter.ConvertToObject(newValue, valueType) : Convert.ChangeType(newValue, valueType);
+                if (typeConverter != null)
+                    converted = typeConverter.ConvertToObject(newValue, valueType);
+                else
+                    converted = Convert.ChangeType(newValue, valueType);
             }
 
             if (!Equals(converted, currentValue))

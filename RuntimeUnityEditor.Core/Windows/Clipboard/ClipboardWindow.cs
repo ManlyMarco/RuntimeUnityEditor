@@ -20,6 +20,8 @@ namespace RuntimeUnityEditor.Core.Clipboard
         /// </summary>
         public static readonly List<object> Contents = new List<object>();
         private Vector2 _scrollPos;
+        private string _editingIndex;
+        private string _editingValue;
 
         protected override void Initialize(InitSettings initSettings)
         {
@@ -60,6 +62,8 @@ namespace RuntimeUnityEditor.Core.Clipboard
                     }
                     GUILayout.EndHorizontal();
 
+                    const string editControlNamePrefix = "clipboard_edit_";
+
                     for (var index = 0; index < Contents.Count; index++)
                     {
                         GUILayout.BeginHorizontal(GUI.skin.box);
@@ -76,26 +80,50 @@ namespace RuntimeUnityEditor.Core.Clipboard
 
                             var prevEnabled = GUI.enabled;
                             GUI.enabled = type != null && typeof(IConvertible).IsAssignableFrom(type);
+
                             GUI.changed = false;
-                            var newVal = GUILayout.TextField(ToStringConverter.ObjectToString(content), IMGUIUtils.LayoutOptionsExpandWidthTrue);
+                            var controlName = editControlNamePrefix + index;
+                            GUI.SetNextControlName(controlName);
+
+                            var isBeingEdited = _editingIndex == controlName;
+                            var prevColor = GUI.backgroundColor;
+                            if (isBeingEdited) GUI.backgroundColor = _editingValue == null ? Color.green : Color.yellow;
+
+                            var newVal = GUILayout.TextField(isBeingEdited && _editingValue != null ? _editingValue : ToStringConverter.ObjectToString(content), IMGUIUtils.LayoutOptionsExpandWidthTrue);
+
                             if (GUI.changed && type != null)
                             {
+                                _editingIndex = controlName;
+                                _editingValue = newVal;
                                 try
                                 {
-                                    Contents[index] = Convert.ChangeType(newVal, type);
+                                    var converter = TomlTypeConverter.GetConverter(type);
+                                    if (converter != null)
+                                        Contents[index] = converter.ConvertToObject(newVal, type);
+                                    else
+                                        Contents[index] = Convert.ChangeType(newVal, type);
+
+                                    _editingValue = null;
                                 }
-                                catch (Exception e)
+                                catch (Exception)
                                 {
-                                    Console.WriteLine($"Could not convert string \"{newVal}\" to type \"{type.Name}\": {e.Message}");
+                                    //Console.WriteLine($"Could not convert string \"{newVal}\" to type \"{type.Name}\": {e.Message}");
                                 }
                             }
 
                             GUI.enabled = prevEnabled;
+                            GUI.backgroundColor = prevColor;
 
                             if (GUILayout.Button("X", IMGUIUtils.LayoutOptionsExpandWidthFalse))
                                 Contents.RemoveAt(index);
                         }
                         GUILayout.EndHorizontal();
+                    }
+
+                    if (_editingIndex != null && GUI.GetNameOfFocusedControl() != _editingIndex)
+                    {
+                        _editingIndex = null;
+                        _editingValue = null;
                     }
                 }
                 GUILayout.EndVertical();
@@ -117,8 +145,8 @@ namespace RuntimeUnityEditor.Core.Clipboard
         private static bool TryExtractId(string parameterString, out int id)
         {
             id = 0;
-            return parameterString.Length >= 2 && parameterString.StartsWith("#") && 
-                   int.TryParse(parameterString.Substring(1), out id) && 
+            return parameterString.Length >= 2 && parameterString.StartsWith("#") &&
+                   int.TryParse(parameterString.Substring(1), out id) &&
                    Contents.Count > id && id >= 0;
         }
 

@@ -623,8 +623,18 @@ namespace RuntimeUnityEditor.Core.Inspector
                                         paramType = nullableParamType;
                                     }
 
-                                    var obj = ClipboardWindow.TryGetObject(arg, out var clipboardObj) ? clipboardObj : Convert.ChangeType(arg, paramType);
-                                    paramArgs[index] = obj;
+                                    if (ClipboardWindow.TryGetObject(arg, out var clipboardObj))
+                                    {
+                                        paramArgs[index] = clipboardObj;
+                                    }
+                                    else
+                                    {
+                                        var converter = TomlTypeConverter.GetConverter(paramType);
+                                        if (converter != null)
+                                            paramArgs[index] = converter.ConvertToObject(arg, paramType);
+                                        else
+                                            paramArgs[index] = Convert.ChangeType(arg, paramType);
+                                    }
                                 }
                                 catch (Exception e)
                                 {
