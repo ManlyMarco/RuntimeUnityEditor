@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace RuntimeUnityEditor.Core.REPL {
@@ -18,19 +17,6 @@ namespace RuntimeUnityEditor.Core.REPL {
         public Color GetTextColor()
         {
             return Kind == SuggestionKind.Namespace ? Color.gray : Color.white;
-        }
-
-        public class OriginalComparer : IEqualityComparer<Suggestion>
-        {
-            public static readonly IEqualityComparer<Suggestion> Instance = new OriginalComparer();
-            public bool Equals(Suggestion x, Suggestion y)
-            {
-                return x.Original == y.Original;
-            }
-            public int GetHashCode(Suggestion obj)
-            {
-                return obj.Original.GetHashCode();
-            }
         }
     }
 }
