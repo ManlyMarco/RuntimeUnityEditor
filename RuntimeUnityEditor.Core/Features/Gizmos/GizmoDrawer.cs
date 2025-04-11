@@ -19,7 +19,7 @@ namespace RuntimeUnityEditor.Core.Gizmos
         private Type _dbcType;
         private bool _dbcTypeAttempted;
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         protected override void Initialize(InitSettings initSettings)
         {
             UnityFeatureHelper.EnsureCameraRenderEventsAreAvailable();
@@ -29,7 +29,7 @@ namespace RuntimeUnityEditor.Core.Gizmos
             ObjectTreeViewer.Instance.TreeSelectionChanged += UpdateState;
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         protected override void VisibleChanged(bool visible)
         {
             base.VisibleChanged(visible);
@@ -291,7 +291,7 @@ namespace RuntimeUnityEditor.Core.Gizmos
             lib.Gizmos.Line(p1 + p1Rotation * Vector3.right * radius, p2 + p2Rotation * Vector3.left * radius, color);
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         protected override void LateUpdate()
         {
             for (var i = 0; i < _drawList.Count; i++)

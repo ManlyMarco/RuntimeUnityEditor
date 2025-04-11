@@ -7,8 +7,8 @@ using System.Reflection;
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
 using Il2CppInterop.Runtime.InteropTypes;
-using RuntimeUnityEditor.Core.Utils.Abstractions;
 using RuntimeUnityEditor.Core.Utils;
+using RuntimeUnityEditor.Core.Utils.Abstractions;
 
 namespace RuntimeUnityEditor.Core
 {

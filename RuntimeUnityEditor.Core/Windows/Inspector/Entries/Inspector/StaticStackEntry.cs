@@ -7,7 +7,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
     /// </summary>
     public class StaticStackEntry : InspectorStackEntryBase
     {
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public StaticStackEntry(Type staticType, string name) : base(name)
         {
             StaticType = staticType;
@@ -18,13 +18,13 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         /// </summary>
         public Type StaticType { get; }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override bool EntryIsValid()
         {
             return StaticType != null;
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override void ShowContextMenu()
         {
             ContextMenu.Instance.Show(StaticType);

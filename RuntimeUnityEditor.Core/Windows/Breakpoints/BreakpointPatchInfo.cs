@@ -41,7 +41,7 @@ namespace RuntimeUnityEditor.Core.Breakpoints
                 _searchStr = $"{Target.DeclaringType?.FullName}.{Target.Name}\t{string.Join("\t", InstanceFilters.Select(x => x?.ToString()).ToArray())}";
             return _searchStr;
         }
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override string ToString()
         {
             if (_toStr == null)

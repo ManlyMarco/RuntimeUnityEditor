@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Xml;
 using System.Xml.Serialization;
 using RuntimeUnityEditor.Core.Utils;
 using UnityEngine;
 using UnityModManagerNet;
+
 #pragma warning disable CS0618 // Type or member is obsolete
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 

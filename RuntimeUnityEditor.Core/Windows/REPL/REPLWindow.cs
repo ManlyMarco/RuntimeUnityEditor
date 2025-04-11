@@ -93,6 +93,7 @@ namespace RuntimeUnityEditor.Core.REPL
             DefaultScreenPosition = ScreenPartition.CenterLower;
         }
 
+        /// <inheritdoc />
         protected override void VisibleChanged(bool visible)
         {
             base.VisibleChanged(visible);

@@ -15,7 +15,7 @@ namespace RuntimeUnityEditor.Core.Breakpoints
     {
         private static readonly List<BreakpointHit> _hits = new List<BreakpointHit>();
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         protected override void Initialize(InitSettings initSettings)
         {
             DisplayName = "Breakpoints";
@@ -25,7 +25,7 @@ namespace RuntimeUnityEditor.Core.Breakpoints
             Breakpoints.OnBreakpointHit += hit => _hits.Add(hit);
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         protected override void LateUpdate()
         {
             if (_hits.Count > _maxHitsToKeep)
@@ -40,7 +40,7 @@ namespace RuntimeUnityEditor.Core.Breakpoints
         private int _maxHitsToKeep = 100;
         private string _searchString = "";
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         protected override void DrawContents()
         {
             GUILayout.BeginHorizontal();

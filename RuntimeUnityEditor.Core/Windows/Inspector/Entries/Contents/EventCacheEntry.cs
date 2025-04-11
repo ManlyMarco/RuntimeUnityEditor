@@ -4,7 +4,7 @@ using RuntimeUnityEditor.Core.Utils;
 
 namespace RuntimeUnityEditor.Core.Inspector.Entries
 {
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public class EventCacheEntry : CacheEntryBase
     {
         /// <summary>
@@ -17,7 +17,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         /// </summary>
         public EventInfo EventInfo { get; }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public EventCacheEntry(object ins, EventInfo e, Type owner) : base(FieldCacheEntry.GetMemberName(ins, e), e.GetFancyDescription(), owner)
         {
             if (owner == null) throw new ArgumentNullException(nameof(owner));
@@ -31,17 +31,17 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         /// </summary>
         public FieldInfo BackingField { get; }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override bool CanEnterValue() => BackingField != null;
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override object GetValueToCache() => BackingField?.GetValue(Instance);
-        /// <inheritdoc/>
+        /// <inheritdoc />
         protected override bool OnSetValue(object newValue) => throw new InvalidOperationException();
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override Type Type() => EventInfo.EventHandlerType;
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override MemberInfo MemberInfo => EventInfo;
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override bool CanSetValue() => false;
 
         /// <summary>

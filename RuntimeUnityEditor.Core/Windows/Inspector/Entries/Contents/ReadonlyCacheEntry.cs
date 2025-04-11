@@ -15,14 +15,14 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         private readonly Type _type;
         private string _tostringCache;
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public ReadonlyCacheEntry(string name, object obj) : base(name, "Read-only item (RUE-only, it doesn't actually exist).")
         {
             Object = obj;
             _type = obj.GetType();
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override object GetValueToCache()
         {
             return Object;
@@ -36,7 +36,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
             return false;
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override Type Type()
         {
             return _type;
@@ -55,7 +55,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
             return false;
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override string ToString()
         {
             return _tostringCache ?? (_tostringCache = Name() + " | " + Object);

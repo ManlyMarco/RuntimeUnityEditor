@@ -10,9 +10,9 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
     /// </summary>
     public class PropertyCacheEntry : CacheEntryBase
     {
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public PropertyCacheEntry(object ins, PropertyInfo p, Type owner) : this(ins, p, owner, null) { }
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public PropertyCacheEntry(object ins, PropertyInfo p, Type owner, ICacheEntry parent) : base(FieldCacheEntry.GetMemberName(ins, p), p.GetFancyDescription(), owner)
         {
             _instance = ins;
@@ -31,10 +31,10 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         private readonly object _instance;
         private readonly ICacheEntry _parent;
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override bool CanEnterValue() => PropertyInfo.CanRead && base.CanEnterValue();
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override object GetValueToCache()
         {
             if (!PropertyInfo.CanRead)
@@ -54,7 +54,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
             }
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         protected override bool OnSetValue(object newValue)
         {
             if (PropertyInfo.CanWrite)
@@ -67,16 +67,16 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
             return false;
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override Type Type()
         {
             return PropertyInfo.PropertyType;
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override MemberInfo MemberInfo => PropertyInfo;
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override bool CanSetValue()
         {
             return PropertyInfo.CanWrite && (_parent == null || _parent.CanSetValue());

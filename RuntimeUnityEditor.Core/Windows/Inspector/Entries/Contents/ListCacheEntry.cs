@@ -15,20 +15,20 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         private readonly IList _list;
         private readonly int _index;
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public ListCacheEntry(IList container, int index) : base(ReadonlyListCacheEntry.GetListItemName(index), $"Item contained inside of a list.\n\nIndex: {index}\n\nList type: {container.GetType().FullDescription()}", null)
         {
             _index = index;
             _list = container;
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override object GetValueToCache()
         {
             return _list.Count > _index ? _list[_index] : "ERROR: The list was changed while browsing!";
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         protected override bool OnSetValue(object newValue)
         {
             if (CanSetValue())
@@ -42,16 +42,16 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
             return false;
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override Type Type()
         {
             return _type ?? (_type = GetValue()?.GetType());
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override MemberInfo MemberInfo => null;
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override bool CanSetValue()
         {
             return !_list.IsReadOnly;

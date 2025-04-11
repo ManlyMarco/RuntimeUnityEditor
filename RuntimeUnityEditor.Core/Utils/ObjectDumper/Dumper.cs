@@ -19,6 +19,9 @@ namespace RuntimeUnityEditor.Core.Utils.ObjectDumper
     /// </summary>
     public static class Dumper
     {
+        /// <summary>
+        /// Dumps the object to a temporary file and opens it. Requires name of the object.
+        /// </summary>
         public static string DumpToTempFile(object value, string name)
         {
             if (value == null) throw new ArgumentNullException(nameof(value));
@@ -37,6 +40,9 @@ namespace RuntimeUnityEditor.Core.Utils.ObjectDumper
             return fname;
         }
 
+        /// <summary>
+        /// Dumps the object to a TextWriter. Requires name of the object.
+        /// </summary>
         public static void Dump(object value, string name, TextWriter writer)
         {
             if (ObjectDumperExtensions.IsNullOrWhiteSpace(name)) throw new ArgumentNullException(nameof(name));

@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -11,8 +10,14 @@ using UnityEngine.Events;
 
 namespace RuntimeUnityEditor.Core.Utils
 {
+    /// <summary>
+    /// Utility class for reflection operations.
+    /// </summary>
     public static class ReflectionUtils
     {
+        /// <summary>
+        /// Sets the value of a member (field or property) on an object.
+        /// </summary>
         public static void SetValue(MemberInfo member, object obj, object value)
         {
             switch (member.MemberType)
@@ -26,6 +31,9 @@ namespace RuntimeUnityEditor.Core.Utils
             }
         }
 
+        /// <summary>
+        /// Gets the value of a member (field or property) on an object.
+        /// </summary>
         public static object GetValue(MemberInfo member, object obj)
         {
             switch (member.MemberType)
@@ -39,6 +47,9 @@ namespace RuntimeUnityEditor.Core.Utils
             }
         }
 
+        /// <summary>
+        /// Gets the details of a UnityEventBase object, including the target and method information.
+        /// </summary>
         public static string GetEventDetails(UnityEventBase eventObj)
         {
             var mList = new List<KeyValuePair<object, MethodInfo>>();
@@ -81,6 +92,9 @@ namespace RuntimeUnityEditor.Core.Utils
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Generates a string representation of a method call, including the instance, method name, and parameters.
+        /// </summary>
         public static string MethodCallToSourceRepresentation(object instance, MethodBase methodInfo, ICollection<string> parameterStrings)
         {
             var generics = methodInfo.GetGenericArgumentsSafe();

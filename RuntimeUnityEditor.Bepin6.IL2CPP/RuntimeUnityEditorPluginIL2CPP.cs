@@ -21,7 +21,7 @@ namespace RuntimeUnityEditor.Bepin6.IL2CPP
     {
         private static RuntimeUnityEditorCore _coreInstance = null!;
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override void Load()
         {
             if (!TomlTypeConverter.CanConvert(typeof(Rect)))

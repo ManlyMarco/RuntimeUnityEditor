@@ -7,7 +7,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
     /// </summary>
     public class ReadonlyListCacheEntry : ReadonlyCacheEntry
     {
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public ReadonlyListCacheEntry(object o, int index) : base(GetListItemName(index), o)
         {
         }
@@ -17,7 +17,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
             return "Index: " + index;
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override string ToString()
         {
             var isNull = Object.IsNullOrDestroyedStr();

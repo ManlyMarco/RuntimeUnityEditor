@@ -1,7 +1,8 @@
-﻿using RuntimeUnityEditor.Core.Utils;
-using System;
+﻿using System;
 using System.Reflection;
 using System.Text;
+using RuntimeUnityEditor.Core.Utils;
+
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
 namespace RuntimeUnityEditor.Core.REPL

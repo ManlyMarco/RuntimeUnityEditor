@@ -36,7 +36,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         /// </summary>
         public abstract bool EntryIsValid();
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override string ToString()
         {
             return Name;

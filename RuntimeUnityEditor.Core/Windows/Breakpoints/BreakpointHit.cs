@@ -59,7 +59,7 @@ namespace RuntimeUnityEditor.Core.Breakpoints
                 _searchStr = $"{Origin.Target.DeclaringType?.FullName}.{Origin.Target.Name}\t{Result}\t{string.Join("\t", Args.Select(x => x?.ToString() ?? "").ToArray())}";
             return _searchStr;
         }
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override string ToString()
         {
             if (_toStr == null)

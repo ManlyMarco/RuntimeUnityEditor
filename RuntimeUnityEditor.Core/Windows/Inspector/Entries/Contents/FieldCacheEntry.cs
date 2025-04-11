@@ -5,12 +5,12 @@ using RuntimeUnityEditor.Core.Utils;
 
 namespace RuntimeUnityEditor.Core.Inspector.Entries
 {
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public class FieldCacheEntry : CacheEntryBase
     {
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public FieldCacheEntry(object ins, FieldInfo f, Type owner) : this(ins, f, owner, null) { }
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public FieldCacheEntry(object ins, FieldInfo f, Type owner, ICacheEntry parent) : base(GetMemberName(ins, f), f.GetFancyDescription(), owner)
         {
             _instance = ins;
@@ -36,10 +36,10 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         private readonly object _instance;
         private readonly ICacheEntry _parent;
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override object GetValueToCache() => FieldInfo.GetValue(_instance);
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         protected override bool OnSetValue(object newValue)
         {
             if (!FieldInfo.IsInitOnly)
@@ -52,16 +52,16 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
             return false;
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override Type Type()
         {
             return FieldInfo.FieldType;
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override MemberInfo MemberInfo => FieldInfo;
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override bool CanSetValue()
         {
             return (FieldInfo.Attributes & FieldAttributes.Literal) == 0 && !FieldInfo.IsInitOnly && (_parent == null || _parent.CanSetValue());

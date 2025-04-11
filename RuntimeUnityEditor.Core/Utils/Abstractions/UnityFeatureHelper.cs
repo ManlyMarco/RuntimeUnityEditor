@@ -154,7 +154,7 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
             public readonly string path;
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
-            /// <inheritdoc/>
+            /// <inheritdoc />
             public override string ToString()
             {
                 return $"Name: {name}\nBuildIndex: {buildIndex}\nRootCount: {rootCount}\nIsLoaded: {isLoaded}\nIsDirty: {isDirty}\nPath: {path}";

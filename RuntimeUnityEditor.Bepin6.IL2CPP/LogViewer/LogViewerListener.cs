@@ -1,5 +1,4 @@
-﻿using System;
-using BepInEx.Logging;
+﻿using BepInEx.Logging;
 using RuntimeUnityEditor.Core;
 
 namespace RuntimeUnityEditor.Bepin6.LogViewer

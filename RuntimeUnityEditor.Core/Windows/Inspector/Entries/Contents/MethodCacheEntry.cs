@@ -11,7 +11,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
     /// </summary>
     public class MethodCacheEntry : ICacheEntry
     {
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public MethodCacheEntry(object instance, MethodInfo methodInfo, Type owner)
         {
             Instance = instance;
@@ -75,7 +75,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         /// </summary>
         public string TypeName() => _returnTypeName;
         
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public GUIContent GetNameContent() => _content;
 
         /// <summary>
@@ -93,7 +93,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         /// </summary>
         public void SetValue(object newValue) => throw new InvalidOperationException();
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public Type Type() => MethodInfo.ReturnType;
 
         /// <summary>

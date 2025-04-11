@@ -1,14 +1,12 @@
-﻿using RuntimeUnityEditor.Core.Utils;
-
-namespace RuntimeUnityEditor.Core.Inspector.Entries {
+﻿namespace RuntimeUnityEditor.Core.Inspector.Entries {
     /// <summary>
     /// Represents an entry in the inspector stack that holds an instance of an object.
     /// </summary>
     public class InstanceStackEntry : InspectorStackEntryBase
     {
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public InstanceStackEntry(object instance, string name) : this(instance, name, null) { }
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public InstanceStackEntry(object instance, string name, ICacheEntry parent) : base(name)
         {
             Instance = instance;
@@ -25,13 +23,13 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries {
         /// </summary>
         public ICacheEntry Parent { get; }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override bool EntryIsValid()
         {
             return Instance != null;
         }
 
-        /// <inheritdoc/>
+        /// <inheritdoc />
         public override void ShowContextMenu()
         {
             ContextMenu.Instance.Show(Instance, Parent);
