@@ -84,8 +84,16 @@ namespace RuntimeUnityEditor.Core
                         GUI.color = new Color(1f, 1f, 1f, 0.75f);
                         if (GUILayout.Button("Reset"))
                         {
+                            // Needed to avoid WindowManager.ResetWindowRect using old rects as reference to where new windows should be placed.
                             foreach (var window in _orderedFeatures.OfType<IWindow>())
+                                window.WindowRect = new Rect(-1000, -1000, 0, 0);
+
+                            foreach (var window in _orderedFeatures.OfType<IWindow>().OrderBy(x => x.Title))
+                            {
+                                // Ensure that all title bars are visible
+                                GUI.BringWindowToFront(window.WindowId);
                                 WindowManager.ResetWindowRect(window);
+                            }
                         }
                         firstFeature = false;
                         GUI.color = Color.white;
