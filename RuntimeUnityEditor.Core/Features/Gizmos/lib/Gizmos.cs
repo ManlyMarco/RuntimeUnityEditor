@@ -125,29 +125,6 @@ namespace RuntimeUnityEditor.Core.Gizmos.lib
             }
         }
 
-        [Obsolete("This property is obsolete. Use FrustumCulling instead.", false)]
-        public static bool Cull
-        {
-            get
-            {
-                return FrustumCulling;
-            }
-            set
-            {
-                FrustumCulling = value;
-            }
-        }
-
-        [Obsolete("This property is obsolete. Subscribe to CameraFilter predicate instead and return true for your custom camera.", false)]
-        public static Camera Camera
-        {
-            get => null;
-            set
-            {
-
-            }
-        }
-
         /// <summary>
         /// Should the camera not draw elements that are not visible?
         /// </summary>

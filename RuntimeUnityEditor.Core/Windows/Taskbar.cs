@@ -23,12 +23,11 @@ namespace RuntimeUnityEditor.Core
         /// </summary>
         public static Taskbar Instance { get; private set; }
 
-#pragma warning disable CS0618
         /// <summary>
         /// Text shown in the title bar of the taskbar.
         /// </summary>
         protected string GetTitle() => RuntimeUnityEditorCore.Instance.ShowHotkey == KeyCode.None ? _title : _title + $" / Press {RuntimeUnityEditorCore.Instance.ShowHotkey} to show/hide";
-#pragma warning restore CS0618
+
         /// <summary>
         /// Height of the taskbar.
         /// </summary>

@@ -11,7 +11,7 @@ namespace RuntimeUnityEditor.UMM
     /// When referencing RuntimeUnityEditor from other code it's recommended to not reference this assembly and instead reference RuntimeUnityEditorCore directly.
     /// You can see if RuntimeUnityEditor has finished loading with <code>RuntimeUnityEditorCore.IsInitialized()</code>.
     /// </summary>
-    [Obsolete("It's recommended to reference RuntimeUnityEditorCore directly")]
+    [Obsolete("It's recommended to reference RuntimeUnityEditorCore directly")] // TODO: Since core dll is ILMerged and internalized this is impossible to do
     public static class RuntimeUnityEditorUMM
     {
         public static bool Enabled { get; private set; }
@@ -85,8 +85,7 @@ namespace RuntimeUnityEditor.UMM
 
             protected override Action<T> RegisterSetting<T>(string category, string name, T defaultValue, string description, Action<T> onValueUpdated)
             {
-                RuntimeUnityEditorSettings.Setting<T> setting;
-                if (!_settings.Get<T>(category, name, out setting))
+                if (!_settings.Get<T>(category, name, out var setting))
                 {
                     setting = new RuntimeUnityEditorSettings.Setting<T>(defaultValue);
                     _settings.Add(category, name, setting);
