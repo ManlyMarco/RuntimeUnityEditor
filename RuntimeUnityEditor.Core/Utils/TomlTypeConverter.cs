@@ -116,6 +116,17 @@ namespace RuntimeUnityEditor.Core.Utils
                     return string.Format(CultureInfo.InvariantCulture, "{{ \"x\":{0}, \"y\":{1}, \"width\":{2}, \"height\":{3} }}", new object[] { rect.x, rect.y, rect.width, rect.height });
                 }
             });
+            AddConverter(typeof(Type), new TypeConverter
+            {
+                ConvertToString = (obj, type) => ((Type)obj).AssemblyQualifiedName,
+                ConvertToObject = (str, type) =>
+                {
+                    var result = Type.GetType(str);
+                    if (result == null)
+                        throw new FormatException($"Invalid type string, expected assembly qualified name");
+                    return result;
+                }
+            });
         }
 
         /// <summary>
