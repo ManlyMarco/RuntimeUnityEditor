@@ -47,10 +47,10 @@ IL2CPP bug reports will be largely ignored, while PRs to fix issues will be grea
 
 
 ## Known issues
-- If no text is visible anywhere in RUE windows, most likely the `Arial.ttf` font is missing from the system (Unity UI default font, may be different in some games). This can happen when running a game on Linux with [misconfigured wine](https://github.com/ManlyMarco/RuntimeUnityEditor/issues/55).
+- Text is invisible, scrambled, not scaled properly or otherwise looks wrong: Most likely the `Arial.ttf` font is missing from the system (Unity UI default font, may be different in some games). This can happen when running a game on Linux with [misconfigured wine](https://github.com/ManlyMarco/RuntimeUnityEditor/issues/55), and on some regional versions of Windows (e.g. Chinese). To resolve this you have to find the Arial font and install it.
 - The C# REPL console is only available in a subset of games. This is because mcs (the current REPL backend) does not work with `.NET Standard` runtime used by default in more recent versions of Unity (because of missing features). There is no fix, the backend will have to be changed, possibly to Lua.
 - The wireframe toggle might not work in some games because of an incompatible rendering setup.
-- The IL2CPP version is broken in `insert your game name here`.
+- The IL2CPP version is broken in `insert your game name here`. At the moment the main issue is stripped IMGUI assemblies, see https://github.com/ManlyMarco/RuntimeUnityEditor/issues/97
 
 
 ## How to build
