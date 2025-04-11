@@ -11,7 +11,9 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
     /// </summary>
     public class MethodCacheEntry : ICacheEntry
     {
-        /// <inheritdoc />
+        /// <summary>
+        /// Creates a new instance of MethodCacheEntry.
+        /// </summary>
         public MethodCacheEntry(object instance, MethodInfo methodInfo, Type owner)
         {
             Instance = instance;
@@ -110,5 +112,8 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         /// Not supported for methods.
         /// </summary>
         public bool CanEnterValue() => false;
+
+        /// <inheritdoc />
+        public int ItemHeight { get; set; } = Inspector.InspectorRecordInitialHeight;
     }
 }

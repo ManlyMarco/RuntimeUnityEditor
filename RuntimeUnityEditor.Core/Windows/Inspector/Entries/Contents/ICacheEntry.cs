@@ -53,5 +53,9 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         /// Inspector can further inspect the value returned by this member.
         /// </summary>
         bool CanEnterValue();
+        /// <summary>
+        /// Height of the item's row in the inspector's scroll list.
+        /// </summary>
+        int ItemHeight { get; set; }
     }
 }

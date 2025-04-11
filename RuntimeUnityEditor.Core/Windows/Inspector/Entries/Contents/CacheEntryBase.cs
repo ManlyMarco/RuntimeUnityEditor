@@ -122,5 +122,8 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
             }
             return _canEnter.Value;
         }
+
+        /// <inheritdoc />
+        public int ItemHeight { get; set; } = Inspector.InspectorRecordInitialHeight;
     }
 }
