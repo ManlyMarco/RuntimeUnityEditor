@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using RuntimeUnityEditor.Core.REPL;
 using UnityEngine;
 
@@ -24,50 +25,48 @@ namespace RuntimeUnityEditor.Core
         /// </summary>
         public static Rect MakeDefaultWindowRect(Rect screenClientRect, ScreenPartition screenPartition)
         {
-            //todo if a window is alraedy visible in a given partition's position, return a slightly moved rect so both windows are easily visible (add 15,15 to position I guess, repeat until nothing is there or we run out of space)
-
             switch (screenPartition)
             {
                 case ScreenPartition.Left:
-                    return new Rect(screenClientRect.xMin, screenClientRect.yMin, SideWidth, screenClientRect.height);
+                    return EnsureVisible(new Rect(screenClientRect.xMin, screenClientRect.yMin, SideWidth, screenClientRect.height));
                 case ScreenPartition.LeftUpper:
-                    return new Rect(screenClientRect.xMin, screenClientRect.yMin, SideWidth, screenClientRect.height / 2 - ScreenMargin);
+                    return EnsureVisible(new Rect(screenClientRect.xMin, screenClientRect.yMin, SideWidth, screenClientRect.height / 2 - ScreenMargin));
                 case ScreenPartition.LeftLower:
-                    return new Rect(screenClientRect.xMin, screenClientRect.yMin + screenClientRect.height / 2, SideWidth, screenClientRect.height / 2);
+                    return EnsureVisible(new Rect(screenClientRect.xMin, screenClientRect.yMin + screenClientRect.height / 2, SideWidth, screenClientRect.height / 2));
 
                 case ScreenPartition.Center:
                     {
                         var centerWidth = (int)Mathf.Min(850, screenClientRect.width);
                         var centerX = (int)(screenClientRect.xMin + screenClientRect.width / 2 - Mathf.RoundToInt((float)centerWidth / 2));
-                        return new Rect(centerX, screenClientRect.yMin, centerWidth, screenClientRect.height);
+                        return EnsureVisible(new Rect(centerX, screenClientRect.yMin, centerWidth, screenClientRect.height));
                     }
                 case ScreenPartition.CenterUpper:
                     {
                         var centerWidth = (int)Mathf.Min(850, screenClientRect.width);
                         var centerX = (int)(screenClientRect.xMin + screenClientRect.width / 2 - Mathf.RoundToInt((float)centerWidth / 2));
                         var upperHeight = (int)(screenClientRect.height / 4) * 3;
-                        return new Rect(centerX, screenClientRect.yMin, centerWidth, upperHeight);
+                        return EnsureVisible(new Rect(centerX, screenClientRect.yMin, centerWidth, upperHeight));
                     }
                 case ScreenPartition.CenterLower:
                     {
                         var centerWidth = (int)Mathf.Min(850, screenClientRect.width);
                         var centerX = (int)(screenClientRect.xMin + screenClientRect.width / 2 - Mathf.RoundToInt((float)centerWidth / 2));
                         var upperHeight = (int)(screenClientRect.height / 4) * 3;
-                        return new Rect(centerX, screenClientRect.yMin + upperHeight + ScreenMargin, centerWidth, screenClientRect.height - upperHeight - ScreenMargin);
+                        return EnsureVisible(new Rect(centerX, screenClientRect.yMin + upperHeight + ScreenMargin, centerWidth, screenClientRect.height - upperHeight - ScreenMargin));
                     }
 
                 case ScreenPartition.Right:
-                    return new Rect(screenClientRect.xMax - SideWidth, screenClientRect.yMin, SideWidth, screenClientRect.height);
+                    return EnsureVisible(new Rect(screenClientRect.xMax - SideWidth, screenClientRect.yMin, SideWidth, screenClientRect.height));
                 case ScreenPartition.RightUpper:
-                    return new Rect(screenClientRect.xMax - SideWidth, screenClientRect.yMin, SideWidth, screenClientRect.height / 2);
+                    return EnsureVisible(new Rect(screenClientRect.xMax - SideWidth, screenClientRect.yMin, SideWidth, screenClientRect.height / 2));
                 case ScreenPartition.RightLower:
-                    return new Rect(screenClientRect.xMax - SideWidth, screenClientRect.yMin + screenClientRect.height / 2, SideWidth, screenClientRect.height / 2);
+                    return EnsureVisible(new Rect(screenClientRect.xMax - SideWidth, screenClientRect.yMin + screenClientRect.height / 2, SideWidth, screenClientRect.height / 2));
 
                 case ScreenPartition.Full:
                     return screenClientRect;
 
                 case ScreenPartition.Default:
-                    if (ReplWindow.Initialized) //todo figure out if any windows want to be in the lower part? set default partition for inspector and profiler then
+                    if (ReplWindow.Initialized)
                         goto case ScreenPartition.CenterUpper;
                     else
                         goto case ScreenPartition.Center;
@@ -75,6 +74,21 @@ namespace RuntimeUnityEditor.Core
                 default:
                     throw new ArgumentOutOfRangeException(nameof(screenPartition), screenPartition, null);
             }
+        }
+
+        private static Rect EnsureVisible(Rect rect)
+        {
+            var result = rect;
+            var allWindows = RuntimeUnityEditorCore.Instance.InitializedFeatures.OfType<IWindow>();
+            var allWindowsRects = allWindows.Select(w => w.WindowRect).ToList();
+            // Check if any window near this position, move the rect until it's not near any other window
+            while (allWindowsRects.Any(r => Mathf.Abs(r.x - result.x) < 7 && Mathf.Abs(r.y - result.y) < 7))
+            {
+                result.x += 17;
+                result.y += 17;
+            }
+            // Ensure the new rect is visible on screen
+            return result.x < Screen.width - 50 && result.y < Screen.height - 50 ? result : rect;
         }
 
         /// <summary>
