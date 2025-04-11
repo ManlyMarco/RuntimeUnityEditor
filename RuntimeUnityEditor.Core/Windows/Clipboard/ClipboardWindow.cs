@@ -82,7 +82,11 @@ namespace RuntimeUnityEditor.Core.Clipboard
                             {
                                 try
                                 {
-                                    Contents[index] = Convert.ChangeType(newVal, type);
+                                    var converter = TomlTypeConverter.GetConverter(type);
+                                    if (converter != null)
+                                        Contents[index] = converter.ConvertToObject(newVal, type);
+                                    else
+                                        Contents[index] = Convert.ChangeType(newVal, type);
                                 }
                                 catch (Exception e)
                                 {

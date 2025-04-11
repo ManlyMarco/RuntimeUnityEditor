@@ -30,6 +30,7 @@ namespace RuntimeUnityEditor.Core.Inspector
 
             var type = typeof(TObj);
             _toStringConverters[type] = o => objectToString.Invoke((TObj)o);
+            _canCovertCache.Remove(typeof(TObj));
         }
 
         /// <summary>
@@ -176,7 +177,10 @@ namespace RuntimeUnityEditor.Core.Inspector
             else
             {
                 var typeConverter = TomlTypeConverter.GetConverter(valueType);
-                converted = typeConverter != null ? typeConverter.ConvertToObject(newValue, valueType) : Convert.ChangeType(newValue, valueType);
+                if (typeConverter != null)
+                    converted = typeConverter.ConvertToObject(newValue, valueType);
+                else
+                    converted = Convert.ChangeType(newValue, valueType);
             }
 
             if (!Equals(converted, currentValue))
