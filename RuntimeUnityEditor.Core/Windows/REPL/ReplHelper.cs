@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using UnityEngine;
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+
 namespace RuntimeUnityEditor.Core.REPL
 {
     //todo redundant?

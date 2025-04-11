@@ -6,19 +6,41 @@ using HarmonyLib;
 
 namespace RuntimeUnityEditor.Core.Breakpoints
 {
+    /// <summary>
+    /// Class for managing breakpoints in methods.
+    /// </summary>
     public static class Breakpoints
     {
         private static readonly Harmony _harmony = new Harmony("RuntimeUnityEditor.Core.Breakpoints");
         private static readonly HarmonyMethod _handlerMethodRet = new HarmonyMethod(typeof(Hooks), nameof(Hooks.BreakpointHandlerReturn));
         private static readonly HarmonyMethod _handlerMethodNoRet = new HarmonyMethod(typeof(Hooks), nameof(Hooks.BreakpointHandlerNoReturn));
         private static readonly Dictionary<MethodBase, BreakpointPatchInfo> _appliedPatches = new Dictionary<MethodBase, BreakpointPatchInfo>();
+        /// <summary>
+        /// A collection of all applied patches.
+        /// </summary>
         public static ICollection<BreakpointPatchInfo> AppliedPatches => _appliedPatches.Values;
 
+        /// <summary>
+        /// Whether all breakpoints are enabled or not.
+        /// </summary>
         public static bool Enabled { get; set; } = true;
+
+        /// <summary>
+        /// What to do when a breakpoint is hit.
+        /// </summary>
         public static DebuggerBreakType DebuggerBreaking { get; set; }
 
+        /// <summary>
+        /// Event that is called when a breakpoint is hit.
+        /// </summary>
         public static event Action<BreakpointHit> OnBreakpointHit;
 
+        /// <summary>
+        /// Attaches a breakpoint to a method.
+        /// </summary>
+        /// <param name="target">Method to attach to</param>
+        /// <param name="instance">Only trigger when method is called on this instance. If null then break on all calls.</param>
+        /// <returns>True if patch was applied successfully</returns>
         public static bool AttachBreakpoint(MethodBase target, object instance)
         {
             if (_appliedPatches.TryGetValue(target, out var pi))
@@ -41,6 +63,12 @@ namespace RuntimeUnityEditor.Core.Breakpoints
             return false;
         }
 
+        /// <summary>
+        /// Detaches a breakpoint from a method.
+        /// </summary>
+        /// <param name="target">Method to detach from</param>
+        /// <param name="instance">Only remove this instance filter. If null, completely remove this breakpoint.</param>
+        /// <returns>True if the breakpoint was completely removed, false otherwise.</returns>
         public static bool DetachBreakpoint(MethodBase target, object instance)
         {
             if (_appliedPatches.TryGetValue(target, out var pi))
@@ -61,6 +89,9 @@ namespace RuntimeUnityEditor.Core.Breakpoints
             return false;
         }
 
+        /// <summary>
+        /// Checks if a breakpoint is attached to a method.
+        /// </summary>
         public static bool IsAttached(MethodBase target, object instance)
         {
             if (_appliedPatches.TryGetValue(target, out var pi))
@@ -71,6 +102,9 @@ namespace RuntimeUnityEditor.Core.Breakpoints
             return false;
         }
 
+        /// <summary>
+        /// Detaches all breakpoints.
+        /// </summary>
         public static void DetachAll()
         {
             _harmony.UnpatchSelf();

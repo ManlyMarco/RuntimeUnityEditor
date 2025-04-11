@@ -76,12 +76,6 @@ namespace RuntimeUnityEditor.Core
             base.AfterInitialized(initSettings);
             WindowId = base.GetHashCode();
             _windowRect = initSettings.RegisterSetting(SettingCategory, DisplayName + " window size", _initialWindowRect, string.Empty);
-
-#pragma warning disable CS0618
-            // Backwards compat with CheatTools
-            if (DefaultScreenPosition == ScreenPartition.Default && GetDefaultWindowRect(new Rect(0, 0, 1600, 900)) != default)
-                DefaultScreenPosition = ScreenPartition.LeftLower;
-#pragma warning restore CS0618
         }
 
         /// <inheritdoc cref="FeatureBase{T}.DisplayName"/>
@@ -216,38 +210,6 @@ namespace RuntimeUnityEditor.Core
         public void ResetWindowRect()
         {
             WindowManager.ResetWindowRect(this);
-        }
-
-        /// <summary>
-        /// Get default size of this window (including border and title bar) for the given screen rect.
-        /// The screen rect includes only useful work area (i.e. it excludes any margins and taskbar).
-        /// </summary>
-        [Obsolete("No longer used, set DefaultScreenPosition instead", false)]
-        protected virtual Rect GetDefaultWindowRect(Rect screenClientRect)
-        {
-            return default;
-        }
-
-        /// <summary>
-        /// Get default size of a window for a given resolution and side of the screen. Center is wider than the sides.
-        /// </summary>
-        [Obsolete("Use set DefaultScreenPosition or use WindowManager.MakeDefaultWindowRect instead", true)]
-        public static Rect MakeDefaultWindowRect(Rect screenClientRect, TextAlignment side)
-        {
-            switch (side)
-            {
-                case TextAlignment.Left:
-                    return WindowManager.MakeDefaultWindowRect(screenClientRect, ScreenPartition.LeftUpper);
-
-                case TextAlignment.Center:
-                    return WindowManager.MakeDefaultWindowRect(screenClientRect, ScreenPartition.CenterUpper);
-
-                case TextAlignment.Right:
-                    return WindowManager.MakeDefaultWindowRect(screenClientRect, ScreenPartition.Right);
-
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(side), side, null);
-            }
         }
 
         /// <summary>

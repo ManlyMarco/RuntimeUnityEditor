@@ -7,7 +7,7 @@ namespace RuntimeUnityEditor.Core.Gizmos.lib
     /// <summary>
     /// Taken from https://github.com/popcron/gizmos
     /// </summary>
-    public class Gizmos
+    internal class Gizmos
     {
         private static string _prefsKey = null;
         private static int? _bufferSize = null;
@@ -122,29 +122,6 @@ namespace RuntimeUnityEditor.Core.Gizmos.lib
                     //todo use config
                     //PlayerPrefs.SetFloat($"{PrefsKey}.DashGap", value);
                 }
-            }
-        }
-
-        [Obsolete("This property is obsolete. Use FrustumCulling instead.", false)]
-        public static bool Cull
-        {
-            get
-            {
-                return FrustumCulling;
-            }
-            set
-            {
-                FrustumCulling = value;
-            }
-        }
-
-        [Obsolete("This property is obsolete. Subscribe to CameraFilter predicate instead and return true for your custom camera.", false)]
-        public static Camera Camera
-        {
-            get => null;
-            set
-            {
-
             }
         }
 
@@ -394,7 +371,10 @@ namespace RuntimeUnityEditor.Core.Gizmos.lib
             float offset = 0f;
             Draw<PolygonDrawer>(color, dashed, position, pointsCount, radius, offset, rotation);
         }
-        
+
+        /// <summary>
+        /// Draws an arc in world space.
+        /// </summary>
         public static void Arc(Vector3 position, float radius, Quaternion rotation, float offset, float drawnAngle, Color? color = null, bool dashed = false, int pointsCount = 16)
         {
             Draw<ArcDrawer>(color, dashed, position, pointsCount, radius, offset, rotation, drawnAngle);

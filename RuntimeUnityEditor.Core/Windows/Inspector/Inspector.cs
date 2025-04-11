@@ -108,17 +108,6 @@ namespace RuntimeUnityEditor.Core.Inspector
             }
         }
 
-        /// <summary> Obsolete, will be removed soon. </summary>
-        [Obsolete("Use push and Show instead")]
-        public void InspectorClear() { }
-
-        /// <summary> Obsolete, will be removed soon. </summary>
-        [Obsolete("Use push instead")]
-        public void InspectorPush(InspectorStackEntryBase stackEntry)
-        {
-            Push(stackEntry, true);
-        }
-
         /// <summary>
         /// Show an object inside inspector.
         /// </summary>

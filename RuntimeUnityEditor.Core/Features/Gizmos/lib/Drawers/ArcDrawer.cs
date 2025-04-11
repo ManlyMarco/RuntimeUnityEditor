@@ -2,7 +2,7 @@
 
 namespace RuntimeUnityEditor.Core.Gizmos.lib.Drawers
 {
-    public class ArcDrawer : Drawer
+    internal class ArcDrawer : Drawer
     {
 		public ArcDrawer()
 		{

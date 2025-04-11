@@ -2,7 +2,7 @@
 
 namespace RuntimeUnityEditor.Core.Gizmos.lib.Drawers
 {
-    public class CubeDrawer : Drawer
+	internal class CubeDrawer : Drawer
     {
 		public CubeDrawer()
 		{

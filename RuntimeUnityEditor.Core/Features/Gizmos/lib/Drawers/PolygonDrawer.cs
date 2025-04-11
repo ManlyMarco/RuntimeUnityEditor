@@ -2,7 +2,7 @@
 
 namespace RuntimeUnityEditor.Core.Gizmos.lib.Drawers
 {
-    public class PolygonDrawer : Drawer
+    internal class PolygonDrawer : Drawer
     {
 		public PolygonDrawer()
 		{

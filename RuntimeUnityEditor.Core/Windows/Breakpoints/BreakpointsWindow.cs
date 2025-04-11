@@ -7,11 +7,15 @@ using UnityEngine;
 
 namespace RuntimeUnityEditor.Core.Breakpoints
 {
+    /// <summary>
+    /// A window that displays the breakpoints and breakpoint hit history.
+    /// </summary>
     // TODO aggregate results, etc.
     public class BreakpointsWindow : Window<BreakpointsWindow>
     {
         private static readonly List<BreakpointHit> _hits = new List<BreakpointHit>();
 
+        /// <inheritdoc />
         protected override void Initialize(InitSettings initSettings)
         {
             DisplayName = "Breakpoints";
@@ -21,6 +25,7 @@ namespace RuntimeUnityEditor.Core.Breakpoints
             Breakpoints.OnBreakpointHit += hit => _hits.Add(hit);
         }
 
+        /// <inheritdoc />
         protected override void LateUpdate()
         {
             if (_hits.Count > _maxHitsToKeep)
@@ -35,6 +40,7 @@ namespace RuntimeUnityEditor.Core.Breakpoints
         private int _maxHitsToKeep = 100;
         private string _searchString = "";
 
+        /// <inheritdoc />
         protected override void DrawContents()
         {
             GUILayout.BeginHorizontal();

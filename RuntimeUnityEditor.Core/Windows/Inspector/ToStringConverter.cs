@@ -11,19 +11,31 @@ using UnityEngine.Events;
 
 namespace RuntimeUnityEditor.Core.Inspector
 {
+    /// <summary>
+    /// Provides a way to convert objects to strings for display in the inspector and other places across RUE.
+    /// </summary>
     public static class ToStringConverter
     {
         private static readonly Dictionary<Type, Func<object, string>> _toStringConverters = new Dictionary<Type, Func<object, string>>();
 
+        /// <summary>
+        /// Adds a converter for a specific type to convert it to a string.
+        /// </summary>
+        /// <typeparam name="TObj">Type of the object</typeparam>
+        /// <param name="objectToString">A custom ToString method for the type</param>
+        /// <exception cref="ArgumentNullException"><paramref name="objectToString"/> cannot be null</exception>
         public static void AddConverter<TObj>(Func<TObj, string> objectToString)
         {
             if (objectToString == null) throw new ArgumentNullException(nameof(objectToString));
 
             var type = typeof(TObj);
             _toStringConverters[type] = o => objectToString.Invoke((TObj)o);
-            _canCovertCache[type] = true;
         }
 
+        /// <summary>
+        /// Converts an object to a string based on registered converters.
+        /// Never throws, at worst it returns the base ToString result or the type name.
+        /// </summary>
         public static string ObjectToString(object value)
         {
             var isNull = value.IsNullOrDestroyedStr();
@@ -51,7 +63,7 @@ namespace RuntimeUnityEditor.Core.Inspector
             if (value is ICollection collection)
                 return $"Count = {collection.Count}";
 
-            if (value is IEnumerable _ || value.GetType().GetMethod("GetEnumerator", AccessTools.all, null, Type.EmptyTypes, null) != null)
+            if (value is IEnumerable || value.GetType().GetMethod("GetEnumerator", AccessTools.all, null, Type.EmptyTypes, null) != null)
             {
                 var property = valueType.GetProperty("Count", BindingFlags.Public | BindingFlags.Instance);
                 if (property != null && property.CanRead)
@@ -114,6 +126,9 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         internal static readonly Dictionary<Type, bool> _canCovertCache = new Dictionary<Type, bool>();
 
+        /// <summary>
+        /// Check if the value can be converted to a string and back to the original type.
+        /// </summary>
         public static bool CanEditValue(ICacheEntry field, object value)
         {
             var valueType = field.Type();
@@ -136,7 +151,7 @@ namespace RuntimeUnityEditor.Core.Inspector
             try
             {
                 var converted = ToStringConverter.ObjectToString(value);
-                var _ = Convert.ChangeType(converted, valueType);
+                _ = Convert.ChangeType(converted, valueType);
                 _canCovertCache[valueType] = true;
                 return true;
             }
@@ -147,30 +162,36 @@ namespace RuntimeUnityEditor.Core.Inspector
             }
         }
 
-        public static void SetEditValue(ICacheEntry field, object value, string result)
+        /// <summary>
+        /// Sets the value of the field to the converted value from the string, if it is different from the current value.
+        /// </summary>
+        public static void SetEditValue(ICacheEntry field, object currentValue, string newValue)
         {
             var valueType = field.Type();
             object converted;
             if (valueType == typeof(string))
             {
-                converted = result;
+                converted = newValue;
             }
             else
             {
                 var typeConverter = TomlTypeConverter.GetConverter(valueType);
-                converted = typeConverter != null ? typeConverter.ConvertToObject(result, valueType) : Convert.ChangeType(result, valueType);
+                converted = typeConverter != null ? typeConverter.ConvertToObject(newValue, valueType) : Convert.ChangeType(newValue, valueType);
             }
 
-            if (!Equals(converted, value))
+            if (!Equals(converted, currentValue))
                 field.SetValue(converted);
         }
 
+        /// <summary>
+        /// Converts the value to a string for editing in the inspector.
+        /// </summary>
         public static string GetEditValue(ICacheEntry field, object value)
         {
-            var valueType = field.Type();
-
             if (value is string str)
                 return str;
+
+            var valueType = field.Type();
 
             if (value == null && valueType == typeof(string))
                 return "";
@@ -181,7 +202,7 @@ namespace RuntimeUnityEditor.Core.Inspector
             var typeConverter = TomlTypeConverter.GetConverter(valueType);
             if (typeConverter != null) return typeConverter.ConvertToString(value, valueType);
 
-            return ToStringConverter.ObjectToString(value);
+            return ObjectToString(value);
         }
     }
 }

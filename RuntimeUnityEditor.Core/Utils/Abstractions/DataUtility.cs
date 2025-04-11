@@ -33,7 +33,10 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
             
             return true;
         }
-        
+
+        /// <summary>
+        /// Tries to parse a string into a <see cref="Color"/>. The string should be in the format of an RGBA hex color code, e.g. #FF0000FF or A0FF05FF.
+        /// </summary>
         public static bool TryParseHtmlString(string htmlString, out Color color)
         {
             var ret = DoTryParseHtmlColor(htmlString, out var c);
@@ -41,7 +44,10 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
             
             return ret;
         }
-        
+
+        /// <summary>
+        /// Converts a <see cref="Color"/> to a string in the format of an RGBA hex color code, e.g. #FF0000FF.
+        /// </summary>
         public static string ToHtmlStringRGBA(Color color)
         {
             var col32 = new Color32(
@@ -59,32 +65,56 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
     /// </summary>
     public static class ToStringUtility
     {
+        /// <summary>
+        /// Converts a Vector to a string representation.
+        /// </summary>
         public static string ObjectToString(Vector2 obj) => $"{obj.x} {obj.y}";
         
+        /// <summary>
+        /// Converts a Vector to a string representation.
+        /// </summary>
         public static string ObjectToString(Vector3 obj) => $"{obj.x} {obj.y} {obj.z}";
         
+        /// <summary>
+        /// Converts a Vector to a string representation.
+        /// </summary>
         public static string ObjectToString(Vector4 obj) => $"{obj.x} {obj.y} {obj.z}, {obj.w}";
-
-        public static string ObjectToString(Quaternion obj) => $"{obj.x} {obj.y} {obj.z}, {obj.w}";
         
+        /// <summary>
+        /// Converts a Quaternion to a string representation.
+        /// </summary>
+        public static string ObjectToString(Quaternion obj) => $"{obj.x} {obj.y} {obj.z}, {obj.w}";
+
+        /// <summary>
+        /// Converts a string representation back to a Vector object.
+        /// </summary>
         public static Vector2 StringToVector2(string str)
         {
             var array = str.Split(' ');
             return new Vector2(float.Parse(array[0]), float.Parse(array[1]));
         }
         
+        /// <summary>
+        /// Converts a string representation back to a Vector object.
+        /// </summary>
         public static Vector3 StringToVector3(string str)
         {
             var array = str.Split(' ');
             return new Vector3(float.Parse(array[0]), float.Parse(array[1]), float.Parse(array[2]));
         }
         
+        /// <summary>
+        /// Converts a string representation back to a Vector object.
+        /// </summary>
         public static Vector4 StringToVector4(string str)
         {
             var array = str.Split(' ');
             return new Vector4(float.Parse(array[0]), float.Parse(array[1]), float.Parse(array[2]), float.Parse(array[3]));
         }
         
+        /// <summary>
+        /// Converts a string representation back to a Quaternion object.
+        /// </summary>
         public static Quaternion StringToQuaternion(string str)
         {
             var array = str.Split(' ');

@@ -67,7 +67,7 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
         #region Scenes
 
         /// <summary>
-        /// UnityEngine.SceneManagement.SceneManager is available, used by <see cref="GetActiveSceneGameObjects"/>.
+        /// UnityEngine.SceneManagement is available, used by <see cref="GetActiveSceneGameObjects"/>.
         /// </summary>
         public static bool SupportsScenes { get; private set; }
 
@@ -79,8 +79,15 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
             return SupportsScenes ? SceneProxyMethods.GetActiveSceneGameObjects() : new GameObject[0];
         }
 
+        /// <summary>
+        /// Number of loaded scenes. This is 0 if UnityEngine.SceneManagement is not available.
+        /// </summary>
         public static int sceneCount => SupportsScenes ? SceneProxyMethods.GetSceneCount() : 0;
 
+        /// <summary>
+        /// Get the name of the scene a GameObject is in. This is only available if UnityEngine.SceneManagement is available.
+        /// Returns false if not available.
+        /// </summary>
         public static bool GetSceneName(this GameObject go, out string sceneName)
         {
             if (SupportsScenes)
@@ -93,26 +100,41 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
             return false;
         }
 
+        /// <summary>
+        /// Get the root game objects of a scene. This is only available if UnityEngine.SceneManagement is available.
+        /// </summary>
         public static GameObject[] GetSceneRootObjects(int sceneLoadIndex)
         {
             if (!SupportsScenes) return new GameObject[0];
             return SceneProxyMethods.GetRootGameObjects(sceneLoadIndex);
         }
 
+        /// <summary>
+        /// Get the scene at the given index. This is only available if UnityEngine.SceneManagement is available.
+        /// </summary>
         public static SceneWrapper GetSceneAt(int sceneLoadIndex)
         {
             if (!SupportsScenes) return default;
             return SceneProxyMethods.GetSceneAt(sceneLoadIndex);
         }
 
+        /// <summary>
+        /// Unload a scene by name. This is only available if UnityEngine.SceneManagement is available.
+        /// </summary>
         public static bool UnloadScene(string sceneName)
         {
             if (!SupportsScenes) return false;
             return SceneProxyMethods.UnloadScene(sceneName);
         }
 
+        /// <summary>
+        /// Wrapper for UnityEngine.SceneManagement.Scene to avoid exceptions in old Unity versions (mostly 4.x) that do not support them.
+        /// </summary>
         public readonly struct SceneWrapper
         {
+            /// <summary>
+            /// Construct a new SceneWrapper.
+            /// </summary>
             public SceneWrapper(string name, int buildIndex, int rootCount, bool isLoaded, bool isDirty, string path)
             {
                 this.name = name;
@@ -123,13 +145,16 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
                 this.path = path;
             }
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
             public readonly string name;
             public readonly int buildIndex;
             public readonly int rootCount;
             public readonly bool isLoaded;
             public readonly bool isDirty;
             public readonly string path;
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
+            /// <inheritdoc />
             public override string ToString()
             {
                 return $"Name: {name}\nBuildIndex: {buildIndex}\nRootCount: {rootCount}\nIsLoaded: {isLoaded}\nIsDirty: {isDirty}\nPath: {path}";
@@ -326,9 +351,9 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
             return UnityEngine.Object.Instantiate(original);
 #else
             // Reflection because unity 4.x refuses to instantiate if built with newer versions of UnityEngine
-            var methodInfo = typeof(UnityEngine.Object).GetMethod("Instantiate", BindingFlags.Static | BindingFlags.Public, null, new []{typeof(UnityEngine.Object)}, null);
+            var methodInfo = typeof(UnityEngine.Object).GetMethod("Instantiate", BindingFlags.Static | BindingFlags.Public, null, new[] { typeof(UnityEngine.Object) }, null);
             if (methodInfo == null) throw new ArgumentNullException(nameof(methodInfo));
-            return methodInfo.Invoke(null, new object[] {original}) as T;
+            return methodInfo.Invoke(null, new object[] { original }) as T;
 #endif
         }
     }
