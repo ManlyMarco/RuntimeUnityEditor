@@ -13,10 +13,9 @@ namespace RuntimeUnityEditor.Core.Inspector
     /// </summary>
     public sealed partial class Inspector : Window<Inspector>
     {
-        private const int InspectorRecordHeight = 25;
+        internal const int InspectorRecordInitialHeight = 25;
         private readonly GUILayoutOption[] _inspectorTypeWidth = { GUILayout.Width(170), GUILayout.MaxWidth(170) };
         private readonly GUILayoutOption[] _inspectorNameWidth = { GUILayout.Width(240), GUILayout.MaxWidth(240) };
-        private readonly GUILayoutOption _inspectorRecordHeight = GUILayout.Height(InspectorRecordHeight);
 
         private readonly List<InspectorTab> _tabs = new List<InspectorTab>();
         private InspectorTab _currentTab;
@@ -81,7 +80,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                 _alignedButtonStyle = GUI.skin.button.CreateCopy();
                 _alignedButtonStyle.alignment = TextAnchor.MiddleLeft;
                 _alignedButtonStyle.wordWrap = true;
-                
+
                 _alignedButtonStyleUnclickable = _alignedButtonStyle.CreateCopy();
                 _alignedButtonStyleUnclickable.normal.background = null;
                 _alignedButtonStyleUnclickable.onNormal.background = null;
@@ -408,19 +407,54 @@ namespace RuntimeUnityEditor.Core.Inspector
                     });
                     var visibleFields = visibleFieldsQuery.ToList();
 
-                    var firstIndex = (int)(currentItem.ScrollPosition.y / InspectorRecordHeight);
+                    var scrollPositionY = (int)currentItem.ScrollPosition.y;
+                    var scrollMaxVisibleY = scrollPositionY + ((int)WindowRect.height - 130); // TODO conservative value, properly measure at runtime for less overdraw
 
-                    GUILayout.Space(firstIndex * InspectorRecordHeight);
+                    var topCombinedHeight = 0;
+                    var index = 0;
 
-                    var currentVisibleCount = (int)(WindowRect.height / InspectorRecordHeight) - 4;
-                    for (var index = firstIndex; index < Mathf.Min(visibleFields.Count, firstIndex + currentVisibleCount); index++)
+                    // Empty space at the top
+                    for (; index < visibleFields.Count; index++)
+                    {
+                        var itemHeight = visibleFields[index].ItemHeight;
+                        if (topCombinedHeight + itemHeight >= scrollPositionY) break;
+                        topCombinedHeight += itemHeight;
+                    }
+
+                    if (topCombinedHeight > 0)
+                        GUILayout.Space(topCombinedHeight);
+
+                    // Actual entries
+                    for (; index < visibleFields.Count; index++)
                     {
                         var entry = visibleFields[index];
+
                         DrawSingleContentEntry(entry);
+
+                        topCombinedHeight += entry.ItemHeight;
+
+                        if (Event.current.type == EventType.Repaint)
+                        {
+                            var measured = (int)GUILayoutUtility.GetLastRect().height;
+                            entry.ItemHeight = Mathf.Max(entry.ItemHeight, measured);
+                        }
+
+                        if (topCombinedHeight > scrollMaxVisibleY)
+                        {
+                            index++;
+                            break;
+                        }
                     }
+
+                    // Empty space at the bottom
+                    var bottomCombinedHeight = 0;
+                    for (; index < visibleFields.Count; index++)
+                        bottomCombinedHeight += visibleFields[index].ItemHeight;
+
                     try
                     {
-                        GUILayout.Space(Mathf.FloorToInt(Mathf.Max(WindowRect.height / 2, (visibleFields.Count - firstIndex - currentVisibleCount) * InspectorRecordHeight)));
+                        var extraSpace = Mathf.FloorToInt(WindowRect.height / 2);
+                        GUILayout.Space(bottomCombinedHeight + extraSpace);
                         // Fixes layout exploding when searching
                         GUILayout.FlexibleSpace();
                     }
@@ -436,7 +470,7 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         private void DrawSingleContentEntry(ICacheEntry entry)
         {
-            GUILayout.BeginHorizontal(_inspectorRecordHeight);
+            GUILayout.BeginHorizontal(GUILayout.Height(entry.ItemHeight));
             {
                 try
                 {
