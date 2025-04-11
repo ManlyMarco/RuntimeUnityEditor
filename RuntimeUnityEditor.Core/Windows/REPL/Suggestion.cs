@@ -3,14 +3,13 @@ using UnityEngine;
 namespace RuntimeUnityEditor.Core.REPL {
     internal struct Suggestion
     {
-        public readonly string Prefix;
-        public readonly string Addition;
-        public string Full => Prefix + Addition;
-        public Suggestion(string addition, string prefix, SuggestionKind kind)
+        public readonly string Original;
+        public readonly string Result;
+        public Suggestion(string result, string original, SuggestionKind kind)
         {
-            Prefix = prefix;
+            Original = original;
             Kind = kind;
-            Addition = addition;
+            Result = result;
         }
 
         public readonly SuggestionKind Kind;
