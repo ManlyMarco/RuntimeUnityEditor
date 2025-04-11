@@ -52,7 +52,7 @@ namespace RuntimeUnityEditor.Core.REPL
                     _namespaces = new HashSet<string>(
                         AppDomain.CurrentDomain.GetAssemblies()
                             .SelectMany(Extensions.GetTypesSafe)
-                            .Where(x => x.IsPublic && !string.IsNullOrEmpty(x.Namespace))
+                            .Where(x => !string.IsNullOrEmpty(x.Namespace))
                             .Select(x => x.Namespace));
                     RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, $"[REPL] Found {_namespaces.Count} public namespaces");
                 }
@@ -91,6 +91,12 @@ namespace RuntimeUnityEditor.Core.REPL
             MinimumSize = new Vector2(280, 130);
             Enabled = false;
             DefaultScreenPosition = ScreenPartition.CenterLower;
+        }
+
+        protected override void VisibleChanged(bool visible)
+        {
+            base.VisibleChanged(visible);
+            _namespaces = null;
         }
 
         private IEnumerator DelayedReplSetup()
@@ -387,12 +393,8 @@ namespace RuntimeUnityEditor.Core.REPL
 
                         _suggestions.AddRange(completions
                                               .Where(x => !string.IsNullOrEmpty(x))
-                                              .Select(x => new Suggestion(x, prefix, Namespaces.Contains(x) ? SuggestionKind.Namespace : SuggestionKind.Unknown))
-                        //.Where(x => !_namespaces.Contains(x.Full))
-                        );
+                                              .Select(x => new Suggestion(x, prefix, Namespaces.Contains(x) ? SuggestionKind.Namespace : SuggestionKind.Unknown)));
                     }
-
-                    _suggestions.AddRange(GetNamespaceSuggestions(input).Except(_suggestions, Suggestion.OriginalComparer.Instance).OrderBy(x => x.Result));
                 }
 
                 _refocus = true;
@@ -402,16 +404,6 @@ namespace RuntimeUnityEditor.Core.REPL
                 RuntimeUnityEditorCore.Logger.Log(LogLevel.Debug, "[REPL] " + ex);
                 ClearSuggestions();
             }
-        }
-
-        private IEnumerable<Suggestion> GetNamespaceSuggestions(string input)
-        {
-            var trimmedInput = input.Trim();
-            if (trimmedInput.StartsWith("using"))
-                trimmedInput = trimmedInput.Remove(0, 5).Trim();
-
-            return Namespaces.Where(x => x.StartsWith(trimmedInput) && x.Length > trimmedInput.Length)
-                .Select(x => new Suggestion(x.Substring(trimmedInput.Length), x.Substring(0, trimmedInput.Length), SuggestionKind.Namespace));
         }
 
         private void CheckReplInput()
