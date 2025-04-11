@@ -207,7 +207,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 }
                 GUILayout.EndHorizontal();
 
-                if (Event.current.type == EventType.repaint)
+                if (Event.current.type == EventType.Repaint)
                 {
                     if (needsHeightMeasure)
                     {

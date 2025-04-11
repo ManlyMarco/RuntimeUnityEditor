@@ -210,7 +210,7 @@ namespace RuntimeUnityEditor.Core.Profiler
                             }
                             GUILayout.EndHorizontal();
 
-                            if (needsHeightMeasure && Event.current.type == EventType.repaint)
+                            if (needsHeightMeasure && Event.current.type == EventType.Repaint)
                                 _singleObjectTreeItemHeight = Mathf.CeilToInt(GUILayoutUtility.GetLastRect().height);
                         }
                         else
