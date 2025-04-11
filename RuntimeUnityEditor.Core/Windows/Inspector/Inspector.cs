@@ -416,9 +416,9 @@ namespace RuntimeUnityEditor.Core.Inspector
                     // Empty space at the top
                     for (; index < visibleFields.Count; index++)
                     {
-                        var itemHeight = visibleFields[index].ItemHeight;
-                        if (topCombinedHeight + itemHeight >= scrollPositionY) break;
-                        topCombinedHeight += itemHeight;
+                        var newHeight = topCombinedHeight + visibleFields[index].ItemHeight;
+                        if (newHeight >= scrollPositionY) break;
+                        else topCombinedHeight = newHeight;
                     }
 
                     if (topCombinedHeight > 0)
