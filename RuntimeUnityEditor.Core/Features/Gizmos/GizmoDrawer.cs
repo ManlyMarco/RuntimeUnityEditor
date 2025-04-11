@@ -5,13 +5,12 @@ using RuntimeUnityEditor.Core.Gizmos.lib;
 using RuntimeUnityEditor.Core.ObjectTree;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
-#pragma warning disable CS1591
 
 namespace RuntimeUnityEditor.Core.Gizmos
 {
-    //todo ShowGizmosOutsideEditor
     /// <summary>
     /// Feature that shows gizmos for selected GameObjects.
+    /// TODO: ShowGizmosOutsideEditor
     /// </summary>
     public sealed class GizmoDrawer : FeatureBase<GizmoDrawer>
     {
@@ -20,6 +19,7 @@ namespace RuntimeUnityEditor.Core.Gizmos
         private Type _dbcType;
         private bool _dbcTypeAttempted;
 
+        /// <inheritdoc/>
         protected override void Initialize(InitSettings initSettings)
         {
             UnityFeatureHelper.EnsureCameraRenderEventsAreAvailable();
@@ -29,6 +29,7 @@ namespace RuntimeUnityEditor.Core.Gizmos
             ObjectTreeViewer.Instance.TreeSelectionChanged += UpdateState;
         }
 
+        /// <inheritdoc/>
         protected override void VisibleChanged(bool visible)
         {
             base.VisibleChanged(visible);
@@ -51,6 +52,9 @@ namespace RuntimeUnityEditor.Core.Gizmos
             lib.Gizmos.Enabled = visible;
         }
 
+        /// <summary>
+        /// Update the displayed gizmos based on the selected transform.
+        /// </summary>
         public void UpdateState(Transform rootTransform)
         {
             if (!Visible || rootTransform == null) return;
@@ -287,6 +291,7 @@ namespace RuntimeUnityEditor.Core.Gizmos
             lib.Gizmos.Line(p1 + p1Rotation * Vector3.right * radius, p2 + p2Rotation * Vector3.left * radius, color);
         }
 
+        /// <inheritdoc/>
         protected override void LateUpdate()
         {
             for (var i = 0; i < _drawList.Count; i++)

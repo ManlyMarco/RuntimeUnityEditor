@@ -2,7 +2,7 @@
 
 namespace RuntimeUnityEditor.Core.Gizmos.lib.Drawers
 {
-    public class SquareDrawer : Drawer
+    internal class SquareDrawer : Drawer
     {
 		public SquareDrawer()
 		{

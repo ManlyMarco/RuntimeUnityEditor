@@ -10,7 +10,7 @@ namespace RuntimeUnityEditor.Core.Gizmos.lib
     /// </summary>
     //[ExecuteInEditMode]
     //[AddComponentMenu("")]
-    public class GizmosInstance : MonoBehaviour
+    internal class GizmosInstance : MonoBehaviour
     {
         private const int DefaultQueueSize = 4096;
 
@@ -262,11 +262,11 @@ namespace RuntimeUnityEditor.Core.Gizmos.lib
             return false;
         }
 
-        private void Update()
-        {
-            //always render something
-            //Gizmos.Line(default, default);
-        }
+        //private void Update()
+        //{
+        //    //always render something
+        //    //Gizmos.Line(default, default);
+        //}
 
         private void OnRendered(Camera camera)
         {

@@ -7,7 +7,7 @@ namespace RuntimeUnityEditor.Core.Gizmos.lib
     /// <summary>
     /// Taken from https://github.com/popcron/gizmos
     /// </summary>
-    public class Gizmos
+    internal class Gizmos
     {
         private static string _prefsKey = null;
         private static int? _bufferSize = null;

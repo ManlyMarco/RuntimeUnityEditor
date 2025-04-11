@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace RuntimeUnityEditor.Core.Gizmos.lib
 {
-    public abstract class Drawer
+    internal abstract class Drawer
     {
         private static Dictionary<Type, Drawer> typeToDrawer = null;
 

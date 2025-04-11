@@ -5,8 +5,14 @@ using System.Text;
 
 namespace RuntimeUnityEditor.Core.Utils.ObjectDumper
 {
+    /// <summary>
+    /// Extensions for dumping objects for debugging purposes.
+    /// </summary>
     public static class ObjectDumperExtensions
     {
+        /// <summary>
+        /// Dumps the object to the console.
+        /// </summary>
         public static T DumpToConsole<T>(this T value, string name)
         {
             if (IsNullOrWhiteSpace(name)) throw new ArgumentNullException(nameof(name));
@@ -16,11 +22,17 @@ namespace RuntimeUnityEditor.Core.Utils.ObjectDumper
             return value;
         }
 
+        /// <summary>
+        /// Dumps the object to a file.
+        /// </summary>
         public static T DumpToFile<T>(this T value, string name, string filename)
         {
             return value.DumpToFile(filename, name, Encoding.Default);
         }
 
+        /// <summary>
+        /// Dumps the object to a TextWriter.
+        /// </summary>
         public static T Dump<T>(this T value, string name, TextWriter writer)
         {
             if (IsNullOrWhiteSpace(name)) throw new ArgumentNullException(nameof(name));
@@ -31,6 +43,9 @@ namespace RuntimeUnityEditor.Core.Utils.ObjectDumper
             return value;
         }
 
+        /// <summary>
+        /// Dumps the object to a file with a specified encoding.
+        /// </summary>
         public static T DumpToFile<T>(this T value, string name, string filename, Encoding encoding)
         {
             if (IsNullOrWhiteSpace(name)) throw new ArgumentNullException(nameof(name));
@@ -42,6 +57,9 @@ namespace RuntimeUnityEditor.Core.Utils.ObjectDumper
             return value;
         }
 
+        /// <summary>
+        /// Dumps the object to a string.
+        /// </summary>
         public static string DumpToString<T>(this T value, string name)
         {
             using (var stringWriter = new StringWriter(CultureInfo.InvariantCulture))

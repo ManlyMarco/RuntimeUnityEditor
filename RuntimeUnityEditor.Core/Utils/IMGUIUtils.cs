@@ -8,7 +8,14 @@ namespace RuntimeUnityEditor.Core.Utils
     /// </summary>
     public static class IMGUIUtils
     {
+        /// <summary>
+        /// Options with GUILayout.ExpandWidth(true). Useful for avoiding allocations.
+        /// </summary>
         public static readonly GUILayoutOption[] LayoutOptionsExpandWidthTrue = { GUILayout.ExpandWidth(true) };
+        
+        /// <summary>
+        /// Options with GUILayout.ExpandWidth(false). Useful for avoiding allocations.
+        /// </summary>
         public static readonly GUILayoutOption[] LayoutOptionsExpandWidthFalse = { GUILayout.ExpandWidth(false) };
 
         private static Texture2D SolidBoxTex { get; set; }
@@ -127,11 +134,17 @@ namespace RuntimeUnityEditor.Core.Utils
             style.normal.textColor = backupColor;
         }
 
+        /// <summary>
+        /// Draw a label with a shadow
+        /// </summary>
         public static void DrawLayoutLabelWithShadow(GUIContent content, GUIStyle style, Color txtColor, Color shadowColor, Vector2 direction, params GUILayoutOption[] options)
         {
             DrawLabelWithShadow(GUILayoutUtility.GetRect(content, style, options), content, style, txtColor, shadowColor, direction);
         }
 
+        /// <summary>
+        /// Draw a button with a shadow
+        /// </summary>
         public static bool DrawButtonWithShadow(Rect r, GUIContent content, GUIStyle style, float shadowAlpha, Vector2 direction)
         {
             GUIStyle letters = style.CreateCopy();
@@ -147,7 +160,10 @@ namespace RuntimeUnityEditor.Core.Utils
 
             return result;
         }
-
+        
+        /// <summary>
+        /// Draw a button with a shadow
+        /// </summary>
         public static bool DrawLayoutButtonWithShadow(GUIContent content, GUIStyle style, float shadowAlpha, Vector2 direction, params GUILayoutOption[] options)
         {
             return DrawButtonWithShadow(GUILayoutUtility.GetRect(content, style, options), content, style, shadowAlpha, direction);

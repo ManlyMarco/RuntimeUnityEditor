@@ -32,7 +32,7 @@ namespace RuntimeUnityEditor.Core.Utils
             public Func<string, Type, object> ConvertToObject { get; set; }
         }
 
-        private static Dictionary<Type, TypeConverter> TypeConverters = new Dictionary<Type, TypeConverter>();
+        private static readonly Dictionary<Type, TypeConverter> TypeConverters = new Dictionary<Type, TypeConverter>();
 
         static TomlTypeConverter()
         {

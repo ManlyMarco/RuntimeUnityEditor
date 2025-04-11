@@ -2,9 +2,13 @@
 using System;
 using System.Reflection;
 using System.Text;
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
 namespace RuntimeUnityEditor.Core.REPL
 {
+    /// <summary>
+    /// Only for internal use.
+    /// </summary>
     public class TypeHelper
     {
         public object instance;
@@ -103,10 +107,10 @@ namespace RuntimeUnityEditor.Core.REPL
                                                        | BindingFlags.Instance))
             {
                 bool putComma = false;
-                sb.Append(methodInfo.IsPublic ? "public" : "private").Append(" ");
+                sb.Append(methodInfo.IsPublic ? "public" : "private").Append(' ');
                 if (methodInfo.ContainsGenericParameters)
                 {
-                    sb.Append("<");
+                    sb.Append('<');
                     foreach (var genericArgument in methodInfo.GetGenericArgumentsSafe())
                     {
                         if (putComma)
@@ -115,10 +119,10 @@ namespace RuntimeUnityEditor.Core.REPL
                         putComma = true;
                     }
 
-                    sb.Append(">");
+                    sb.Append('>');
                 }
 
-                sb.Append(methodInfo.Name).Append("(");
+                sb.Append(methodInfo.Name).Append('(');
 
                 putComma = false;
                 foreach (var parameterInfo in methodInfo.GetParameters())
@@ -139,7 +143,7 @@ namespace RuntimeUnityEditor.Core.REPL
             foreach (var fieldInfo in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance)
             )
             {
-                sb.Append(fieldInfo.IsPublic ? "public" : "private").Append(" ");
+                sb.Append(fieldInfo.IsPublic ? "public" : "private").Append(' ');
                 sb.AppendLine(fieldInfo.Name);
             }
 

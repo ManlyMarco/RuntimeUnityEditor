@@ -7,8 +7,14 @@ using RuntimeUnityEditor.Core.Utils.Abstractions;
 
 namespace RuntimeUnityEditor.Core.Utils
 {
+    /// <summary>
+    /// Extensions for <see cref="Type"/> to get a more readable representation of the type name.
+    /// </summary>
     public static class TypeNameExtensions
     {
+        /// <summary>
+        /// Gets a more readable representation of the type name.
+        /// </summary>
         public static string GetSourceCodeRepresentation(this Type type)
         {
             try
@@ -24,7 +30,7 @@ namespace RuntimeUnityEditor.Core.Utils
         private static string GetSourceCodeRepresentationInt(Type type, List<Type> travesed)
         {
             // Potential infinite recursion
-            if (travesed.Count > 20) throw new ArgumentException();
+            if (travesed.Count > 20) throw new ArgumentException("Infinite recursion trying to get full Type display string");
 
             travesed.Add(type);
 
@@ -54,6 +60,9 @@ namespace RuntimeUnityEditor.Core.Utils
             return $"{prefixName}{type.Name}";
         }
 
+        /// <summary>
+        /// Get a full description of the member, including its type, access modifiers, and other relevant information.
+        /// </summary>
         public static string GetFancyDescription(this MemberInfo member)
         {
             switch (member)
