@@ -1,15 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using RuntimeUnityEditor.Core.ObjectTree;
-using RuntimeUnityEditor.Core.ObjectView;
-using RuntimeUnityEditor.Core.Profiler;
-using RuntimeUnityEditor.Core.REPL;
 using RuntimeUnityEditor.Core.UI;
 using RuntimeUnityEditor.Core.Utils;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
-#pragma warning disable CS0618
 
 namespace RuntimeUnityEditor.Core
 {
@@ -38,57 +33,6 @@ namespace RuntimeUnityEditor.Core
         /// </summary>
         public const string GUID = "RuntimeUnityEditor";
 
-        #region Obsolete
-
-        /// <summary> Obsolete, do not use. Will be removed soon. </summary>
-        [Obsolete("Use window Instance instead", true)] public Inspector.Inspector Inspector => Core.Inspector.Inspector.Initialized ? Core.Inspector.Inspector.Instance : null;
-        /// <summary> Obsolete, do not use. Will be removed soon. </summary>
-        [Obsolete("Use window Instance instead", true)] public ObjectTreeViewer TreeViewer => ObjectTreeViewer.Initialized ? ObjectTreeViewer.Instance : null;
-        /// <summary> Obsolete, do not use. Will be removed soon. </summary>
-        [Obsolete("Use window Instance instead", true)] public ObjectViewWindow PreviewWindow => ObjectViewWindow.Initialized ? ObjectViewWindow.Instance : null;
-        /// <summary> Obsolete, do not use. Will be removed soon. </summary>
-        [Obsolete("Use window Instance instead", true)] public ProfilerWindow ProfilerWindow => ProfilerWindow.Initialized ? ProfilerWindow.Instance : null;
-        /// <summary> Obsolete, do not use. Will be removed soon. </summary>
-        [Obsolete("Use window Instance instead", true)] public ReplWindow Repl => ReplWindow.Initialized ? ReplWindow.Instance : null;
-        /// <summary> Obsolete, do not use. Will be removed soon. </summary>
-        [Obsolete("No longer works", true)] public event EventHandler SettingsChanged;
-
-        /// <summary>
-        /// Hotkey used to show/hide RuntimeUnityEditor. Changing this at runtime also updates the config file, so the value will be set on the next start.
-        /// </summary>
-        [Obsolete("Avoid changing the hotkey through code since it will overwrite user setting. Set the Show property instead if you need to show/hide RUE at specific times.")]
-        public KeyCode ShowHotkey
-        {
-            get =>_showHotkey?.Value ?? KeyCode.F12;
-            set => _showHotkey.Value = value;
-        }
-
-        /// <summary> Obsolete, do not use. Will be removed soon. </summary>
-        [Obsolete("Use window Instance instead", true)]
-        public bool ShowRepl
-        {
-            get => ReplWindow.Initialized && ReplWindow.Instance.Enabled;
-            set { if (ReplWindow.Initialized) ReplWindow.Instance.Enabled = value; }
-        }
-
-        /// <summary> Obsolete, do not use. Will be removed soon. </summary>
-        [Obsolete("Use window Instance instead", true)]
-        public bool EnableMouseInspect
-        {
-            get => MouseInspect.Initialized && MouseInspect.Instance.Enabled;
-            set { if (MouseInspect.Initialized) MouseInspect.Instance.Enabled = value; }
-        }
-
-        /// <summary> Obsolete, do not use. Will be removed soon. </summary>
-        [Obsolete("Use window Instance instead", true)]
-        public bool ShowInspector
-        {
-            get => Core.Inspector.Inspector.Initialized && Core.Inspector.Inspector.Instance.Enabled;
-            set { if (Core.Inspector.Inspector.Initialized) Core.Inspector.Inspector.Instance.Enabled = value; }
-        }
-
-        #endregion
-
         #region Public API
 
         /// <summary>
@@ -108,6 +52,18 @@ namespace RuntimeUnityEditor.Core
             {
                 return Instance != null;
             }
+        }
+        
+        /// <summary>
+        /// Hotkey used to show/hide RuntimeUnityEditor. Changing this at runtime also updates the config file, so the value will be set on the next start.
+        /// </summary>
+        /// <remarks>
+        /// Avoid changing the hotkey through code since it will overwrite user setting. Set the <see cref="Show"/> property instead if you need to show/hide RUE at specific times.
+        /// </remarks>
+        public KeyCode ShowHotkey
+        {
+            get => _showHotkey?.Value ?? KeyCode.F12;
+            set => _showHotkey.Value = value;
         }
 
         /// <summary>
@@ -142,7 +98,12 @@ namespace RuntimeUnityEditor.Core
             Taskbar.Instance.SetFeatures(_initializedFeatures);
         }
 
-        internal bool RemoveFeature(IFeature feature)
+        /// <summary>
+        /// Remove a feature from RuntimeUnityEditor.
+        /// Any added config settings will not be removed, but the feature will no longer be shown in the taskbar or receive events.
+        /// </summary>
+        /// <returns>True if the feature existed and was removed, false if nothing was done.</returns>
+        public bool RemoveFeature(IFeature feature)
         {
             if (_initializedFeatures.Remove(feature))
             {
