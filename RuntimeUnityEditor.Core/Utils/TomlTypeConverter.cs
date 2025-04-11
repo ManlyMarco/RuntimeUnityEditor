@@ -190,7 +190,7 @@ namespace RuntimeUnityEditor.Core.Utils
             }
 
             TypeConverters.Add(type, converter);
-            ToStringConverter._canCovertCache[type] = true;
+            ToStringConverter._canConvertCache[type] = true;
             return true;
         }
 
