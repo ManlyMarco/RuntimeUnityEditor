@@ -21,6 +21,7 @@ namespace RuntimeUnityEditor.Bepin6.IL2CPP
     {
         private static RuntimeUnityEditorCore _coreInstance = null!;
 
+        /// <inheritdoc/>
         public override void Load()
         {
             if (!TomlTypeConverter.CanConvert(typeof(Rect)))
@@ -28,7 +29,7 @@ namespace RuntimeUnityEditor.Bepin6.IL2CPP
                 var converter = Core.Utils.TomlTypeConverter.GetConverter(typeof(Rect));
                 TomlTypeConverter.AddConverter(typeof(Rect), new TypeConverter { ConvertToObject = converter.ConvertToObject, ConvertToString = converter.ConvertToString });
             }
-            
+
             _coreInstance = new RuntimeUnityEditorCore(new Bep6InitSettings(this));
 
             _coreInstance.AddFeature(new LogViewerWindow());

@@ -3,6 +3,7 @@ using RuntimeUnityEditor.Core.Utils.Abstractions;
 using System;
 using UnityEngine;
 using UnityModManagerNet;
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 
 namespace RuntimeUnityEditor.UMM
 {

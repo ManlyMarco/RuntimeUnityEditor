@@ -371,7 +371,10 @@ namespace RuntimeUnityEditor.Core.Gizmos.lib
             float offset = 0f;
             Draw<PolygonDrawer>(color, dashed, position, pointsCount, radius, offset, rotation);
         }
-        
+
+        /// <summary>
+        /// Draws an arc in world space.
+        /// </summary>
         public static void Arc(Vector3 position, float radius, Quaternion rotation, float offset, float drawnAngle, Color? color = null, bool dashed = false, int pointsCount = 16)
         {
             Draw<ArcDrawer>(color, dashed, position, pointsCount, radius, offset, rotation, drawnAngle);

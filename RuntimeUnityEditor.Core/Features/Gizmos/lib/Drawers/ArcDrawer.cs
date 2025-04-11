@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+
 namespace RuntimeUnityEditor.Core.Gizmos.lib.Drawers
 {
     public class ArcDrawer : Drawer
