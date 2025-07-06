@@ -63,7 +63,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Windows\Breakpoints\BreakpointHitException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\Breakpoints\BreakpointPatchInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\Breakpoints\Breakpoints.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)windows\breakpoints\BreakpointsWindow.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Breakpoints\BreakpointsWindow.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\Breakpoints\DebuggerBreakType.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\ChangeHistory\Change.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\ChangeHistory\ChangeAction.cs" />
