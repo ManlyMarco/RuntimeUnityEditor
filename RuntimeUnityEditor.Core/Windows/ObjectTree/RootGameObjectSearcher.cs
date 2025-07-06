@@ -25,16 +25,25 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         private bool _lastSearchComponents;
         private bool _lastSearchNames;
 
-        // -1 for all scenes
-        // todo only additive scenes option?
+        public enum SearchType
+        {
+            AllScenes,
+            DontDestroyOnLoad,
+            Inactive,
+            SceneIndex,
+        }
+
+        public SearchType CurrentSearchType { get; set; } = SearchType.AllScenes;
+
         private int _sceneIndexFilter = -1;
         internal int SceneIndexFilter
         {
             get => _sceneIndexFilter;
             set
             {
-                if (_sceneIndexFilter != value)
+                if (CurrentSearchType != SearchType.SceneIndex || _sceneIndexFilter != value)
                 {
+                    CurrentSearchType = SearchType.SceneIndex;
                     _sceneIndexFilter = value;
                     QueueFullReindex();
                     RedoLastSearch();
@@ -74,7 +83,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         /// </summary>
         public IEnumerable<GameObject> GetRootObjects()
         {
-            if (SceneIndexFilter >= 0)
+            if (SceneIndexFilter >= 0 && CurrentSearchType == SearchType.SceneIndex)
             {
                 return UnityFeatureHelper.GetSceneRootObjects(SceneIndexFilter);
             }
@@ -82,7 +91,18 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             if (_cachedRootGameObjects != null)
             {
                 _cachedRootGameObjects.RemoveAll(IsGameObjectNull);
-                return _cachedRootGameObjects;
+                if (CurrentSearchType == SearchType.DontDestroyOnLoad)
+                {
+                    return _cachedRootGameObjects.Where(go => go.scene.isLoaded && go.scene.name == "DontDestroyOnLoad");
+                }
+                else if (CurrentSearchType == SearchType.Inactive)
+                {
+                    return _cachedRootGameObjects.Where(go => go.scene == default);
+                }
+                else
+                {
+                    return _cachedRootGameObjects;
+                }
             }
 
             return Enumerable.Empty<GameObject>();

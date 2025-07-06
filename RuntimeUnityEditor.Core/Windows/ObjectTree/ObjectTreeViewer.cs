@@ -666,6 +666,14 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
         private readonly ImguiComboBox _sceneDropdown = new ImguiComboBox();
         private static readonly GUIContent _sceneDropdownAllScenesContent = new GUIContent("All scenes", null, "Show GameObjects from all loaded scenes.\n\nSelect a scene from the dropdown to only show GameObjects that belong to that scene (they will be destroyed if the scene is unloaded).");
+        private static readonly GUIContent _sceneDropdownDontDestroyOnLoadContent = new GUIContent("DontDestroyOnLoad", null, "Show GameObjects that are not part of any scene, but are marked as DontDestroyOnLoad.\n\nThese objects will not be destroyed when a scene is unloaded.");
+        private static readonly GUIContent _sceneDropdownInactiveContent = new GUIContent("Inactive", null, "Show GameObjects that are not part of any scene.\n\nThese objects will not be destroyed when a scene is unloaded, but they are not visible in the hierarchy and cannot be selected.");
+        private static readonly GUIContent[] _sceneDropdownDefaultOptions =
+        {
+            _sceneDropdownAllScenesContent,
+            _sceneDropdownDontDestroyOnLoadContent,
+            _sceneDropdownInactiveContent
+        };
         private GUIContent _sceneDropdownCurrentContent = _sceneDropdownAllScenesContent;
         private readonly GUIContent _sceneUnloadButtonContent = new GUIContent("Unload", null, "Attempt to unload currently selected scene. It may fail if there is only one scene loaded.");
         private readonly GUIContent _sceneLabelContent = new GUIContent("Scene: ", null, "Multiple scenes can be loaded at the same time, in which case objects that belong to them all exist at the same time." +
@@ -682,21 +690,41 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 var loadedScenes = Enumerable.Range(0, UnityFeatureHelper.sceneCount).Select(UnityFeatureHelper.GetSceneAt);
 
                 _sceneDropdown.Show(_sceneDropdownCurrentContent,
-                                    () => Enumerable.Repeat(_sceneDropdownAllScenesContent, 1).Concat(loadedScenes.Select((x, i) => GetSceneContent(i, x))).ToArray(),
+                                    () => _sceneDropdownDefaultOptions.Concat(loadedScenes.Select((x, i) => GetSceneContent(i, x))).ToArray(),
                                     i =>
                                     {
                                         try
                                         {
-                                            var sceneIndex = i - 1;
-                                            _sceneDropdownCurrentContent = sceneIndex < 0 ? _sceneDropdownAllScenesContent : GetSceneContent(sceneIndex, UnityFeatureHelper.GetSceneAt(sceneIndex));
-                                            _gameObjectSearcher.SceneIndexFilter = sceneIndex;
-
+                                            if (i == Array.IndexOf(_sceneDropdownDefaultOptions, _sceneDropdownAllScenesContent))
+                                            {
+                                                _sceneDropdownCurrentContent = _sceneDropdownAllScenesContent;
+                                                _gameObjectSearcher.CurrentSearchType = RootGameObjectSearcher.SearchType.AllScenes;
+                                            }
+                                            else if (i == Array.IndexOf(_sceneDropdownDefaultOptions, _sceneDropdownDontDestroyOnLoadContent))
+                                            {
+                                                _sceneDropdownCurrentContent = _sceneDropdownDontDestroyOnLoadContent;
+                                                _gameObjectSearcher.CurrentSearchType = RootGameObjectSearcher.SearchType.DontDestroyOnLoad;
+                                            }
+                                            else if (i == Array.IndexOf(_sceneDropdownDefaultOptions, _sceneDropdownInactiveContent))
+                                            {
+                                                _sceneDropdownCurrentContent = _sceneDropdownInactiveContent;
+                                                _gameObjectSearcher.CurrentSearchType = RootGameObjectSearcher.SearchType.Inactive;
+                                            }
+                                            else if (i < _sceneDropdownDefaultOptions.Length)
+                                                throw new ArgumentOutOfRangeException(nameof(i), "Invalid scene index");
+                                            else
+                                            {
+                                                var sceneIndex = i - _sceneDropdownDefaultOptions.Length;
+                                                _sceneDropdownCurrentContent = GetSceneContent(sceneIndex, UnityFeatureHelper.GetSceneAt(sceneIndex));
+                                                _gameObjectSearcher.CurrentSearchType = RootGameObjectSearcher.SearchType.SceneIndex;
+                                                _gameObjectSearcher.SceneIndexFilter = sceneIndex;
+                                            }
                                             UpdateSearch();
                                         }
                                         catch (Exception e)
                                         {
                                             _sceneDropdownCurrentContent = _sceneDropdownAllScenesContent;
-                                            _gameObjectSearcher.SceneIndexFilter = -1;
+                                            _gameObjectSearcher.CurrentSearchType = RootGameObjectSearcher.SearchType.AllScenes;
                                             RuntimeUnityEditorCore.Logger.Log(LogLevel.Message | LogLevel.Warning, "Failed to select scene from dropdown, it may have been unloaded");
                                             RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, e);
                                         }
@@ -711,7 +739,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                     if (scene.isLoaded)
                     {
                         UnityFeatureHelper.UnloadScene(scene.name);
-                        _gameObjectSearcher.SceneIndexFilter = -1;
+                        _gameObjectSearcher.CurrentSearchType = RootGameObjectSearcher.SearchType.AllScenes;
                         _sceneDropdownCurrentContent = _sceneDropdownAllScenesContent;
                     }
                 }
