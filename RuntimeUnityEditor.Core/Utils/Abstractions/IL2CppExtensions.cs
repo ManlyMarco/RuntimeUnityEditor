@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
+using Il2CppInterop.Common.Attributes;
 using Il2CppInterop.Runtime.InteropTypes;
 using RuntimeUnityEditor.Core.Utils;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
@@ -77,11 +78,15 @@ namespace RuntimeUnityEditor.Core
                                   .SelectMany(x => x.GetTypesSafe())
                                   .GroupBy(x => x.FullName))
             {
-                _cachedTypes[types.Key] = types.OrderByDescending(a =>
+                var type = types.OrderByDescending(a =>
                 {
                     var assemblyFullName = a.Assembly.FullName;
                     return assemblyFullName.StartsWith("UnityEngine.") || assemblyFullName.StartsWith("System.");
                 }).First();
+                var key = types.Key;
+                var obfuscatedNameAttribute = type.GetCustomAttribute<ObfuscatedNameAttribute>();
+                if (obfuscatedNameAttribute != null) key = obfuscatedNameAttribute.ObfuscatedName;
+                _cachedTypes[key] = type;
             }
 
             if (_cachedTypes.TryGetValue(typeName, out monoType)) return monoType;
@@ -90,9 +95,10 @@ namespace RuntimeUnityEditor.Core
             // todo try this first to be safe?
             var typeNameWithNamespace = il2CppType.Namespace + "." + typeName.Replace('.', '+');
 
-            //Console.WriteLine(typeName);
-            //Console.WriteLine(il2CppType.FormatTypeName());
-            //Console.WriteLine(il2CppType.Namespace);
+            // RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, typeName);
+            // RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, il2CppType.FormatTypeName());
+            // RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, il2CppType.Namespace);
+            // RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, il2CppType.Assembly.FullName);
 
             if (_cachedTypes.TryGetValue(typeNameWithNamespace, out monoType))
             {
