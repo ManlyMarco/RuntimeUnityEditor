@@ -21,12 +21,12 @@ namespace RuntimeUnityEditor.Core.Profiler
         private const string OnGuiMethodName = "OnGUI";
         private const int RanW = 25;
         private static readonly string[] _orderingStrings = { "#", "Time", "Memory", "Name" };
-        private static readonly GUILayoutOption[] _cGcW = { GUILayout.MinWidth(50), GUILayout.MaxWidth(50) };
-        private static readonly GUILayoutOption[] _cOrderW = { GUILayout.MinWidth(30), GUILayout.MaxWidth(30) };
-        private static readonly GUILayoutOption[] _cRanHeaderW = { GUILayout.MinWidth(43), GUILayout.MaxWidth(43) };
-        private static readonly GUILayoutOption[] _cRanW2 = { GUILayout.MinWidth(RanW), GUILayout.MaxWidth(RanW) };
-        private static readonly GUILayoutOption[] _cTicksW = { GUILayout.MinWidth(50), GUILayout.MaxWidth(50) };
-        private static readonly GUILayoutOption[] _cInsW = { GUILayout.MinWidth(50), GUILayout.MaxWidth(50) };
+        private static readonly GUILayoutOption[] _cGcW = { GUILayoutShim.MinWidth(50), GUILayoutShim.MaxWidth(50) };
+        private static readonly GUILayoutOption[] _cOrderW = { GUILayoutShim.MinWidth(30), GUILayoutShim.MaxWidth(30) };
+        private static readonly GUILayoutOption[] _cRanHeaderW = { GUILayoutShim.MinWidth(43), GUILayoutShim.MaxWidth(43) };
+        private static readonly GUILayoutOption[] _cRanW2 = { GUILayoutShim.MinWidth(RanW), GUILayoutShim.MaxWidth(RanW) };
+        private static readonly GUILayoutOption[] _cTicksW = { GUILayoutShim.MinWidth(50), GUILayoutShim.MaxWidth(50) };
+        private static readonly GUILayoutOption[] _cInsW = { GUILayoutShim.MinWidth(50), GUILayoutShim.MaxWidth(50) };
         private static readonly GUIContent _cColOrder = new GUIContent("#", null, "Relative order of execution in a frame. Methods are called one by one on the main unity thread in this order.\n\nMethods that did not run during this frame are also included, so this number does not equal how many methods were called on this frame.");
         private static readonly GUIContent _cColRan = new GUIContent("Ran", null, "Left toggle indicates if this method was executed in this frame (all Harmony patches were called, and the original method was called if not disabled by a Harmony patch).\n\nRight toggle indicates if the original method was executed (original method being skipped is usually caused by a false postfix in a Harmony patch)");
         private static readonly GUIContent _cColTime = new GUIContent("Time", null, "Time spent executing this method (all Harmony patches included).\n\nBy default it's shown in ticks (smallest measurable unit of time). Resolution of ticks depends on Stopwatch.Frequency, but usually 10000 = 1ms.\n\nHigh values will drop FPS. If the value is much higher on some frames it can be felt as the game stuttering.\n\nIn methods running on every frame this should be as low as possible.");
@@ -211,7 +211,7 @@ namespace RuntimeUnityEditor.Core.Profiler
                             GUILayout.EndHorizontal();
 
                             if (needsHeightMeasure && Event.current.type == EventType.Repaint)
-                                _singleObjectTreeItemHeight = Mathf.CeilToInt(GUILayoutUtility.GetLastRect().height);
+                                _singleObjectTreeItemHeight = Mathf.CeilToInt(GUILayoutUtilityShim.GetLastRect().height);
                         }
                         else
                             GUILayout.Space(_singleObjectTreeItemHeight);

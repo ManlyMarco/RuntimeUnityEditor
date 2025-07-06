@@ -41,6 +41,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Utils\ComboBox.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\Extensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\Abstractions\IL2CppExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\Abstractions\GUILayoutShim.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\Abstractions\GUILayoutUtilityShim.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\ImguiComboBox.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\IMGUIUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Utils\MovingAverage.cs" />

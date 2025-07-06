@@ -81,7 +81,7 @@ namespace RuntimeUnityEditor.Core.ChangeHistory
                         if (_showTimestamps.Value)
                         {
                             GUI.color = new Color(0.67f, 0.67f, 0.67f);
-                            GUILayout.Label(change.ChangeTime.ToString("HH:mm:ss"), GUILayout.MinWidth(50));
+                            GUILayout.Label(change.ChangeTime.ToString("HH:mm:ss"), GUILayoutShim.MinWidth(50));
                             GUI.color = Color.white;
                         }
 

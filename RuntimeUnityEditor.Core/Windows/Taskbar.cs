@@ -58,7 +58,15 @@ namespace RuntimeUnityEditor.Core
 
         void IFeature.OnOnGUI()
         {
-            _windowRect = GUILayout.Window(_windowId, _windowRect, (GUI.WindowFunction)DrawTaskbar, GetTitle(), GUILayout.ExpandHeight(false), GUILayout.ExpandWidth(false), GUILayout.MaxWidth(Screen.width));
+            _windowRect = GUILayout.Window(
+                _windowId,
+                _windowRect,
+                (GUI.WindowFunction)DrawTaskbar,
+                GetTitle(),
+                GUILayout.ExpandHeight(false),
+                GUILayout.ExpandWidth(false),
+                GUILayoutShim.MaxWidth(Screen.width)
+            );
             IMGUIUtils.EatInputInRect(_windowRect);
             _windowRect.x = (int)((Screen.width - _windowRect.width) / 2);
             _windowRect.y = (int)(Screen.height - _windowRect.height);
