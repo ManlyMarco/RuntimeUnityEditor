@@ -16,13 +16,8 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
     /// </summary>
     public static class UnityFeatureHelper
     {
-#if IL2CPP
-        private static readonly Type _sceneManager = Type.GetType("UnityEngine.SceneManagement.SceneManager, UnityEngine.CoreModule", false);
-        private static readonly Type _scene = Type.GetType("UnityEngine.SceneManagement.Scene, UnityEngine.CoreModule", false);
-#else
-        private static readonly Type _sceneManager = Type.GetType("UnityEngine.SceneManagement.SceneManager, UnityEngine", false);
-        private static readonly Type _scene = Type.GetType("UnityEngine.SceneManagement.Scene, UnityEngine", false);
-#endif
+        private static readonly Type _sceneManager = Type.GetType("UnityEngine.SceneManagement.SceneManager, UnityEngine.CoreModule", false) ?? Type.GetType("UnityEngine.SceneManagement.SceneManager, UnityEngine", false);
+        private static readonly Type _scene = Type.GetType("UnityEngine.SceneManagement.Scene, UnityEngine.CoreModule", false) ?? Type.GetType("UnityEngine.SceneManagement.Scene, UnityEngine", false);
 
         static UnityFeatureHelper()
         {
@@ -344,6 +339,7 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
         {
             var cameraType = typeof(Camera);
 #if IL2CPP
+            // Fields are exposed as properties in interop assemblies
             if (cameraType.GetProperty(nameof(Camera.onPreRender), BindingFlags.Static | BindingFlags.Public) == null || cameraType.GetProperty(nameof(Camera.onPostRender), BindingFlags.Static | BindingFlags.Public) == null)
                 throw new NotSupportedException("Camera.onPreRender and/or Camera.onPostRender are not available");
 #else
