@@ -85,7 +85,7 @@ namespace RuntimeUnityEditor.Core
                 }).First();
                 var key = types.Key;
                 var obfuscatedNameAttribute = type.GetCustomAttribute<ObfuscatedNameAttribute>();
-                if (obfuscatedNameAttribute != null) key = obfuscatedNameAttribute.ObfuscatedName;
+                if (obfuscatedNameAttribute != null && !string.IsNullOrWhiteSpace(obfuscatedNameAttribute.ObfuscatedName)) key = obfuscatedNameAttribute.ObfuscatedName;
                 _cachedTypes[key] = type;
             }
 
