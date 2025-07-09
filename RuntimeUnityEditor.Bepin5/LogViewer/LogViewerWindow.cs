@@ -232,7 +232,7 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
 
                     if (!heightMeasured && Event.current.type == EventType.Repaint)
                     {
-                        var newHeight = (int)GUILayoutUtility.GetLastRect().height;
+                        var newHeight = (int)GUILayoutUtilityShim.GetLastRect().height;
                         if (_itemHeight == 0 || _itemHeight > newHeight) // handle long log messages that span multiple lines, we want to use the height of a single line
                             _itemHeight = newHeight;
                     }

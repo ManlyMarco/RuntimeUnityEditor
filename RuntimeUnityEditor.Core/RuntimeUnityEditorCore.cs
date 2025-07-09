@@ -143,10 +143,21 @@ namespace RuntimeUnityEditor.Core
 
                     var iFeatureType = typeof(IFeature);
                     // Create all instances first so they are accessible in Initialize methods in case there's crosslinking spaghetti
-                    var allFeatures = typeof(RuntimeUnityEditorCore).Assembly.GetTypesSafe()
-                                                                    .Where(t => !t.IsAbstract && iFeatureType.IsAssignableFrom(t))
-                                                                    .Select(Activator.CreateInstance)
-                                                                    .Cast<IFeature>().ToList();
+                    List<IFeature> allFeatures = new List<IFeature>();
+                    foreach (var type in typeof(RuntimeUnityEditorCore).Assembly.GetTypesSafe())
+                    {
+                        if (!type.IsAbstract && iFeatureType.IsAssignableFrom(type))
+                        {
+                            try
+                            {
+                                allFeatures.Add((IFeature)Activator.CreateInstance(type));
+                            }
+                            catch (Exception e)
+                            {
+                                Logger.Log(LogLevel.Warning, $"Failed to create instance of {type.Name} - {e}");
+                            }
+                        }
+                    }
 
                     foreach (var feature in allFeatures)
                     {

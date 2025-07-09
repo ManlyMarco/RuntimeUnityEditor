@@ -32,7 +32,10 @@
         /// <inheritdoc />
         public override void ShowContextMenu()
         {
-            ContextMenu.Instance.Show(Instance, Parent);
+            if (Parent == null)
+                ContextMenu.Instance.Show(Instance);
+            else
+                ContextMenu.Instance.Show(Instance, Parent);
         }
     }
 }

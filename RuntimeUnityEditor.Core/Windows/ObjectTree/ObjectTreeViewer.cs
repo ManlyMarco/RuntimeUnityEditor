@@ -180,7 +180,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                             GUILayout.Space(20f);
                         }
 
-                        if (GUILayout.Button(go.name, GUI.skin.label, GUILayout.ExpandWidth(true), GUILayout.MinWidth(200)))
+                        if (GUILayout.Button(go.name, GUI.skin.label, GUILayout.ExpandWidth(true), GUILayoutShim.MinWidth(200), GUILayout.ExpandHeight(false)))
                         {
                             if (IMGUIUtils.IsMouseRightClick())
                             {
@@ -212,7 +212,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                     if (needsHeightMeasure)
                     {
                         _singleObjectTreeItemMargin = GUI.skin.label.margin.top;
-                        _singleObjectTreeItemHeight = GUILayoutUtility.GetLastRect().height + _singleObjectTreeItemMargin;
+                        _singleObjectTreeItemHeight = GUILayoutUtilityShim.GetLastRect().height + _singleObjectTreeItemMargin;
                     }
                 }
             }

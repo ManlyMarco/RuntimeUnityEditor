@@ -14,8 +14,8 @@ namespace RuntimeUnityEditor.Core.Inspector
     public sealed partial class Inspector : Window<Inspector>
     {
         internal const int InspectorRecordInitialHeight = 25;
-        private readonly GUILayoutOption[] _inspectorTypeWidth = { GUILayout.Width(170), GUILayout.MaxWidth(170) };
-        private readonly GUILayoutOption[] _inspectorNameWidth = { GUILayout.Width(240), GUILayout.MaxWidth(240) };
+        private readonly GUILayoutOption[] _inspectorTypeWidth = { GUILayout.Width(170), GUILayoutShim.MaxWidth(170) };
+        private readonly GUILayoutOption[] _inspectorNameWidth = { GUILayout.Width(240), GUILayoutShim.MaxWidth(240) };
 
         private readonly List<InspectorTab> _tabs = new List<InspectorTab>();
         private InspectorTab _currentTab;
@@ -435,7 +435,7 @@ namespace RuntimeUnityEditor.Core.Inspector
 
                         if (Event.current.type == EventType.Repaint)
                         {
-                            var measured = (int)GUILayoutUtility.GetLastRect().height;
+                            var measured = (int)GUILayoutUtilityShim.GetLastRect().height;
                             entry.ItemHeight = Mathf.Max(entry.ItemHeight, measured);
                         }
 
