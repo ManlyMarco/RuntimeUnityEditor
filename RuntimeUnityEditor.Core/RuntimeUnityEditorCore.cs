@@ -144,10 +144,12 @@ namespace RuntimeUnityEditor.Core
                     var iFeatureType = typeof(IFeature);
                     // Create all instances first so they are accessible in Initialize methods in case there's crosslinking spaghetti
                     List<IFeature> allFeatures = new List<IFeature>();
+                    var featureTotal = 0;
                     foreach (var type in typeof(RuntimeUnityEditorCore).Assembly.GetTypesSafe())
                     {
                         if (!type.IsAbstract && iFeatureType.IsAssignableFrom(type))
                         {
+                            featureTotal++;
                             try
                             {
                                 allFeatures.Add((IFeature)Activator.CreateInstance(type));
@@ -176,7 +178,7 @@ namespace RuntimeUnityEditor.Core
 
                     Taskbar.Instance.SetFeatures(_initializedFeatures);
 
-                    Logger.Log(LogLevel.Info, $"Successfully initialized {_initializedFeatures.Count}/{allFeatures.Count} features: {string.Join(", ", _initializedFeatures.Select(x => x.GetType().Name).ToArray())}");
+                    Logger.Log(LogLevel.Info, $"Successfully initialized {_initializedFeatures.Count}/{featureTotal} features: {string.Join(", ", _initializedFeatures.Select(x => x.GetType().Name).ToArray())}");
                 }
                 catch
                 {
