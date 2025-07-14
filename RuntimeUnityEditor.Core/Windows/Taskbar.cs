@@ -96,7 +96,7 @@ namespace RuntimeUnityEditor.Core
                             foreach (var window in _orderedFeatures.OfType<IWindow>())
                                 window.WindowRect = new Rect(-1000, -1000, 0, 0);
 
-                            foreach (var window in _orderedFeatures.OfType<IWindow>().OrderBy(x => x.Title))
+                            foreach (var window in _orderedFeatures.OfType<IWindow>().OrderByDescending(x => x.Enabled).ThenBy(x => x.Title))
                             {
                                 // Ensure that all title bars are visible
                                 GUI.BringWindowToFront(window.WindowId);
