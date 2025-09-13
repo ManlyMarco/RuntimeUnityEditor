@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using Mono.CSharp;
+using RuntimeUnityEditor.Core.Utils.Abstractions;
 
 namespace RuntimeUnityEditor.Core.REPL.MCS
 {
@@ -56,10 +57,18 @@ namespace RuntimeUnityEditor.Core.REPL.MCS
         {
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
-                string name = assembly.GetName().Name;
-                if (StdLib.Contains(name))
+                var assemblyName = assembly.GetName();
+                var shortName = assemblyName.Name;
+                if (StdLib.Contains(shortName))
                     continue;
-                import(assembly);
+                try
+                {
+                    import(assembly);
+                }
+                catch (Exception e)
+                {
+                    RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, $"[REPL] Failed to import [{assemblyName.FullName}]: {e.Message}");
+                }
             }
         }
     }
