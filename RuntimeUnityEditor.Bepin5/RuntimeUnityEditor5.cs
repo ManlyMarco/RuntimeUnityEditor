@@ -31,6 +31,7 @@ namespace RuntimeUnityEditor.Bepin5
 
             Instance = new RuntimeUnityEditorCore(new Bep5InitSettings(this));
 
+            Instance.AddFeature(new PatchInspector.PatchInspector());
             Instance.AddFeature(new LogViewerWindow());
         }
 
