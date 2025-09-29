@@ -128,7 +128,7 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
 
 					GUILayout.BeginVertical(GUILayout.Width(80));
 
-					bool newEnabled = GUILayout.Toggle(patch.IsEnabled, "Toggle");
+					bool newEnabled = GUILayout.Toggle(patch.IsEnabled, "Enabled");
 					if (newEnabled != patch.IsEnabled)
 					{
 						TogglePatchDirect(patch, newEnabled);
