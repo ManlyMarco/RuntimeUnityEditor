@@ -21,26 +21,85 @@ namespace RuntimeUnityEditor.Core.Inspector
     /// </summary>
     internal static class MemberCollector
     {
+        private static readonly Dictionary<Type, Dictionary<string, Il2CppMemberInfo>> _ptrLookup = new();
+        internal sealed class Il2CppMemberInfo
+        {
+            /// <summary>
+            /// Prop getter if it's a property or field address if it's a field
+            /// </summary>
+            public FieldInfo Getter { get; }
+            /// <summary>
+            /// Always null for fields, prop setter if it's a property that has a setter
+            /// </summary>
+            public FieldInfo Setter { get; }
+            public string TrimmedName { get; }
+            public bool IsProperty { get; }
+
+            public Il2CppMemberInfo(string trimmedName, FieldInfo getter, FieldInfo setter, bool isProperty)
+            {
+                Getter = getter;
+                Setter = setter;
+                IsProperty = isProperty;
+                TrimmedName = trimmedName;
+            }
+        }
+
+        private static Dictionary<string, Il2CppMemberInfo> GetPtrLookupTable(Type type)
+        {
+            // todo some way to clean up old entries?
+            if (_ptrLookup.TryGetValue(type, out var value))
+                return value;
+
+            // TODO redo to use memberinfo as key and figure out the target field for properties and methods via
+            // Il2CppInterop.Common.Il2CppInteropUtils.GetIl2CppMethodInfoPointerFieldForGeneratedMethod()
+            // probably enough to list fields and assume if it's not a field it's a method and use the method at time of collecting members not here
+
+            var staticFields = type.GetFields(BindingFlags.Static | BindingFlags.NonPublic).Where(x => x.IsInitOnly).ToList();
+
+            value = staticFields.Where(x => x.Name.StartsWith("NativeFieldInfoPtr_"))
+                                .Select(x => new Il2CppMemberInfo(x.Name.Replace("NativeFieldInfoPtr_", ""), x, null, false))
+                                .ToDictionary(x => x.TrimmedName, x => x);
+
+
+            bool IsFromProp(string name) => name.StartsWith("get_", StringComparison.Ordinal) || name.StartsWith("set_", StringComparison.Ordinal);
+
+            var methodPointerLookup = staticFields.Where(x => x.Name.StartsWith("NativeMethodInfoPtr_", StringComparison.Ordinal))
+                                                  .Select(x => new { x, trim = x.Name.Replace("NativeMethodInfoPtr_", "") })
+                                                  .GroupBy(x => IsFromProp(x.trim) ? x.trim.Substring(4) : x.trim).ToList();
+
+            foreach (var gr in methodPointerLookup)
+            {
+                var entries = gr.ToArray();
+                var isProp = IsFromProp(entries[0].trim);
+                if (isProp)
+                {
+                    var get = entries.FirstOrDefault(x => x.trim.StartsWith("get_", StringComparison.Ordinal));
+                    var set = entries.FirstOrDefault(x => x.trim.StartsWith("set_", StringComparison.Ordinal));
+                    value.Add(gr.Key, new Il2CppMemberInfo(gr.Key, get?.x, set?.x, true));
+                }
+                else
+                {
+                    value.Add(gr.Key, new Il2CppMemberInfo(gr.Key, entries[0].x, null, false));
+                }
+            }
+
+            _ptrLookup[type] = value;
+            return value;
+        }
+        
+        //TODO
+        // - Handle il2cpp-side fields by making them act like normal fields
+        // - give il2cpp-side fields and methods a special color or something in inspector, show pointer address in tooltip
         public static ICollection<ICacheEntry> CollectAllMembers(InstanceStackEntry entry)
         {
-                var fieldCache = new List<ICacheEntry>();
+            var fieldCache = new List<ICacheEntry>();
             var objectToOpen = entry?.Instance;
             if (objectToOpen == null) return fieldCache;
 
             var type = objectToOpen.GetType();
 
-            //TODO
-            // - Handle il2cpp-side fields by making them act like normal fields
-            // - give il2cpp-side fields and methods a special color or something in inspector, show pointer address in tooltip
-            var staticFields = type.GetFields(BindingFlags.Static | BindingFlags.NonPublic).Where(x => x.IsInitOnly).ToList();
-            var fieldPointerLookup = staticFields.Where(x => x.Name.StartsWith("NativeFieldInfoPtr_"))
-                                                 .ToDictionary(x => x.Name.Replace("NativeFieldInfoPtr_", ""), x => x.GetValue(null));
-            var methodPointerLookup = staticFields.Where(x => x.Name.StartsWith("NativeMethodInfoPtr_"))
-                                                  .ToDictionary(x => x.Name.Replace("NativeMethodInfoPtr_", ""), x => x.GetValue(null));
-
             try
             {
-
                 CallbackCacheEntry GetExportTexEntry(Texture texture)
                 {
                     return new CallbackCacheEntry("Export Texture to file",
@@ -75,7 +134,9 @@ namespace RuntimeUnityEditor.Core.Inspector
                                                                () => ObjectTreeViewer.Instance.SelectAndShowObject(castedObj.transform)));
                     }
 #if !IL2CPP
-                        fieldCache.Add(new ReadonlyCacheEntry("Child objects", castedObj.transform.Cast<Transform>().ToArray()));
+                    fieldCache.Add(new ReadonlyCacheEntry("Child objects", castedObj.transform.Cast<Transform>().ToArray()));
+#else
+                    fieldCache.Add(new ReadonlyCacheEntry("Child objects", castedObj.transform.CastToEnumerable<Il2CppSystem.Object>().Select(x => x.Cast<Transform>()).ToArray()));
 #endif
                     fieldCache.Add(new ReadonlyCacheEntry("Components", castedObj.AbstractGetAllComponents()));
                 }
@@ -140,6 +201,8 @@ namespace RuntimeUnityEditor.Core.Inspector
 
                 // No need if it's not a value type, only used to propagate changes back so it's redundant with classes
                 var parent = entry.Parent?.Type().IsValueType == true ? entry.Parent : null;
+
+                var il2cppLookup = GetPtrLookupTable(type);
 
                 // Instance members
                 fieldCache.AddRange(type.GetAllFields(false)
@@ -233,4 +296,5 @@ namespace RuntimeUnityEditor.Core.Inspector
             return cacheItems;
         }
     }
+
 }
