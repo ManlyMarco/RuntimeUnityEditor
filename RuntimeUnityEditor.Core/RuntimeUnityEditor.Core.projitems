@@ -87,6 +87,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Inspector.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Inspector.InspectorTab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\InspectorHelpObject.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\MemberCollector.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\ToStringConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\VariableFieldDrawer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\ObjectTree\ObjectTreeViewer.cs" />
