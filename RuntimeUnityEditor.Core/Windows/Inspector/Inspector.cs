@@ -68,7 +68,8 @@ namespace RuntimeUnityEditor.Core.Inspector
         private bool _showMethods = true;
         private bool _showEvents = true;
 #if IL2CPP
-        private bool _showNative;
+        private bool _showNative = true;
+        private bool _showManaged = true;
 #endif
         private bool _showDeclaredOnly;
         private bool _showTooltips = true;
@@ -196,7 +197,8 @@ namespace RuntimeUnityEditor.Core.Inspector
                         _showMethods = GUILayout.Toggle(_showMethods, "Methods");
                         _showEvents = GUILayout.Toggle(_showEvents, "Events");
 #if IL2CPP
-                        _showNative = GUILayout.Toggle(_showNative, "Native");
+                        _showNative = GUILayout.Toggle(_showNative, new GUIContent("Native", null, "Display members from the IL2CPP runtime (i.e. the game code)."));
+                        _showManaged = GUILayout.Toggle(_showManaged, new GUIContent("Managed", null, "Display members from the BepInEx's runtime (i.e. interop and plugin code)."));
 #endif
                         _showDeclaredOnly = GUILayout.Toggle(_showDeclaredOnly, "Only declared");
 
@@ -390,14 +392,24 @@ namespace RuntimeUnityEditor.Core.Inspector
                     }
                     visibleFieldsQuery = visibleFieldsQuery.Where(x =>
                     {
+#if IL2CPP
+                        if (IL2CPPFieldCacheEntry.IsIl2CppCacheEntry(x))
+                        {
+                            if (!_showNative)
+                                return false;
+                        }
+                        else
+                        {
+                            if (!_showManaged)
+                                return false;
+                        }
+                        if (x is IL2CPPFieldCacheEntry cf)
+                            return _showFields && (!_showDeclaredOnly || cf.IsDeclared);
+#endif
                         switch (x)
                         {
                             case PropertyCacheEntry p when !_showProperties || _showDeclaredOnly && !p.IsDeclared:
-#if IL2CPP
-                            case FieldCacheEntry f when !_showFields || _showDeclaredOnly && !f.IsDeclared || !_showNative && f.FieldInfo.IsStatic && f.Type() == typeof(IntPtr):
-#else
                             case FieldCacheEntry f when !_showFields || _showDeclaredOnly && !f.IsDeclared:
-#endif
                             case MethodCacheEntry m when !_showMethods || _showDeclaredOnly && !m.IsDeclared:
                             case EventCacheEntry e when !_showEvents || _showDeclaredOnly && !e.IsDeclared:
                                 return false;

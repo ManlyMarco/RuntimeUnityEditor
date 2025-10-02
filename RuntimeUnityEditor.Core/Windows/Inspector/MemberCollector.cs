@@ -7,12 +7,10 @@ using RuntimeUnityEditor.Core.Utils.ObjectDumper;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using UnityEngine;
-using Component = UnityEngine.Component;
 
 namespace RuntimeUnityEditor.Core.Inspector
 {
@@ -21,72 +19,81 @@ namespace RuntimeUnityEditor.Core.Inspector
     /// </summary>
     internal static class MemberCollector
     {
-        private static readonly Dictionary<Type, Dictionary<string, Il2CppMemberInfo>> _ptrLookup = new();
-        internal sealed class Il2CppMemberInfo
-        {
-            /// <summary>
-            /// Prop getter if it's a property or field address if it's a field
-            /// </summary>
-            public FieldInfo Getter { get; }
-            /// <summary>
-            /// Always null for fields, prop setter if it's a property that has a setter
-            /// </summary>
-            public FieldInfo Setter { get; }
-            public string TrimmedName { get; }
-            public bool IsProperty { get; }
+#if IL2CPP
+        private static readonly Dictionary<Type, Dictionary<MemberInfo, FieldInfo>> _ptrLookup = new();
 
-            public Il2CppMemberInfo(string trimmedName, FieldInfo getter, FieldInfo setter, bool isProperty)
-            {
-                Getter = getter;
-                Setter = setter;
-                IsProperty = isProperty;
-                TrimmedName = trimmedName;
-            }
-        }
-
-        private static Dictionary<string, Il2CppMemberInfo> GetPtrLookupTable(Type type)
+        private static Dictionary<MemberInfo, FieldInfo> GetPtrLookupTable(Type type)
         {
             // todo some way to clean up old entries?
             if (_ptrLookup.TryGetValue(type, out var value))
                 return value;
 
-            // TODO redo to use memberinfo as key and figure out the target field for properties and methods via
-            // Il2CppInterop.Common.Il2CppInteropUtils.GetIl2CppMethodInfoPointerFieldForGeneratedMethod()
-            // probably enough to list fields and assume if it's not a field it's a method and use the method at time of collecting members not here
+            value = new Dictionary<MemberInfo, FieldInfo>();
 
             var staticFields = type.GetFields(BindingFlags.Static | BindingFlags.NonPublic).Where(x => x.IsInitOnly).ToList();
 
-            value = staticFields.Where(x => x.Name.StartsWith("NativeFieldInfoPtr_"))
-                                .Select(x => new Il2CppMemberInfo(x.Name.Replace("NativeFieldInfoPtr_", ""), x, null, false))
-                                .ToDictionary(x => x.TrimmedName, x => x);
+            var fieldPtrs = staticFields.Where(x => x.Name.StartsWith("NativeFieldInfoPtr_"))
+                                .Select(x => new { trimmed = x.Name.Substring("NativeFieldInfoPtr_".Length), ptrF = x });
 
+            var usedFields = new HashSet<MethodInfo>();
 
-            bool IsFromProp(string name) => name.StartsWith("get_", StringComparison.Ordinal) || name.StartsWith("set_", StringComparison.Ordinal);
-
-            var methodPointerLookup = staticFields.Where(x => x.Name.StartsWith("NativeMethodInfoPtr_", StringComparison.Ordinal))
-                                                  .Select(x => new { x, trim = x.Name.Replace("NativeMethodInfoPtr_", "") })
-                                                  .GroupBy(x => IsFromProp(x.trim) ? x.trim.Substring(4) : x.trim).ToList();
-
-            foreach (var gr in methodPointerLookup)
+            foreach (var fieldPtr in fieldPtrs)
             {
-                var entries = gr.ToArray();
-                var isProp = IsFromProp(entries[0].trim);
-                if (isProp)
+                var targetFieldName = fieldPtr.trimmed;
+                // Fields are props in il2cpp interop
+                var targetField = type.GetProperty(targetFieldName, AccessTools.all);
+                if (targetField != null)
                 {
-                    var get = entries.FirstOrDefault(x => x.trim.StartsWith("get_", StringComparison.Ordinal));
-                    var set = entries.FirstOrDefault(x => x.trim.StartsWith("set_", StringComparison.Ordinal));
-                    value.Add(gr.Key, new Il2CppMemberInfo(gr.Key, get?.x, set?.x, true));
+                    value[targetField] = fieldPtr.ptrF;
+
+                    var getMethod = targetField.GetGetMethod();
+                    if (getMethod != null) usedFields.Add(getMethod);
+                    var setMethod = targetField.GetSetMethod();
+                    if (setMethod != null) usedFields.Add(setMethod);
                 }
-                else
+            }
+
+            foreach (var propertyInfo in type.GetAllProperties(true))
+            {
+                // It's a field
+                if (value.ContainsKey(propertyInfo))
+                    continue;
+
+                var getMethod = propertyInfo.GetGetMethod(true);
+                if (getMethod != null && getMethod.GetMethodBody() != null)
                 {
-                    value.Add(gr.Key, new Il2CppMemberInfo(gr.Key, entries[0].x, null, false));
+                    var ptr = Il2CppInterop.Common.Il2CppInteropUtils.GetIl2CppMethodInfoPointerFieldForGeneratedMethod(getMethod);
+                    if (ptr != null)
+                        value[getMethod] = ptr;
+                }
+
+                var setMethod = propertyInfo.GetSetMethod();
+                if (setMethod != null && setMethod.GetMethodBody() != null)
+                {
+                    var ptr = Il2CppInterop.Common.Il2CppInteropUtils.GetIl2CppMethodInfoPointerFieldForGeneratedMethod(setMethod);
+                    if (ptr != null)
+                        value[setMethod] = ptr;
+                }
+            }
+
+            foreach (var methodInfo in type.GetAllMethods(true))
+            {
+                if (value.ContainsKey(methodInfo) || usedFields.Contains(methodInfo))
+                    continue;
+
+                if (methodInfo.GetMethodBody() != null)
+                {
+                    var ptr = Il2CppInterop.Common.Il2CppInteropUtils.GetIl2CppMethodInfoPointerFieldForGeneratedMethod(methodInfo);
+                    if (ptr != null)
+                        value[methodInfo] = ptr;
                 }
             }
 
             _ptrLookup[type] = value;
             return value;
         }
-        
+#endif
+
         //TODO
         // - Handle il2cpp-side fields by making them act like normal fields
         // - give il2cpp-side fields and methods a special color or something in inspector, show pointer address in tooltip
@@ -202,16 +209,16 @@ namespace RuntimeUnityEditor.Core.Inspector
                 // No need if it's not a value type, only used to propagate changes back so it's redundant with classes
                 var parent = entry.Parent?.Type().IsValueType == true ? entry.Parent : null;
 
-                var il2cppLookup = GetPtrLookupTable(type);
 
                 // Instance members
                 fieldCache.AddRange(type.GetAllFields(false)
                     .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
-                    .Select(f => new FieldCacheEntry(objectToOpen, f, type, parent)).Cast<ICacheEntry>());
+                    .Select(f => (ICacheEntry)new FieldCacheEntry(objectToOpen, f, type, parent)));
 
                 var isRenderer = objectToOpen is Renderer;
 #if IL2CPP
                 var isIl2cppType = objectToOpen is Il2CppSystem.Type;
+                var il2cppLookup = GetPtrLookupTable(type);
 #endif
                 fieldCache.AddRange(type.GetAllProperties(false)
                                          .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
@@ -234,6 +241,9 @@ namespace RuntimeUnityEditor.Core.Inspector
                                                  if (p.Name == nameof(Il2CppSystem.Type.DeclaringMethod))
                                                      return new CallbackCacheEntry<Il2CppSystem.Reflection.MethodBase>(nameof(Il2CppSystem.Type.DeclaringMethod), "Skipped evaluation, click to enter (DANGER, MAY HARD CRASH)", () => ((Il2CppSystem.Type)objectToOpen).DeclaringMethod);
                                              }
+
+                                             if (IL2CPPFieldCacheEntry.TryGetIl2CppCacheEntry(objectToOpen, type, p, il2cppLookup, out var result))
+                                                 return result;
 #endif
 
                                              return (ICacheEntry)new PropertyCacheEntry(objectToOpen, p, type, parent);
@@ -241,7 +251,14 @@ namespace RuntimeUnityEditor.Core.Inspector
 
                 fieldCache.AddRange(type.GetAllEvents(false)
                     .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
-                    .Select(p => new EventCacheEntry(objectToOpen, p, type)).Cast<ICacheEntry>());
+                    .Select(p =>
+                    {
+#if IL2CPP
+                        if (IL2CPPFieldCacheEntry.TryGetIl2CppCacheEntry(objectToOpen, type, p, il2cppLookup, out var result))
+                            return result;
+#endif
+                        return new EventCacheEntry(objectToOpen, p, type);
+                    }).Cast<ICacheEntry>());
 
                 fieldCache.AddRange(MethodsToCacheEntries(objectToOpen, type, type.GetAllMethods(false)));
 
@@ -253,7 +270,7 @@ namespace RuntimeUnityEditor.Core.Inspector
             {
                 RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning, "[Inspector] CacheFields crash: " + ex);
                 fieldCache.Clear();
-                fieldCache.Add(new ReadonlyCacheEntry("Exception", ex));
+                fieldCache.Add(new ReadonlyCacheEntry("Exception", ex.ToString()));
             }
 
             return fieldCache;
@@ -269,18 +286,38 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         private static ICollection<ICacheEntry> CacheStaticMembersHelper(Type type)
         {
+#if IL2CPP
+            var il2cppLookup = GetPtrLookupTable(type);
+#endif
             var fieldCache = new List<ICacheEntry>();
             fieldCache.AddRange(type.GetAllFields(true)
-                                     .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
-                                     .Select(f => new FieldCacheEntry(null, f, type)).Cast<ICacheEntry>());
+                                    .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
+#if IL2CPP
+                                    .Where(f => !f.Name.StartsWith("NativeFieldInfoPtr_") && !f.Name.StartsWith("NativeMethodInfoPtr_"))
+#endif
+                                    .Select(f => (ICacheEntry)new FieldCacheEntry(null, f, type)));
 
             fieldCache.AddRange(type.GetAllProperties(true)
-                                     .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
-                                     .Select(p => new PropertyCacheEntry(null, p, type)).Cast<ICacheEntry>());
+                                    .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
+                                    .Select(p =>
+                                    {
+#if IL2CPP
+                                        if (IL2CPPFieldCacheEntry.TryGetIl2CppCacheEntry(null, type, p, il2cppLookup, out var result))
+                                            return result;
+#endif
+                                        return (ICacheEntry)new PropertyCacheEntry(null, p, type);
+                                    }));
 
             fieldCache.AddRange(type.GetAllEvents(true)
-                                     .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
-                                     .Select(p => new EventCacheEntry(null, p, type)).Cast<ICacheEntry>());
+                                    .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
+                                    .Select(p =>
+                                    {
+#if IL2CPP
+                                        if (IL2CPPFieldCacheEntry.TryGetIl2CppCacheEntry(null, type, p, il2cppLookup, out var result))
+                                            return result;
+#endif
+                                        return (ICacheEntry)new EventCacheEntry(null, p, type);
+                                    }));
 
             fieldCache.AddRange(MethodsToCacheEntries(null, type, type.GetAllMethods(true)));
             return fieldCache;
@@ -288,13 +325,172 @@ namespace RuntimeUnityEditor.Core.Inspector
 
         private static IEnumerable<ICacheEntry> MethodsToCacheEntries(object instance, Type ownerType, IEnumerable<MethodInfo> methodsToCheck)
         {
+#if IL2CPP
+            var il2cppLookup = GetPtrLookupTable(ownerType);
+#endif
             var cacheItems = methodsToCheck
+#if IL2CPP // TODO: Events are not implemented in il2cpp interop, they show up as separate add/remove/raise methods
+                             .Where(x => !x.IsConstructor && (!x.IsSpecialName || x.Name.StartsWith("add_") || x.Name.StartsWith("raise_") || x.Name.StartsWith("remove_")))
+#else
                              .Where(x => !x.IsConstructor && !x.IsSpecialName)
+#endif
                              .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
                              .Where(x => x.Name != "MemberwiseClone" && x.Name != "obj_address") // Instant game crash
-                             .Select(m => new MethodCacheEntry(instance, m, ownerType)).Cast<ICacheEntry>();
+                             .Select(m =>
+                             {
+#if IL2CPP
+                                 if (il2cppLookup.TryGetValue(m, out var ptr))
+                                     return (ICacheEntry)new IL2CPPMethodCacheEntry(instance, m, ownerType, ptr);
+#endif
+                                 return (ICacheEntry)new MethodCacheEntry(instance, m, ownerType);
+                             });
             return cacheItems;
         }
     }
 
+#if IL2CPP
+    /// <inheritdoc />
+    public class IL2CPPFieldCacheEntry : PropertyCacheEntry
+    {
+        public FieldInfo PtrField { get; }
+
+        /// <inheritdoc />
+        public IL2CPPFieldCacheEntry(object ins, PropertyInfo p, Type owner, FieldInfo ptrField) : base(ins, p, owner)
+        {
+            PtrField = ptrField;
+            _nameContent.text = $"C-F/{_nameContent.text}";
+            _nameContent.tooltip = $"IL2CPP Field (ptr={SafeGetPtr(owner, ptrField)})\n\n{_nameContent.tooltip}";
+        }
+
+        /// <inheritdoc />
+        public IL2CPPFieldCacheEntry(object ins, PropertyInfo p, Type owner, FieldInfo ptrField, ICacheEntry parent) : base(ins, p, owner, parent)
+        {
+            PtrField = ptrField;
+            _nameContent.text = $"C-F/{_nameContent.text}";
+            _nameContent.tooltip = $"IL2CPP Field (ptr={SafeGetPtr(owner, ptrField)})\n\n{_nameContent.tooltip}";
+        }
+
+
+        internal static bool TryGetIl2CppCacheEntry(object instance, Type type, EventInfo p, Dictionary<MemberInfo, FieldInfo> lookup, out ICacheEntry result)
+        {
+            FieldInfo ptrAdd = null;
+            FieldInfo ptrRaise = null;
+            FieldInfo ptrRemove = null;
+            var addMethod = p.GetAddMethod(true);
+            if (addMethod != null) lookup.TryGetValue(addMethod, out ptrAdd);
+            var raiseMethod = p.GetRaiseMethod(true);
+            if (raiseMethod != null) lookup.TryGetValue(raiseMethod, out ptrRaise);
+            var removeMethod = p.GetRemoveMethod(true);
+            if (removeMethod != null) lookup.TryGetValue(removeMethod, out ptrRemove);
+            if (ptrAdd != null || ptrRaise != null || ptrRemove != null)
+            {
+                result = (ICacheEntry)new IL2CPPEventCacheEntry(instance, p, type, ptrAdd, ptrRaise, ptrRemove);
+                return true;
+            }
+
+            result = null;
+            return false;
+        }
+
+        internal static bool TryGetIl2CppCacheEntry(object instance, Type type, PropertyInfo p, Dictionary<MemberInfo, FieldInfo> lookup, out ICacheEntry result)
+        {
+            if (lookup.TryGetValue(p, out var ptr))
+            {
+                result = (ICacheEntry)new IL2CPPFieldCacheEntry(instance, p, type, ptr);
+                return true;
+            }
+
+            FieldInfo ptrGet = null;
+            FieldInfo ptrSet = null;
+            var getMethod = p.GetGetMethod(true);
+            if (getMethod != null) lookup.TryGetValue(getMethod, out ptrGet);
+            var setMethod = p.GetSetMethod(true);
+            if (setMethod != null) lookup.TryGetValue(setMethod, out ptrSet);
+            if (ptrGet != null || ptrSet != null)
+            {
+                result = (ICacheEntry)new IL2CPPPropertyCacheEntry(instance, p, type, ptrGet, ptrSet);
+                return true;
+            }
+
+            result = null;
+            return false;
+        }
+
+        internal static object SafeGetPtr(Type owner, FieldInfo ptrField)
+        {
+            if (ptrField == null) return "null";
+            if (owner.ContainsGenericParameters)
+                return "???";
+            try
+            {
+                return ptrField.GetValue(null);
+            }
+            catch
+            {
+                return "error";
+            }
+        }
+
+        internal static bool IsIl2CppCacheEntry(ICacheEntry entry)
+        {
+            return entry is IL2CPPFieldCacheEntry || entry is IL2CPPPropertyCacheEntry || entry is IL2CPPMethodCacheEntry || entry is IL2CPPEventCacheEntry;
+        }
+    }
+
+    /// <inheritdoc />
+    public class IL2CPPPropertyCacheEntry : PropertyCacheEntry
+    {
+        public FieldInfo PtrFieldGet { get; }
+        public FieldInfo PtrFieldSet { get; }
+
+        /// <inheritdoc />
+        public IL2CPPPropertyCacheEntry(object ins, PropertyInfo p, Type owner, FieldInfo ptrFieldGet, FieldInfo ptrFieldSet) : base(ins, p, owner)
+        {
+            PtrFieldGet = ptrFieldGet;
+            PtrFieldSet = ptrFieldSet;
+            _nameContent.text = $"C-P/{_nameContent.text}";
+            _nameContent.tooltip = $"IL2CPP Property (getPtr={IL2CPPFieldCacheEntry.SafeGetPtr(owner, ptrFieldGet)}, setPtr={IL2CPPFieldCacheEntry.SafeGetPtr(owner, ptrFieldSet)})\n\n{_nameContent.tooltip}";
+        }
+        /// <inheritdoc />
+        public IL2CPPPropertyCacheEntry(object ins, PropertyInfo p, Type owner, FieldInfo ptrFieldGet, FieldInfo ptrFieldSet, ICacheEntry parent) : base(ins, p, owner, parent)
+        {
+            PtrFieldGet = ptrFieldGet;
+            PtrFieldSet = ptrFieldSet;
+            _nameContent.text = $"C-P/{_nameContent.text}";
+            _nameContent.tooltip = $"IL2CPP Property (getPtr={IL2CPPFieldCacheEntry.SafeGetPtr(owner, ptrFieldGet)}, setPtr={IL2CPPFieldCacheEntry.SafeGetPtr(owner, ptrFieldSet)})\n\n{_nameContent.tooltip}";
+        }
+    }
+
+    /// <inheritdoc />
+    public class IL2CPPMethodCacheEntry : MethodCacheEntry
+    {
+        public FieldInfo PtrField { get; }
+
+        /// <inheritdoc />
+        public IL2CPPMethodCacheEntry(object instance, MethodInfo methodInfo, Type owner, FieldInfo ptrField) : base(instance, methodInfo, owner)
+        {
+            PtrField = ptrField;
+            _nameContent.text = $"C-M/{_nameContent.text}";
+            _nameContent.tooltip = $"IL2CPP Method (ptr={IL2CPPFieldCacheEntry.SafeGetPtr(owner, ptrField)})\n\n{_nameContent.tooltip}";
+        }
+    }
+
+    /// <inheritdoc />
+    /// TODO: This does nothing so far because events are not implemented in il2cpp interop (they show up as separate add/remove/raise methods). Maybe combine them back into events?
+    public class IL2CPPEventCacheEntry : EventCacheEntry
+    {
+        public FieldInfo PtrFieldAdd { get; }
+        public FieldInfo PtrFieldRaise { get; }
+        public FieldInfo PtrFieldRemove { get; }
+        /// <inheritdoc />
+        public IL2CPPEventCacheEntry(object ins, EventInfo e, Type owner, FieldInfo ptrFieldAdd, FieldInfo ptrFieldRaise, FieldInfo ptrFieldRemove) : base(ins, e, owner)
+        {
+            PtrFieldAdd = ptrFieldAdd;
+            PtrFieldRaise = ptrFieldRaise;
+            PtrFieldRemove = ptrFieldRemove;
+            _nameContent.text = $"C-E/{_nameContent.text}";
+            _nameContent.tooltip = $"IL2CPP Event (addPtr={IL2CPPFieldCacheEntry.SafeGetPtr(owner, ptrFieldAdd)}, raisePtr={IL2CPPFieldCacheEntry.SafeGetPtr(owner, ptrFieldRaise)}, removePtr={IL2CPPFieldCacheEntry.SafeGetPtr(owner, ptrFieldRemove)})\n\n{_nameContent.tooltip}";
+        }
+    }
+#endif
 }

@@ -25,7 +25,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
 
             ParameterString = GetParameterPreviewString(methodInfo);
 
-            _content = new GUIContent(_name,null, methodInfo.GetFancyDescription());
+            _nameContent = new GUIContent(_name,null, methodInfo.GetFancyDescription());
         }
 
         internal static string GetParameterPreviewString(MethodBase methodInfo)
@@ -65,7 +65,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
 
         private readonly string _name;
         private readonly string _returnTypeName;
-        private readonly GUIContent _content;
+        private protected readonly GUIContent _nameContent;
 
         /// <summary>
         /// Name of the method.
@@ -78,7 +78,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         public string TypeName() => _returnTypeName;
         
         /// <inheritdoc />
-        public GUIContent GetNameContent() => _content;
+        public GUIContent GetNameContent() => _nameContent;
 
         /// <summary>
         /// Not supported for methods.
