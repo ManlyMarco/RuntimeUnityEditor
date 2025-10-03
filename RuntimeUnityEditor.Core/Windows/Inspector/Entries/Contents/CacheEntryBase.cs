@@ -110,7 +110,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
         }
 
         private bool? _canEnter;
-        private readonly GUIContent _nameContent;
+        private protected readonly GUIContent _nameContent;
 
         /// <inheritdoc />
         public virtual bool CanEnterValue()

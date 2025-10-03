@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using RuntimeUnityEditor.Core.Inspector.Entries;
+#if IL2CPP
+using RuntimeUnityEditor.Core.Inspector.IL2CPP;
+#endif
 using RuntimeUnityEditor.Core.Utils;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
@@ -68,7 +71,9 @@ namespace RuntimeUnityEditor.Core.Inspector
         private bool _showMethods = true;
         private bool _showEvents = true;
 #if IL2CPP
-        private bool _showNative;
+        private bool _showNative = true;
+        private bool _showManaged = true;
+        private readonly Color _il2CPPMemberColor = new(1f, 1f, 0.6f);
 #endif
         private bool _showDeclaredOnly;
         private bool _showTooltips = true;
@@ -88,6 +93,10 @@ namespace RuntimeUnityEditor.Core.Inspector
 
             var canEnterValue = field.CanEnterValue();
             var val = field.GetValue();
+#if IL2CPP
+            if (IL2CPPCacheEntryHelper.IsIl2CppCacheEntry(field))
+                GUI.color = _il2CPPMemberColor;
+#endif
             if (GUILayout.Button(field.GetNameContent(), canEnterValue ? _alignedButtonStyle : _alignedButtonStyleUnclickable, _inspectorNameWidth))
             {
                 if (IMGUIUtils.IsMouseRightClick())
@@ -105,6 +114,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                     }
                 }
             }
+            GUI.color = Color.white;
         }
 
         /// <summary>
@@ -196,7 +206,10 @@ namespace RuntimeUnityEditor.Core.Inspector
                         _showMethods = GUILayout.Toggle(_showMethods, "Methods");
                         _showEvents = GUILayout.Toggle(_showEvents, "Events");
 #if IL2CPP
-                        _showNative = GUILayout.Toggle(_showNative, "Native");
+                        GUI.color = _il2CPPMemberColor;
+                        _showNative = GUILayout.Toggle(_showNative, new GUIContent("Native", null, "Display members from the IL2CPP runtime (i.e. the game code)."));
+                        GUI.color = Color.white;
+                        _showManaged = GUILayout.Toggle(_showManaged, new GUIContent("Managed", null, "Display members from the BepInEx's runtime (i.e. interop and plugin code)."));
 #endif
                         _showDeclaredOnly = GUILayout.Toggle(_showDeclaredOnly, "Only declared");
 
@@ -390,14 +403,24 @@ namespace RuntimeUnityEditor.Core.Inspector
                     }
                     visibleFieldsQuery = visibleFieldsQuery.Where(x =>
                     {
+#if IL2CPP
+                        if (IL2CPPCacheEntryHelper.IsIl2CppCacheEntry(x))
+                        {
+                            if (!_showNative)
+                                return false;
+                        }
+                        else
+                        {
+                            if (!_showManaged)
+                                return false;
+                        }
+                        if (x is IL2CPPFieldCacheEntry cf)
+                            return _showFields && (!_showDeclaredOnly || cf.IsDeclared);
+#endif
                         switch (x)
                         {
                             case PropertyCacheEntry p when !_showProperties || _showDeclaredOnly && !p.IsDeclared:
-#if IL2CPP
-                            case FieldCacheEntry f when !_showFields || _showDeclaredOnly && !f.IsDeclared || !_showNative && f.FieldInfo.IsStatic && f.Type() == typeof(IntPtr):
-#else
                             case FieldCacheEntry f when !_showFields || _showDeclaredOnly && !f.IsDeclared:
-#endif
                             case MethodCacheEntry m when !_showMethods || _showDeclaredOnly && !m.IsDeclared:
                             case EventCacheEntry e when !_showEvents || _showDeclaredOnly && !e.IsDeclared:
                                 return false;
