@@ -94,7 +94,7 @@ namespace RuntimeUnityEditor.Core.Inspector
             var canEnterValue = field.CanEnterValue();
             var val = field.GetValue();
 #if IL2CPP
-            if(IL2CPPCacheEntryHelper.IsIl2CppCacheEntry(field))
+            if (IL2CPPCacheEntryHelper.IsIl2CppCacheEntry(field))
                 GUI.color = _il2CPPMemberColor;
 #endif
             if (GUILayout.Button(field.GetNameContent(), canEnterValue ? _alignedButtonStyle : _alignedButtonStyleUnclickable, _inspectorNameWidth))
