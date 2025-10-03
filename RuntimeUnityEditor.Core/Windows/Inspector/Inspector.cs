@@ -73,7 +73,7 @@ namespace RuntimeUnityEditor.Core.Inspector
 #if IL2CPP
         private bool _showNative = true;
         private bool _showManaged = true;
-        private readonly Color _il2CPPMemberColor = new(1f, 1f, 0.4f);
+        private readonly Color _il2CPPMemberColor = new(1f, 1f, 0.6f);
 #endif
         private bool _showDeclaredOnly;
         private bool _showTooltips = true;
