@@ -334,7 +334,26 @@ namespace RuntimeUnityEditor.Core.Inspector
                         }
                         GUILayout.EndHorizontal();
 
-                        DrawContentScrollView(currentTab);
+                        try
+                        {
+                            DrawContentScrollView(currentTab);
+                        }
+                        catch (Exception e)
+                        {
+                            // Ignore GUILayout exceptions, usually one-off because of lists changing or scrolling
+                            if (!e.Message.Contains("GUILayout"))
+                            {
+                                RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, e);
+                                RuntimeUnityEditorCore.Logger.Log(LogLevel.Warning | LogLevel.Message, "Unhandled exception when showing current tab, deselecting it!");
+
+                                var stackEntries = currentTab.InspectorStack.Reverse().ToList();
+                                var i = stackEntries.IndexOf(currentTab.CurrentStackItem);
+                                if (i > 0)
+                                    currentTab.CurrentStackItem = stackEntries[i - 1];
+                                else
+                                    _currentTab = null; //RemoveTab(currentTab);
+                            }
+                        }
                     }
                     GUILayout.EndVertical();
                 }
@@ -392,13 +411,20 @@ namespace RuntimeUnityEditor.Core.Inspector
                     {
                         visibleFieldsQuery = visibleFieldsQuery.Where(x =>
                         {
-                            var name = x.Name();
-                            if (name != null && name.Contains(SearchString, StringComparison.OrdinalIgnoreCase)) return true;
-                            var typeName = x.TypeName();
-                            if (typeName != null && typeName.Contains(SearchString, StringComparison.OrdinalIgnoreCase)) return true;
-                            var value = x.GetValue();
-                            if (value == null || (value is UnityEngine.Object obj && !obj)) return false;
-                            return value.ToString().Contains(SearchString, StringComparison.OrdinalIgnoreCase);
+                            try
+                            {
+                                var name = x.Name();
+                                if (name != null && name.Contains(SearchString, StringComparison.OrdinalIgnoreCase)) return true;
+                                var typeName = x.TypeName();
+                                if (typeName != null && typeName.Contains(SearchString, StringComparison.OrdinalIgnoreCase)) return true;
+                                var value = x.GetValue();
+                                if (value == null || (value is UnityEngine.Object obj && !obj)) return false;
+                                return value.ToString().Contains(SearchString, StringComparison.OrdinalIgnoreCase);
+                            }
+                            catch
+                            {
+                                return false;
+                            }
                         });
                     }
                     visibleFieldsQuery = visibleFieldsQuery.Where(x =>
