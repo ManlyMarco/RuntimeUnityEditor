@@ -257,7 +257,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                     _tabScrollPos = GUILayout.BeginScrollView(_tabScrollPos, false, false,
                         GUI.skin.horizontalScrollbar, GUIStyle.none, GUIStyle.none); //, GUILayout.Height(46)
                     {
-                        GUILayout.BeginHorizontal(GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
+                        GUILayout.BeginHorizontal(GUILayoutShim.ExpandWidth(false), GUILayoutShim.ExpandHeight(false));
                         for (var index = 0; index < _tabs.Count; index++)
                         {
                             var tab = _tabs[index];
@@ -292,7 +292,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                     currentTab.InspectorStackScrollPos = GUILayout.BeginScrollView(currentTab.InspectorStackScrollPos, false, false,
                         GUI.skin.horizontalScrollbar, GUIStyle.none, GUIStyle.none); //, GUILayout.Height(46)
                     {
-                        GUILayout.BeginHorizontal(GUI.skin.box, GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
+                        GUILayout.BeginHorizontal(GUI.skin.box, GUILayoutShim.ExpandWidth(false), GUILayoutShim.ExpandHeight(false));
                         var stackEntries = currentTab.InspectorStack.Reverse().ToArray();
                         for (var i = 0; i < stackEntries.Length; i++)
                         {

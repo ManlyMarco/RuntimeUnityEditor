@@ -11,12 +11,12 @@ namespace RuntimeUnityEditor.Core.Utils
         /// <summary>
         /// Options with GUILayout.ExpandWidth(true). Useful for avoiding allocations.
         /// </summary>
-        public static readonly GUILayoutOption[] LayoutOptionsExpandWidthTrue = { GUILayout.ExpandWidth(true) };
+        public static readonly GUILayoutOption[] LayoutOptionsExpandWidthTrue = { GUILayoutShim.ExpandWidth(true) };
         
         /// <summary>
         /// Options with GUILayout.ExpandWidth(false). Useful for avoiding allocations.
         /// </summary>
-        public static readonly GUILayoutOption[] LayoutOptionsExpandWidthFalse = { GUILayout.ExpandWidth(false) };
+        public static readonly GUILayoutOption[] LayoutOptionsExpandWidthFalse = { GUILayoutShim.ExpandWidth(false) };
 
         private static Texture2D SolidBoxTex { get; set; }
 

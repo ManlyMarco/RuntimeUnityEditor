@@ -56,8 +56,8 @@ namespace RuntimeUnityEditor.Core.Clipboard
 
                     GUILayout.BeginHorizontal();
                     {
-                        GUILayout.Label("Index", GUILayout.Width(widthIndex), GUILayout.ExpandWidth(false));
-                        GUILayout.Label("Type", GUILayout.Width(widthName), GUILayout.ExpandWidth(false));
+                        GUILayout.Label("Index", GUILayout.Width(widthIndex), GUILayoutShim.ExpandWidth(false));
+                        GUILayout.Label("Type", GUILayout.Width(widthName), GUILayoutShim.ExpandWidth(false));
                         GUILayout.Label("Value", IMGUIUtils.LayoutOptionsExpandWidthTrue);
                     }
                     GUILayout.EndHorizontal();
@@ -70,12 +70,12 @@ namespace RuntimeUnityEditor.Core.Clipboard
                         {
                             var content = Contents[index];
 
-                            if (GUILayout.Button(index.ToString(), GUI.skin.label, GUILayout.Width(widthIndex), GUILayout.ExpandWidth(false)) && IMGUIUtils.IsMouseRightClick())
+                            if (GUILayout.Button(index.ToString(), GUI.skin.label, GUILayout.Width(widthIndex), GUILayoutShim.ExpandWidth(false)) && IMGUIUtils.IsMouseRightClick())
                                 ContextMenu.Instance.Show(content);
 
                             var type = content?.GetType();
 
-                            if (GUILayout.Button(type?.Name ?? "NULL", GUI.skin.label, GUILayout.Width(widthName), GUILayout.ExpandWidth(false)) && IMGUIUtils.IsMouseRightClick())
+                            if (GUILayout.Button(type?.Name ?? "NULL", GUI.skin.label, GUILayout.Width(widthName), GUILayoutShim.ExpandWidth(false)) && IMGUIUtils.IsMouseRightClick())
                                 ContextMenu.Instance.Show(content);
 
                             var prevEnabled = GUI.enabled;

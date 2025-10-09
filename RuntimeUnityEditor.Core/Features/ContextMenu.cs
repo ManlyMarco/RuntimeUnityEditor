@@ -374,7 +374,7 @@ namespace RuntimeUnityEditor.Core
 
         private void DisableOnClickWindowFunc(int id)
         {
-            if (GUILayout.Button(GUIContent.none, GUI.skin.label, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true))) Enabled = false;
+            if (GUILayout.Button(GUIContent.none, GUI.skin.label, GUILayoutShim.ExpandWidth(true), GUILayoutShim.ExpandHeight(true))) Enabled = false;
         }
 
         private void DrawMenu(int id)

@@ -180,7 +180,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                             GUILayout.Space(20f);
                         }
 
-                        if (GUILayout.Button(go.name, GUI.skin.label, GUILayout.ExpandWidth(true), GUILayoutShim.MinWidth(200), GUILayout.ExpandHeight(false)))
+                        if (GUILayout.Button(go.name, GUI.skin.label, GUILayoutShim.ExpandWidth(true), GUILayoutShim.MinWidth(200), GUILayoutShim.ExpandHeight(false)))
                         {
                             if (IMGUIUtils.IsMouseRightClick())
                             {
@@ -336,7 +336,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             GUI.changed = false;
             GUILayout.BeginHorizontal();
             {
-                GUILayout.Label(memberName, GUILayout.ExpandWidth(true), _drawVector3FieldHeight);
+                GUILayout.Label(memberName, GUILayoutShim.ExpandWidth(true), _drawVector3FieldHeight);
                 v3New.x = GUILayout.HorizontalSlider(v3.x, minVal, maxVal, _drawVector3SliderWidth, _drawVector3SliderHeight);
                 float.TryParse(GUILayout.TextField(v3New.x.ToString("F2", CultureInfo.InvariantCulture), _drawVector3FieldWidth, _drawVector3FieldHeight), NumberStyles.Any, CultureInfo.InvariantCulture, out v3New.x);
                 v3New.y = GUILayout.HorizontalSlider(v3.y, minVal, maxVal, _drawVector3SliderWidth, _drawVector3SliderHeight);
@@ -357,7 +357,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             GUI.changed = false;
             GUILayout.BeginHorizontal();
             {
-                GUILayout.Label(memberName, GUILayout.ExpandWidth(true), _drawVector3FieldHeight);
+                GUILayout.Label(memberName, GUILayoutShim.ExpandWidth(true), _drawVector3FieldHeight);
                 vector2New.x = GUILayout.HorizontalSlider(vector2.x, minVal, maxVal, _drawVector3SliderWidth, _drawVector3SliderHeight);
                 float.TryParse(GUILayout.TextField(vector2New.x.ToString("F2", CultureInfo.InvariantCulture), _drawVector3FieldWidth, _drawVector3FieldHeight), NumberStyles.Any, CultureInfo.InvariantCulture, out vector2New.x);
                 vector2New.y = GUILayout.HorizontalSlider(vector2.y, minVal, maxVal, _drawVector3SliderWidth, _drawVector3SliderHeight);
@@ -555,7 +555,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 DisplayTreeSearchBox();
 
                 _treeScrollPosition = GUILayout.BeginScrollView(_treeScrollPosition,
-                    GUILayout.Height(_objectTreeHeight), GUILayout.ExpandWidth(true));
+                    GUILayout.Height(_objectTreeHeight), GUILayoutShim.ExpandWidth(true));
                 {
                     var currentCount = 0;
                     var notVisibleCount = 0;

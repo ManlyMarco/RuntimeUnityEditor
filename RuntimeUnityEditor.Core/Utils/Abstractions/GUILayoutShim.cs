@@ -14,7 +14,7 @@ namespace RuntimeUnityEditor.Core
 #endif
         }
 
-         public static GUILayoutOption ExpandWidth(bool expand)
+        public static GUILayoutOption ExpandWidth(bool expand)
         {
 #if IL2CPP
             var entity = new UnityEngine.GUILayoutOption(GUILayoutOption.Type.stretchWidth, expand);

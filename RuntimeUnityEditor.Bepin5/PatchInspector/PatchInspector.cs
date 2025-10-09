@@ -101,7 +101,7 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
 			if (foundPatches.Count > 0)
 			{
 				GUILayout.Label($"Found {foundPatches.Count} patches:");
-				scrollPos = GUILayout.BeginScrollView(scrollPos, GUILayout.ExpandHeight(true));
+				scrollPos = GUILayout.BeginScrollView(scrollPos, GUILayoutShim.ExpandHeight(true));
 
 				foreach (var patch in foundPatches)
 				{
@@ -549,7 +549,7 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
 		private void DrawOriginalMethodView(ILViewerWindow window)
 		{
 			GUILayout.Label("Original Method IL Code:");
-			window.ScrollPosition = GUILayout.BeginScrollView(window.ScrollPosition, GUILayout.ExpandHeight(true));
+			window.ScrollPosition = GUILayout.BeginScrollView(window.ScrollPosition, GUILayoutShim.ExpandHeight(true));
 			GUILayout.TextArea(window.OriginalIL);
 			GUILayout.EndScrollView();
 		}
@@ -569,7 +569,7 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
 			if (GUILayout.Button("Refresh Patch List", GUILayout.Height(25)))
 				RefreshPatchList(window);
 
-			window.PatchListScrollPosition = GUILayout.BeginScrollView(window.PatchListScrollPosition, GUILayout.ExpandHeight(true));
+			window.PatchListScrollPosition = GUILayout.BeginScrollView(window.PatchListScrollPosition, GUILayoutShim.ExpandHeight(true));
 
 			for (var i = 0; i < window.PatchMethods.Count; i++)
 			{
@@ -615,7 +615,7 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
 				var selectedPatch = window.PatchMethods[window.SelectedPatchIndex];
 				GUILayout.Label($"IL Code for: {selectedPatch.PatchType} - {selectedPatch.PatchMethod.DeclaringType?.Name}.{selectedPatch.PatchMethod.Name}", GUI.skin.label);
 
-				window.ScrollPosition = GUILayout.BeginScrollView(window.ScrollPosition, GUILayout.ExpandHeight(true));
+				window.ScrollPosition = GUILayout.BeginScrollView(window.ScrollPosition, GUILayoutShim.ExpandHeight(true));
 
 				GUILayout.TextArea(selectedPatch.ILCode);
 

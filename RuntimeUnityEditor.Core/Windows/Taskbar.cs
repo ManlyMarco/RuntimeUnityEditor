@@ -63,8 +63,8 @@ namespace RuntimeUnityEditor.Core
                 _windowRect,
                 (GUI.WindowFunction)DrawTaskbar,
                 GetTitle(),
-                GUILayout.ExpandHeight(false),
-                GUILayout.ExpandWidth(false),
+                GUILayoutShim.ExpandHeight(false),
+                GUILayoutShim.ExpandWidth(false),
                 GUILayoutShim.MaxWidth(Screen.width)
             );
             IMGUIUtils.EatInputInRect(_windowRect);

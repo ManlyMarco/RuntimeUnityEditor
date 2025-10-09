@@ -20,9 +20,9 @@ namespace RuntimeUnityEditor.Core.ObjectView
 
         private static Dictionary<Type, Action<object>> _objectDrawers = new Dictionary<Type, Action<object>>
         {
-            {typeof(Texture), o => GUILayout.Label((Texture)o, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true))},
-            {typeof(GUIContent), o => GUILayout.Label((GUIContent)o, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true))},
-            {typeof(string), o => GUILayout.TextArea((string)o, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true))},
+            {typeof(Texture), o => GUILayout.Label((Texture)o, GUILayoutShim.ExpandWidth(true), GUILayoutShim.ExpandHeight(true))},
+            {typeof(GUIContent), o => GUILayout.Label((GUIContent)o, GUILayoutShim.ExpandWidth(true), GUILayoutShim.ExpandHeight(true))},
+            {typeof(string), o => GUILayout.TextArea((string)o, GUILayoutShim.ExpandWidth(true), GUILayoutShim.ExpandHeight(true))},
         };
 
         private static bool GetDrawer(object objToDisplay, out Action<object> drawer)
@@ -87,7 +87,7 @@ namespace RuntimeUnityEditor.Core.ObjectView
                 }
                 GUILayout.EndHorizontal();
 
-                _scrollPos = GUILayout.BeginScrollView(_scrollPos, true, true, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+                _scrollPos = GUILayout.BeginScrollView(_scrollPos, true, true, GUILayoutShim.ExpandWidth(true), GUILayoutShim.ExpandHeight(true));
                 {
                     _objDrawer(_objToDisplay);
                 }

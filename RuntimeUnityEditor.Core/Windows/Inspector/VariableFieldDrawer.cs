@@ -155,8 +155,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                                     break;
 
                                 GUI.changed = false;
-                                var newVal = GUILayout.Toggle((currentValue & value.val) == value.val, value.name,
-                                    GUILayout.ExpandWidth(false));
+                                var newVal = GUILayout.Toggle((currentValue & value.val) == value.val, value.name, IMGUIUtils.LayoutOptionsExpandWidthFalse);
                                 if (GUI.changed)
                                 {
                                     var newValue = newVal ? currentValue | value.val : currentValue & ~value.val;
