@@ -17,7 +17,7 @@ namespace RuntimeUnityEditor.Core
         public static GUILayoutOption ExpandWidth(bool expand)
         {
 #if IL2CPP
-            var entity = new UnityEngine.GUILayoutOption(GUILayoutOption.Type.stretchWidth, expand);
+            var entity = new UnityEngine.GUILayoutOption(GUILayoutOption.Type.stretchWidth, !expand ? 0 : 1);
             return entity;
 #else
             return GUILayout.ExpandWidth(expand);
@@ -27,7 +27,7 @@ namespace RuntimeUnityEditor.Core
         public static GUILayoutOption ExpandHeight(bool expand)
         {
 #if IL2CPP
-            var entity = new UnityEngine.GUILayoutOption(GUILayoutOption.Type.stretchHeight, expand);
+            var entity = new UnityEngine.GUILayoutOption(GUILayoutOption.Type.stretchHeight, !expand ? 0 : 1);
             return entity;
 #else
             return GUILayout.ExpandHeight(expand);
