@@ -170,7 +170,7 @@ namespace RuntimeUnityEditor.Core.Utils
         }
 
         /// <summary>
-        /// Get all public and private fields, including from base classes
+        /// Get all public and private fields, including from base classes. If getStatic is true, gets only static members, otherwise only instance members.
         /// </summary>
         public static IEnumerable<FieldInfo> GetAllFields(this Type t, bool getStatic)
         {
@@ -179,7 +179,7 @@ namespace RuntimeUnityEditor.Core.Utils
         }
 
         /// <summary>
-        /// Get all public and private properties, including from base classes
+        /// Get all public and private properties, including from base classes. If getStatic is true, gets only static members, otherwise only instance members.
         /// </summary>
         public static IEnumerable<PropertyInfo> GetAllProperties(this Type t, bool getStatic)
         {
@@ -188,7 +188,7 @@ namespace RuntimeUnityEditor.Core.Utils
         }
 
         /// <summary>
-        /// Get all public and private methods, including from base classes
+        /// Get all public and private methods, including from base classes. If getStatic is true, gets only static members, otherwise only instance members.
         /// </summary>
         public static IEnumerable<MethodInfo> GetAllMethods(this Type t, bool getStatic)
         {
@@ -197,7 +197,7 @@ namespace RuntimeUnityEditor.Core.Utils
         }
 
         /// <summary>
-        /// Get all public and private methods, including from base classes
+        /// Get all public and private methods, including from base classes. If getStatic is true, gets only static members, otherwise only instance members.
         /// </summary>
         public static IEnumerable<EventInfo> GetAllEvents(this Type t, bool getStatic)
         {
