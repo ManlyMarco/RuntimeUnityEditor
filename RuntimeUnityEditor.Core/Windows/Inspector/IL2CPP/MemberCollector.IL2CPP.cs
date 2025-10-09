@@ -1,5 +1,6 @@
 #if IL2CPP
 using HarmonyLib;
+using Il2CppInterop.Runtime.InteropTypes;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.Utils;
 using System;
@@ -16,72 +17,26 @@ public class IL2CPPCacheEntryHelper
     public static Dictionary<MemberInfo, FieldInfo> GetPtrLookupTable(Type type)
     {
         // todo some way to clean up old entries?
-        if (_ptrLookup.TryGetValue(type, out var value))
-            return value;
+        if (_ptrLookup.TryGetValue(type, out var lookup))
+            return lookup;
 
-        value = new Dictionary<MemberInfo, FieldInfo>();
+        lookup = new Dictionary<MemberInfo, FieldInfo>();
+        _ptrLookup[type] = lookup;
 
-        var staticFields = type.GetFields(BindingFlags.Static | BindingFlags.NonPublic).Where(x => x.IsInitOnly).ToList();
+        if (!type.IsAssignableTo(typeof(Il2CppObjectBase)))
+            return lookup;
 
-        var fieldPtrs = staticFields.Where(x => x.Name.StartsWith("NativeFieldInfoPtr_"))
-                                    .Select(x => new { trimmed = x.Name.Substring("NativeFieldInfoPtr_".Length), ptrF = x });
-
-        var usedFields = new HashSet<MethodInfo>();
-
-        foreach (var fieldPtr in fieldPtrs)
+        foreach (var methodInfo in type.GetAllMethods(Extensions.GetAllType.Both))
         {
-            var targetFieldName = fieldPtr.trimmed;
-            // Fields are props in il2cpp interop
-            var targetField = type.GetProperty(targetFieldName, AccessTools.all);
-            if (targetField != null)
-            {
-                value[targetField] = fieldPtr.ptrF;
-
-                var getMethod = targetField.GetGetMethod();
-                if (getMethod != null) usedFields.Add(getMethod);
-                var setMethod = targetField.GetSetMethod();
-                if (setMethod != null) usedFields.Add(setMethod);
-            }
-        }
-
-        foreach (var propertyInfo in type.GetAllProperties(true))
-        {
-            // It's a field
-            if (value.ContainsKey(propertyInfo))
-                continue;
-
-            var getMethod = propertyInfo.GetGetMethod(true);
-            if (getMethod != null && getMethod.GetMethodBody() != null)
-            {
-                var ptr = Il2CppInterop.Common.Il2CppInteropUtils.GetIl2CppMethodInfoPointerFieldForGeneratedMethod(getMethod);
-                if (ptr != null)
-                    value[getMethod] = ptr;
-            }
-
-            var setMethod = propertyInfo.GetSetMethod();
-            if (setMethod != null && setMethod.GetMethodBody() != null)
-            {
-                var ptr = Il2CppInterop.Common.Il2CppInteropUtils.GetIl2CppMethodInfoPointerFieldForGeneratedMethod(setMethod);
-                if (ptr != null)
-                    value[setMethod] = ptr;
-            }
-        }
-
-        foreach (var methodInfo in type.GetAllMethods(true))
-        {
-            if (value.ContainsKey(methodInfo) || usedFields.Contains(methodInfo))
-                continue;
-
             if (methodInfo.GetMethodBody() != null)
             {
-                var ptr = Il2CppInterop.Common.Il2CppInteropUtils.GetIl2CppMethodInfoPointerFieldForGeneratedMethod(methodInfo);
+                var ptr = Il2CppInterop.Common.Il2CppInteropUtils.GetIl2CppMethodInfoPointerFieldForGeneratedMethod(methodInfo) ?? Il2CppInterop.Common.Il2CppInteropUtils.GetIl2CppFieldInfoPointerFieldForGeneratedFieldAccessor(methodInfo);
                 if (ptr != null)
-                    value[methodInfo] = ptr;
+                    lookup[methodInfo] = ptr;
             }
         }
 
-        _ptrLookup[type] = value;
-        return value;
+        return lookup;
     }
 
     public static bool TryGetIl2CppCacheEntry(object instance, Type type, EventInfo p, Dictionary<MemberInfo, FieldInfo> lookup, out ICacheEntry result)

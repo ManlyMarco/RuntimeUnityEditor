@@ -169,40 +169,62 @@ namespace RuntimeUnityEditor.Core.Utils
             tex.Apply(false);
         }
 
-        /// <summary>
-        /// Get all public and private fields, including from base classes
-        /// </summary>
-        public static IEnumerable<FieldInfo> GetAllFields(this Type t, bool getStatic)
+        public enum GetAllType
         {
-            var flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly | (getStatic ? BindingFlags.Static : BindingFlags.Instance);
-            return t.BaseType == null ? t.GetFields(flags) : t.GetFields(flags).Concat(GetAllFields(t.BaseType, getStatic));
+            Both,
+            InstanceOnly,
+            StaticOnly
+        }
+
+        private static BindingFlags ToBindingFlags(this GetAllType memberType)
+        {
+            switch (memberType)
+            {
+                case GetAllType.Both:
+                    return BindingFlags.Static | BindingFlags.Instance;
+                case GetAllType.StaticOnly:
+                    return BindingFlags.Static;
+                case GetAllType.InstanceOnly:
+                    return BindingFlags.Instance;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(memberType), memberType, null);
+            }
         }
 
         /// <summary>
-        /// Get all public and private properties, including from base classes
+        /// Get all public and private fields, including from base classes.
         /// </summary>
-        public static IEnumerable<PropertyInfo> GetAllProperties(this Type t, bool getStatic)
+        public static IEnumerable<FieldInfo> GetAllFields(this Type t, GetAllType memberType)
         {
-            var flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly | (getStatic ? BindingFlags.Static : BindingFlags.Instance);
-            return t.BaseType == null ? t.GetProperties(flags) : t.GetProperties(flags).Concat(GetAllProperties(t.BaseType, getStatic));
+            var flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly | memberType.ToBindingFlags();
+            return t.BaseType == null ? t.GetFields(flags) : t.GetFields(flags).Concat(GetAllFields(t.BaseType, memberType));
         }
 
         /// <summary>
-        /// Get all public and private methods, including from base classes
+        /// Get all public and private properties, including from base classes.
         /// </summary>
-        public static IEnumerable<MethodInfo> GetAllMethods(this Type t, bool getStatic)
+        public static IEnumerable<PropertyInfo> GetAllProperties(this Type t, GetAllType memberType)
         {
-            var flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly | (getStatic ? BindingFlags.Static : BindingFlags.Instance);
-            return t.BaseType == null ? t.GetMethods(flags) : t.GetMethods(flags).Concat(GetAllMethods(t.BaseType, getStatic));
+            var flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly | memberType.ToBindingFlags();
+            return t.BaseType == null ? t.GetProperties(flags) : t.GetProperties(flags).Concat(GetAllProperties(t.BaseType, memberType));
         }
 
         /// <summary>
-        /// Get all public and private methods, including from base classes
+        /// Get all public and private methods, including from base classes.
         /// </summary>
-        public static IEnumerable<EventInfo> GetAllEvents(this Type t, bool getStatic)
+        public static IEnumerable<MethodInfo> GetAllMethods(this Type t, GetAllType memberType)
         {
-            var flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly | (getStatic ? BindingFlags.Static : BindingFlags.Instance);
-            return t.BaseType == null ? t.GetEvents(flags) : t.GetEvents(flags).Concat(GetAllEvents(t.BaseType, getStatic));
+            var flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly | memberType.ToBindingFlags();
+            return t.BaseType == null ? t.GetMethods(flags) : t.GetMethods(flags).Concat(GetAllMethods(t.BaseType, memberType));
+        }
+
+        /// <summary>
+        /// Get all public and private methods, including from base classes.
+        /// </summary>
+        public static IEnumerable<EventInfo> GetAllEvents(this Type t, GetAllType memberType)
+        {
+            var flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly | memberType.ToBindingFlags();
+            return t.BaseType == null ? t.GetEvents(flags) : t.GetEvents(flags).Concat(GetAllEvents(t.BaseType, memberType));
         }
 
         public static void SetLossyScale(this Transform targetTransform, Vector3 lossyScale)
