@@ -136,7 +136,7 @@ namespace RuntimeUnityEditor.Core.Inspector
 
 
                 // Instance members
-                fieldCache.AddRange(type.GetAllFields(false)
+                fieldCache.AddRange(type.GetAllFields(Extensions.GetAllType.InstanceOnly)
                     .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
                     .Select(f => (ICacheEntry)new FieldCacheEntry(objectToOpen, f, type, parent)));
 
@@ -145,7 +145,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                 var isIl2cppType = objectToOpen is Il2CppSystem.Type;
                 var il2cppLookup = IL2CPPCacheEntryHelper.GetPtrLookupTable(type);
 #endif
-                fieldCache.AddRange(type.GetAllProperties(false)
+                fieldCache.AddRange(type.GetAllProperties(Extensions.GetAllType.InstanceOnly)
                                          .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
                                          .Select(p =>
                                          {
@@ -174,7 +174,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                                              return (ICacheEntry)new PropertyCacheEntry(objectToOpen, p, type, parent);
                                          }));
 
-                fieldCache.AddRange(type.GetAllEvents(false)
+                fieldCache.AddRange(type.GetAllEvents(Extensions.GetAllType.InstanceOnly)
                     .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
                     .Select(p =>
                     {
@@ -185,7 +185,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                         return new EventCacheEntry(objectToOpen, p, type);
                     }).Cast<ICacheEntry>());
 
-                fieldCache.AddRange(MethodsToCacheEntries(objectToOpen, type, type.GetAllMethods(false)));
+                fieldCache.AddRange(MethodsToCacheEntries(objectToOpen, type, type.GetAllMethods(Extensions.GetAllType.InstanceOnly)));
 
                 fieldCache.AddRange(CacheStaticMembersHelper(type));
 
@@ -215,14 +215,14 @@ namespace RuntimeUnityEditor.Core.Inspector
             var il2cppLookup = IL2CPPCacheEntryHelper.GetPtrLookupTable(type);
 #endif
             var fieldCache = new List<ICacheEntry>();
-            fieldCache.AddRange(type.GetAllFields(true)
+            fieldCache.AddRange(type.GetAllFields(Extensions.GetAllType.StaticOnly)
                                     .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
 #if IL2CPP
                                     .Where(f => !f.Name.StartsWith("NativeFieldInfoPtr_") && !f.Name.StartsWith("NativeMethodInfoPtr_"))
 #endif
                                     .Select(f => (ICacheEntry)new FieldCacheEntry(null, f, type)));
 
-            fieldCache.AddRange(type.GetAllProperties(true)
+            fieldCache.AddRange(type.GetAllProperties(Extensions.GetAllType.StaticOnly)
                                     .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
                                     .Select(p =>
                                     {
@@ -233,7 +233,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                                         return (ICacheEntry)new PropertyCacheEntry(null, p, type);
                                     }));
 
-            fieldCache.AddRange(type.GetAllEvents(true)
+            fieldCache.AddRange(type.GetAllEvents(Extensions.GetAllType.StaticOnly)
                                     .Where(f => !f.IsDefined(typeof(CompilerGeneratedAttribute), false))
                                     .Select(p =>
                                     {
@@ -244,7 +244,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                                         return (ICacheEntry)new EventCacheEntry(null, p, type);
                                     }));
 
-            fieldCache.AddRange(MethodsToCacheEntries(null, type, type.GetAllMethods(true)));
+            fieldCache.AddRange(MethodsToCacheEntries(null, type, type.GetAllMethods(Extensions.GetAllType.StaticOnly)));
             return fieldCache;
         }
 

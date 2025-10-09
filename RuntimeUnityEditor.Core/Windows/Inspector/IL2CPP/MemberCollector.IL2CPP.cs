@@ -19,80 +19,18 @@ public class IL2CPPCacheEntryHelper
         // todo some way to clean up old entries?
         if (_ptrLookup.TryGetValue(type, out var lookup))
             return lookup;
-        
+
         lookup = new Dictionary<MemberInfo, FieldInfo>();
         _ptrLookup[type] = lookup;
 
-        var staticFields = new List<FieldInfo>();
-        var isIl2Cpp = false;
-        var currentType = type;
-        do
-        {
-            if (currentType == typeof(Il2CppObjectBase))
-            {
-                isIl2Cpp = true;
-                break;
-            }
-
-            staticFields.AddRange(currentType.GetFields(BindingFlags.Static | BindingFlags.NonPublic).Where(x => x.IsInitOnly));
-        } while ((currentType = currentType.BaseType) != null);
-        
-        if (!isIl2Cpp)
+        if (!type.IsAssignableTo(typeof(Il2CppObjectBase)))
             return lookup;
 
-        var fieldPtrs = staticFields.Where(x => x.Name.StartsWith("NativeFieldInfoPtr_"))
-                                    .Select(x => new { trimmed = x.Name.Substring("NativeFieldInfoPtr_".Length), ptrF = x });
-
-        var usedFields = new HashSet<MethodInfo>();
-
-        // todo BUGGED, doesn't catch all fields. try doing get field from utils instead?
-        foreach (var fieldPtr in fieldPtrs)
+        foreach (var methodInfo in type.GetAllMethods(Extensions.GetAllType.Both))
         {
-            var targetFieldName = fieldPtr.trimmed;
-            // Fields are props in il2cpp interop
-            var targetField = type.GetProperty(targetFieldName, AccessTools.all);
-            if (targetField != null)
-            {
-                lookup[targetField] = fieldPtr.ptrF;
-
-                var getMethod = targetField.GetGetMethod();
-                if (getMethod != null) usedFields.Add(getMethod);
-                var setMethod = targetField.GetSetMethod();
-                if (setMethod != null) usedFields.Add(setMethod);
-            }
-        }
-
-        foreach (var propertyInfo in type.GetAllProperties(false).Concat(type.GetAllProperties(true)))
-        {
-            // It's a field
-            if (lookup.ContainsKey(propertyInfo))
-                continue;
-
-            var getMethod = propertyInfo.GetGetMethod(true);
-            if (getMethod != null && getMethod.GetMethodBody() != null)
-            {
-                var ptr = Il2CppInterop.Common.Il2CppInteropUtils.GetIl2CppMethodInfoPointerFieldForGeneratedMethod(getMethod);
-                if (ptr != null)
-                    lookup[getMethod] = ptr;
-            }
-
-            var setMethod = propertyInfo.GetSetMethod();
-            if (setMethod != null && setMethod.GetMethodBody() != null)
-            {
-                var ptr = Il2CppInterop.Common.Il2CppInteropUtils.GetIl2CppMethodInfoPointerFieldForGeneratedMethod(setMethod);
-                if (ptr != null)
-                    lookup[setMethod] = ptr;
-            }
-        }
-
-        foreach (var methodInfo in type.GetAllMethods(false).Concat(type.GetAllMethods(true)))
-        {
-            if (lookup.ContainsKey(methodInfo) || usedFields.Contains(methodInfo))
-                continue;
-
             if (methodInfo.GetMethodBody() != null)
             {
-                var ptr = Il2CppInterop.Common.Il2CppInteropUtils.GetIl2CppMethodInfoPointerFieldForGeneratedMethod(methodInfo);
+                var ptr = Il2CppInterop.Common.Il2CppInteropUtils.GetIl2CppMethodInfoPointerFieldForGeneratedMethod(methodInfo) ?? Il2CppInterop.Common.Il2CppInteropUtils.GetIl2CppFieldInfoPointerFieldForGeneratedFieldAccessor(methodInfo);
                 if (ptr != null)
                     lookup[methodInfo] = ptr;
             }
