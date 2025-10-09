@@ -72,15 +72,19 @@
     <Compile Include="$(MSBuildThisFileDirectory)Windows\ChangeHistory\IChange.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\Clipboard\ClipboardWindow.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\CacheEntryBase.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\CallbackCacheEntey.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\EventCacheEntry.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\FieldCacheEntry.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\Fake\CallbackCacheEntey.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\IL2CPP\IL2CPPEventCacheEntry.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\IL2CPP\IL2CPPFieldCacheEntry.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\IL2CPP\IL2CPPMethodCacheEntry.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\IL2CPP\IL2CPPPropertyCacheEntry.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\Real\EventCacheEntry.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\Real\FieldCacheEntry.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\ICacheEntry.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\ListCacheEntry.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\MethodCacheEntry.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\PropertyCacheEntry.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\ReadonlyCacheEntry.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\ReadonlyListCacheEntry.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\Fake\ListCacheEntry.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\Real\MethodCacheEntry.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\Real\PropertyCacheEntry.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\Fake\ReadonlyCacheEntry.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\Fake\ReadonlyListCacheEntry.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Inspector\InspectorStackEntryBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Inspector\InstanceStackEntry.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Inspector\StaticStackEntry.cs" />
@@ -88,7 +92,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Inspector.InspectorTab.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\InspectorHelpObject.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\MemberCollector.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\IL2CPP\MemberCollector.IL2CPP.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\IL2CPP\IL2CPPCacheEntryHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\ToStringConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\VariableFieldDrawer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\ObjectTree\ObjectTreeViewer.cs" />
@@ -109,6 +113,10 @@
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)Utils\UI\guisharp-window.png" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="$(MSBuildThisFileDirectory)Windows\Inspector\IL2CPP\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\Fake\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\Real\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)windows\inspector\entries\contents\fake\IFakeCacheEntry.cs" />
   </ItemGroup>
 </Project>

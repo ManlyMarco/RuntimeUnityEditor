@@ -6,7 +6,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
     /// <summary>
     /// Represents a read-only cache entry in the inspector.
     /// </summary>
-    public class ReadonlyCacheEntry : CacheEntryBase
+    public class ReadonlyCacheEntry : CacheEntryBase, IFakeCacheEntry
     {
         /// <summary>
         /// The object that this entry represents.

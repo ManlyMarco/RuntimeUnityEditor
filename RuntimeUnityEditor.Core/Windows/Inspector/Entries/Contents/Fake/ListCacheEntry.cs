@@ -9,7 +9,7 @@ namespace RuntimeUnityEditor.Core.Inspector.Entries
     /// <summary>
     /// Represents a cache entry for an item inside any IList.
     /// </summary>
-    public class ListCacheEntry : CacheEntryBase
+    public class ListCacheEntry : CacheEntryBase, IFakeCacheEntry
     {
         private Type _type;
         private readonly IList _list;

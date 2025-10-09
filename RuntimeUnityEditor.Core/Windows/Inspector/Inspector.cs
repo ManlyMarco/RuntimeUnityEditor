@@ -429,6 +429,9 @@ namespace RuntimeUnityEditor.Core.Inspector
                     }
                     visibleFieldsQuery = visibleFieldsQuery.Where(x =>
                     {
+                        // TODO add filtering option
+                        if (x is IFakeCacheEntry) 
+                            return true;
 #if IL2CPP
                         if (IL2CPPCacheEntryHelper.IsIl2CppCacheEntry(x))
                         {
