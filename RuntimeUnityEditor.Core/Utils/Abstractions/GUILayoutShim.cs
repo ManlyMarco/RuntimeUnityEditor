@@ -30,7 +30,7 @@ namespace RuntimeUnityEditor.Core
             var entity = new UnityEngine.GUILayoutOption(GUILayoutOption.Type.stretchHeight, expand);
             return entity;
 #else
-            return GUILayout.ExpandWidth(expand);
+            return GUILayout.ExpandHeight(expand);
 #endif
         }
 
