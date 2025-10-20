@@ -28,14 +28,12 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
             _method = method ?? throw new ArgumentNullException(nameof(method));
             _originalIL = originalIL ?? throw new ArgumentNullException(nameof(originalIL));
             _patchMethods = patchMethods ?? throw new ArgumentNullException(nameof(patchMethods));
-
             Enabled = true;
             DisplayType = FeatureDisplayType.Hidden;
             DefaultScreenPosition = ScreenPartition.CenterUpper;
             Title = $"IL Code: {_method.DeclaringType?.Name}.{_method.Name}";
 
-            ResetWindowRect();
-            //WindowRect = new Rect(100 + (windowId % 5) * 50, 100 + (windowId % 5) * 50, 900, 650);
+            OnVisibleChanged(true);
         }
 
         protected override void Initialize(InitSettings initSettings) => throw new InvalidOperationException("This window should not be initialized");
@@ -45,6 +43,7 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
         protected override void DrawContents()
         {
             GUILayout.BeginVertical();
+
             // todo cache + tooltip maybe buttons
             GUILayout.Label($"Method: {_method.DeclaringType?.FullName}.{_method.Name}");
             GUILayout.Label($"Parameters: {GetMethodParameters(_method)}");

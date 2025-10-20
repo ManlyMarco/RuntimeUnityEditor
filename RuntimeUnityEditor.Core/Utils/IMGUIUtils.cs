@@ -12,13 +12,55 @@ namespace RuntimeUnityEditor.Core.Utils
         /// Options with GUILayout.ExpandWidth(true). Useful for avoiding allocations.
         /// </summary>
         public static readonly GUILayoutOption[] LayoutOptionsExpandWidthTrue = { GUILayoutShim.ExpandWidth(true) };
-        
+
         /// <summary>
         /// Options with GUILayout.ExpandWidth(false). Useful for avoiding allocations.
         /// </summary>
         public static readonly GUILayoutOption[] LayoutOptionsExpandWidthFalse = { GUILayoutShim.ExpandWidth(false) };
 
         private static Texture2D SolidBoxTex { get; set; }
+
+        /// <summary>
+        /// Gets a Label <see cref="GUIStyle"/> configured to display text in MiddleCenter and stretch horizontally + vertically with wrapping.
+        /// </summary>
+        public static GUIStyle MiddleCenterLabelStyle
+        {
+            get
+            {
+                if (_middleCenterLabelStyle == null)
+                {
+                    _middleCenterLabelStyle = GUI.skin.label.CreateCopy();
+                    _middleCenterLabelStyle.alignment = TextAnchor.MiddleCenter;
+                    _middleCenterLabelStyle.stretchWidth = true;
+                    _middleCenterLabelStyle.stretchHeight = true;
+                    _middleCenterLabelStyle.wordWrap = true;
+                    _middleCenterLabelStyle.richText = false;
+                }
+                return _middleCenterLabelStyle;
+            }
+        }
+        private static GUIStyle _middleCenterLabelStyle;
+
+        /// <summary>
+        /// Gets a Label <see cref="GUIStyle"/> configured to display text in UpperCenter and stretch only horizontally with wrapping.
+        /// </summary>
+        public static GUIStyle UpperCenterLabelStyle
+        {
+            get
+            {
+                if (_upperCenterLabelStyle == null)
+                {
+                    _upperCenterLabelStyle = GUI.skin.label.CreateCopy();
+                    _upperCenterLabelStyle.alignment = TextAnchor.UpperCenter;
+                    _upperCenterLabelStyle.stretchWidth = true;
+                    _upperCenterLabelStyle.stretchHeight = false;
+                    _upperCenterLabelStyle.wordWrap = true;
+                    _upperCenterLabelStyle.richText = false;
+                }
+                return _upperCenterLabelStyle;
+            }
+        }
+        private static GUIStyle _upperCenterLabelStyle;
 
         /// <summary>
         /// Draw a gray non-transparent GUI.Box at the specified rect. Use before a GUI.Window or other controls to get rid of 
@@ -160,7 +202,7 @@ namespace RuntimeUnityEditor.Core.Utils
 
             return result;
         }
-        
+
         /// <summary>
         /// Draw a button with a shadow
         /// </summary>
@@ -258,7 +300,7 @@ namespace RuntimeUnityEditor.Core.Utils
         {
             return Event.current.button == 2;
         }
-        
+
         /// <summary>
         /// For use inside OnGUI to check if a GUI.Button was clicked with right mouse button.
         /// </summary>
