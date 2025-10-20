@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using RuntimeUnityEditor.Core.REPL;
 using UnityEngine;
@@ -76,10 +77,12 @@ namespace RuntimeUnityEditor.Core
             }
         }
 
+        internal static readonly List<IWindow> AdditionalWindows = new List<IWindow>();
+
         private static Rect EnsureVisible(Rect rect)
         {
             var result = rect;
-            var allWindows = RuntimeUnityEditorCore.Instance.InitializedFeatures.OfType<IWindow>();
+            var allWindows = RuntimeUnityEditorCore.Instance.InitializedFeatures.OfType<IWindow>().Concat(AdditionalWindows);
             var allWindowsRects = allWindows.Select(w => w.WindowRect).ToList();
             // Check if any window near this position, move the rect until it's not near any other window
             while (allWindowsRects.Any(r => Mathf.Abs(r.x - result.x) < 7 && Mathf.Abs(r.y - result.y) < 7))

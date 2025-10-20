@@ -5,7 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using RuntimeUnityEditor.Core.Inspector;
+using RuntimeUnityEditor.Core.Inspector.Entries;
+using RuntimeUnityEditor.Core.Utils;
 using UnityEngine;
+using ContextMenu = RuntimeUnityEditor.Core.ContextMenu;
 
 namespace RuntimeUnityEditor.Bepin5.PatchInspector
 {
@@ -17,10 +21,10 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
         private readonly string _originalIL;
         private readonly List<PatchMethodInfo> _patchMethods;
 
-        private Vector2 _scrollPosition;
-        private Vector2 _patchListScrollPosition;
-        private ILViewMode _currentView = ILViewMode.Original;
-        private int _selectedPatchIndex = -1;
+        private readonly GUIContent _headingGc;
+
+        private Vector2 _patchesScrollPosition, _ilScrollPosition;
+        private int _selectedPatchIndex = -2;
 
         public ILViewerWindow(int windowId, MethodBase method, string originalIL, List<PatchMethodInfo> patchMethods)
         {
@@ -33,6 +37,8 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
             DefaultScreenPosition = ScreenPartition.CenterUpper;
             Title = $"IL Code: {_method.DeclaringType?.Name}.{_method.Name}";
 
+            _headingGc = new GUIContent(_method.FullDescription(), null, _method.GetFancyDescription());
+
             OnVisibleChanged(true);
         }
 
@@ -42,183 +48,129 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
 
         protected override void DrawContents()
         {
-            GUILayout.BeginVertical();
-
-            // todo cache + tooltip maybe buttons
-            GUILayout.Label($"Method: {_method.DeclaringType?.FullName}.{_method.Name}");
-            GUILayout.Label($"Parameters: {GetMethodParameters(_method)}");
-            GUILayout.Label($"Return Type: {GetReturnType(_method)}");
-
-            GUILayout.Space(10);
-
-            GUILayout.BeginHorizontal();
-
-            bool opSelected = _currentView == ILViewMode.Original;
-            if (opSelected) GUI.color = Color.yellow;
-            if (GUILayout.Button("Original Method", GUILayout.Height(30)))
+            if (GUILayout.Button(_headingGc, IMGUIUtils.UpperCenterLabelStyle))
             {
-                _currentView = ILViewMode.Original;
-                _scrollPosition = Vector2.zero;
-            }
-            if (opSelected) GUI.color = Color.white;
-
-            bool patchMethodsSelected = _currentView == ILViewMode.PatchMethods;
-            if (patchMethodsSelected) GUI.color = Color.yellow;
-            if (GUILayout.Button($"Patch Manager ({_patchMethods.Count})", GUILayout.Height(30)))
-            {
-                _currentView = ILViewMode.PatchMethods;
-                _scrollPosition = Vector2.zero;
-            }
-            if (patchMethodsSelected) GUI.color = Color.white;
-
-            GUILayout.FlexibleSpace();
-
-            GUILayout.EndHorizontal();
-
-            GUILayout.Space(5);
-
-            switch (_currentView)
-            {
-                case ILViewMode.Original:
-                    DrawOriginalMethodView();
-                    break;
-                case ILViewMode.PatchMethods:
-                    DrawPatchManagerView();
-                    break;
-            }
-
-            GUILayout.EndVertical();
-        }
-
-        public void DrawOriginalMethodView()
-        {
-            GUILayout.Label("Original Method IL Code:");
-            _scrollPosition = GUILayout.BeginScrollView(_scrollPosition, GUILayoutShim.ExpandHeight(true));
-            GUILayout.TextArea(_originalIL);
-            GUILayout.EndScrollView();
-        }
-
-        private void DrawPatchManagerView()
-        {
-            if (_patchMethods.Count == 0)
-            {
-                GUILayout.Label("No patches found for this method.");
-                return;
+                //if (IMGUIUtils.IsMouseRightClick())
+                ContextMenu.Instance.Show(_method);
             }
 
             GUILayout.BeginHorizontal();
-            GUILayout.BeginVertical(GUILayout.Width(400));
-            GUILayout.Label("Patches:");
-
-            if (GUILayout.Button("Refresh Patch List", GUILayout.Height(25)))
-                RefreshPatchList();
-
-            _patchListScrollPosition = GUILayout.BeginScrollView(_patchListScrollPosition, GUILayoutShim.ExpandHeight(true));
-
-            for (var i = 0; i < _patchMethods.Count; i++)
             {
-                var patch = _patchMethods[i];
-
-                GUILayout.BeginVertical("box");
-                GUILayout.BeginHorizontal();
-
-                bool newEnabled = GUILayout.Toggle(patch.IsEnabled, "", GUILayout.Width(20));
-                if (newEnabled != patch.IsEnabled)
+                _patchesScrollPosition = GUILayout.BeginScrollView(_patchesScrollPosition, GUI.skin.box, GUILayoutShim.ExpandHeight(true), GUILayout.Width(400));
                 {
-                    TogglePatch(i, newEnabled);
-                    //SearchPatches(); // not needed?
-                }
-
-                GUILayout.BeginVertical();
-
-                bool isSelected = _selectedPatchIndex == i;
-                if (isSelected) GUI.color = Color.cyan;
-
-                if (GUILayout.Button($"{patch.PatchType}: {patch.PatchMethod.DeclaringType?.Name}.{patch.PatchMethod.Name}", "label"))
-                {
-                    _selectedPatchIndex = i;
-                    _scrollPosition = Vector2.zero;
-                }
-
-                if (isSelected) GUI.color = Color.white;
-
-                GUILayout.Label($"Priority: {patch.Priority} | {patch.PatcherNamespace}");
-                GUILayout.EndVertical();
-                GUILayout.EndHorizontal();
-                GUILayout.EndVertical();
-                GUILayout.Space(2);
-            }
-
-            GUILayout.EndScrollView();
-            GUILayout.EndVertical();
-
-            GUILayout.BeginVertical();
-
-            if (_selectedPatchIndex >= 0 && _selectedPatchIndex < _patchMethods.Count)
-            {
-                var selectedPatch = _patchMethods[_selectedPatchIndex];
-                GUILayout.Label($"IL Code for: {selectedPatch.PatchType} - {selectedPatch.PatchMethod.DeclaringType?.Name}.{selectedPatch.PatchMethod.Name}", GUI.skin.label);
-
-                _scrollPosition = GUILayout.BeginScrollView(_scrollPosition, GUILayoutShim.ExpandHeight(true));
-
-                GUILayout.TextArea(selectedPatch.ILCode);
-
-                GUILayout.EndScrollView();
-            }
-            else
-            {
-                GUILayout.Label("Select a patch from the list to view its IL code.", GUI.skin.label);
-            }
-
-            GUILayout.EndVertical();
-            GUILayout.EndHorizontal();
-        }
-
-
-        private void TogglePatch(int patchIndex, bool enable)
-        {
-            if (patchIndex < 0 || patchIndex >= _patchMethods.Count)
-                return;
-
-            var patch = _patchMethods[patchIndex];
-
-            try
-            {
-                if (enable && !patch.IsEnabled)
-                {
-                    var harmony = new Harmony(patch.HarmonyId ?? "harmony.patch.inspector.temp");
-
-                    switch (patch.PatchType)
+                    GUILayout.BeginVertical(GUI.skin.box);
                     {
-                        case "Prefix":
-                            harmony.Patch(_method, prefix: patch.HarmonyPatch);
-                            break;
-                        case "Postfix":
-                            harmony.Patch(_method, postfix: patch.HarmonyPatch);
-                            break;
-                        case "Transpiler":
-                            harmony.Patch(_method, transpiler: patch.HarmonyPatch);
-                            break;
-                        case "Finalizer":
-                            harmony.Patch(_method, finalizer: patch.HarmonyPatch);
-                            break;
-                    }
+                        var isSelected = _selectedPatchIndex == -1;
+                        if (isSelected) GUI.color = Color.cyan;
 
-                    patch.IsEnabled = true;
+                        if (GUILayout.Button($" [Original method] {_method.Name}", GUI.skin.label, IMGUIUtils.LayoutOptionsExpandWidthTrue))
+                        {
+                            if (IMGUIUtils.IsMouseRightClick())
+                            {
+                                ContextMenu.Instance.Show(_method, null, "[MethodInfo] " + _method?.Name, null, null);
+                            }
+                            else
+                            {
+                                _selectedPatchIndex = -1;
+                                _ilScrollPosition = Vector2.zero;
+                            }
+                        }
+
+                        if (isSelected) GUI.color = Color.white;
+                    }
+                    GUILayout.EndVertical();
+
+                    GUILayout.BeginHorizontal();
+                    {
+                        GUILayout.Label("Patches:", IMGUIUtils.LayoutOptionsExpandWidthTrue);
+
+                        if (GUILayout.Button("Refresh", IMGUIUtils.LayoutOptionsExpandWidthFalse))
+                            RefreshPatchList();
+                    }
+                    GUILayout.EndHorizontal();
+
+                    if (_patchMethods.Count == 0)
+                    {
+                        GUILayout.Label("No patches found for this method.", IMGUIUtils.UpperCenterLabelStyle);
+                    }
+                    else
+                    {
+                        for (var i = 0; i < _patchMethods.Count; i++)
+                        {
+                            var patch = _patchMethods[i];
+
+                            GUILayout.BeginHorizontal(GUI.skin.box);
+                            {
+                                var newEnabled = GUILayout.Toggle(patch.IsEnabled, "", GUILayout.Width(20));
+                                if (newEnabled != patch.IsEnabled)
+                                    PatchInspector.Instance.TogglePatch(_method, _patchMethods[i], newEnabled);
+
+                                var isSelected = _selectedPatchIndex == i;
+                                if (isSelected) GUI.color = Color.cyan;
+
+                                var patchName = $"[{patch.PatchType}] {patch.PatchMethod.DeclaringType?.Name}.{patch.PatchMethod.Name}";
+                                if (GUILayout.Button(patchName + $"\nPriority: {patch.Priority} | {patch.PatcherNamespace}", GUI.skin.label, IMGUIUtils.LayoutOptionsExpandWidthTrue))
+                                {
+                                    if (IMGUIUtils.IsMouseRightClick())
+                                    {
+                                        ContextMenu.Instance.Show(patch.PatchMethod, null, "[MethodInfo] " + patch.PatchMethod?.Name, null, null);
+                                    }
+                                    else
+                                    {
+                                        _selectedPatchIndex = i;
+                                        _ilScrollPosition = Vector2.zero;
+                                    }
+                                }
+
+                                if (isSelected) GUI.color = Color.white;
+                            }
+                            GUILayout.EndHorizontal();
+                        }
+                    }
                 }
-                else if (!enable && patch.IsEnabled)
+                GUILayout.EndScrollView();
+
+                GUILayout.Space(5);
+
+                GUILayout.BeginVertical(GUI.skin.box, GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true));
+                if (_selectedPatchIndex == -1)
                 {
-                    var harmony = new Harmony(patch.HarmonyId ?? "harmony.patch.inspector.temp");
-                    harmony.Unpatch(_method, patch.PatchMethod as MethodInfo);
-                    patch.IsEnabled = false;
+                    GUILayout.Label("IL Code for the Original Method (target being patched)");
+                    _ilScrollPosition = GUILayout.BeginScrollView(_ilScrollPosition, GUILayoutShim.ExpandHeight(true));
+                    GUILayout.TextArea(_originalIL);
+                    GUILayout.EndScrollView();
                 }
+                else if (_selectedPatchIndex >= 0 && _selectedPatchIndex < _patchMethods.Count)
+                {
+                    var selectedPatch = _patchMethods[_selectedPatchIndex];
+
+                    GUILayout.BeginHorizontal();
+                    {
+                        GUILayout.Space(3);
+
+                        var patchName = $"[{selectedPatch.PatchType}] {selectedPatch.PatchMethod.DeclaringType?.Name}.{selectedPatch.PatchMethod.Name}";
+                        GUILayout.Label($"IL Code for: {patchName}", IMGUIUtils.LayoutOptionsExpandWidthTrue);
+
+                        if (GUILayout.Button("Inspect", IMGUIUtils.LayoutOptionsExpandWidthFalse))
+                            Inspector.Instance.Push(new InstanceStackEntry(selectedPatch, patchName), true);
+
+                        GUILayout.Space(3);
+                    }
+                    GUILayout.EndHorizontal();
+
+                    _ilScrollPosition = GUILayout.BeginScrollView(_ilScrollPosition, GUILayoutShim.ExpandHeight(true));
+
+                    GUILayout.TextArea(selectedPatch.ILCode);
+
+                    GUILayout.EndScrollView();
+                }
+                else
+                {
+                    GUILayout.Label("Select a method from the list on the left to view its IL code.", IMGUIUtils.MiddleCenterLabelStyle);
+                }
+                GUILayout.EndVertical();
             }
-            catch (Exception e)
-            {
-                //patch.IsEnabled = !enable;
-                RuntimeUnityEditorCore.Logger.Log(LogLevel.Message, $"Failed to {(enable ? "enable" : "disable")} Harmony patch {patch.HarmonyId ?? "<NULL>"}:{patch.HarmonyPatch?.methodName}");
-                RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, e);
-            }
+            GUILayout.EndHorizontal();
         }
 
         private void RefreshPatchList()
@@ -248,37 +200,6 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
             catch (Exception e)
             {
                 RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, e);
-            }
-        }
-
-        private static string GetMethodParameters(MethodBase method)
-        {
-            try
-            {
-                var parameters = method.GetParameters();
-                if (parameters.Length == 0)
-                    return "()";
-
-                var paramStrings = parameters.Select(p => $"{p.ParameterType.Name} {p.Name}");
-                return $"({string.Join(", ", paramStrings.ToArray())})";
-            }
-            catch
-            {
-                return "(unknown)";
-            }
-        }
-
-        private static string GetReturnType(MethodBase method)
-        {
-            try
-            {
-                if (method is MethodInfo methodInfo)
-                    return methodInfo.ReturnType.Name;
-                return "void";
-            }
-            catch
-            {
-                return "Unknown";
             }
         }
     }
