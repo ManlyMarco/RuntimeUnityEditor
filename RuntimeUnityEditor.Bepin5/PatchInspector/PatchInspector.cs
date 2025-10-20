@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using BepInEx;
 using HarmonyLib;
 using RuntimeUnityEditor.Core;
@@ -9,6 +5,10 @@ using RuntimeUnityEditor.Core.Inspector;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.Utils;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using UnityEngine;
 using ContextMenu = RuntimeUnityEditor.Core.ContextMenu;
 
@@ -46,11 +46,7 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
         protected override void VisibleChanged(bool visible)
         {
             if (visible)
-            {
-                //_searchInput = string.Empty;
-                //_foundPatches.Clear();
                 SearchPatches();
-            }
 
             foreach (var window in _ilViewerWindows)
             {
@@ -74,6 +70,7 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
                 else
                 {
                     _ilViewerWindows.RemoveAt(i);
+                    WindowManager.AdditionalWindows.Remove(window);
                     i--;
                 }
             }
@@ -84,7 +81,6 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
         /// <inheritdoc />
         protected override void DrawContents()
         {
-            //GUILayout.BeginVertical();
             GUILayout.BeginHorizontal(GUI.skin.box);
             {
                 GUILayout.Label("Search: ", IMGUIUtils.LayoutOptionsExpandWidthFalse);
@@ -126,11 +122,11 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
                                 TogglePatchDirect(patch, newEnabled);
 
                             if (GUILayout.Button(
-                                    new GUIContent($"Target: {patch.TargetType}.{patch.MethodName}", null, "Click to view IL and a full list of patches applied to this method. Right click for more options"),
+                                    new GUIContent($"Target: {patch.TargetType}.{patch.TargetMethodName}", null, "Click to view IL and a full list of patches applied to this method. Right click for more options"),
                                     GUI.skin.label, IMGUIUtils.LayoutOptionsExpandWidthTrue))
                             {
                                 if (IMGUIUtils.IsMouseRightClick())
-                                    ContextMenu.Instance.Show(patch.TargetMethod, null, $"MethodInfo: {patch.TargetType}.{patch.MethodName}", null, null);
+                                    ContextMenu.Instance.Show(patch.TargetMethod, null, $"MethodInfo: {patch.TargetType}.{patch.TargetMethodName}", null, null);
                                 else
                                     OpenILViewer(patch.TargetMethod);
                             }
@@ -234,7 +230,7 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
                     if (c1 != 0)
                         return c1;
 
-                    return string.Compare(p1.MethodName, p2.MethodName, StringComparison.Ordinal);
+                    return string.Compare(p1.TargetMethodName, p2.TargetMethodName, StringComparison.Ordinal);
                 });
             }
             catch (Exception ex)
@@ -334,7 +330,7 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
                 var patchInfo = new PatchInfo
                 {
                     Patch = patch,
-                    MethodName = targetMethod.Name,
+                    TargetMethodName = targetMethod.Name,
                     TargetType = targetMethod.DeclaringType?.FullName ?? "Unknown",
                     PatcherAssembly = assembly?.GetName().Name ?? "Unknown",
                     PatchType = patchType,
@@ -361,7 +357,7 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
                             var assembly = storedPatch.PatchMethod.DeclaringType?.Assembly;
                             var patchInfo = new PatchInfo
                             {
-                                MethodName = targetMethod.Name,
+                                TargetMethodName = targetMethod.Name,
                                 TargetType = targetMethod.DeclaringType?.FullName ?? "Unknown",
                                 PatcherAssembly = assembly?.GetName().Name ?? "Unknown",
                                 PatchType = patchType,
@@ -399,8 +395,12 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
         {
             if (method == null) return;
 
-            if (_ilViewerWindows.Any(w => w.Method == method))
+            var existing = _ilViewerWindows.Find(w => w.Method == method);
+            if (existing != null)
+            {
+                GUI.BringWindowToFront(existing.WindowId);
                 return;
+            }
 
             try
             {
@@ -498,6 +498,7 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
 
                 var window = new ILViewerWindow(_nextWindowId++, method, opIL, patchMethods);
                 _ilViewerWindows.Add(window);
+                WindowManager.AdditionalWindows.Add(window);
             }
             catch (Exception e)
             {
@@ -602,6 +603,72 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
                         HarmonyId = GetHarmonyIdFromPatch(patch.PatchMethod)
                     });
                 }
+            }
+        }
+
+        internal void TogglePatch(MethodBase targetMethod, PatchMethodInfo patch, bool enable)
+        {
+            try
+            {
+                string methodKey = GetMethodSignature(targetMethod);
+
+                if (!_opPatchStates.ContainsKey(methodKey))
+                {
+                    var patchMethods = new List<PatchMethodInfo>();
+                    var harmonyPatchInfo = Harmony.GetPatchInfo(targetMethod);
+
+                    if (harmonyPatchInfo != null)
+                    {
+                        AddPatchHInfo(harmonyPatchInfo, patchMethods);
+                    }
+
+                    _opPatchStates[methodKey] = patchMethods;
+                }
+
+                if (enable && !patch.IsEnabled)
+                {
+                    var harmony = new Harmony(patch.HarmonyId ?? "harmony.patch.inspector.temp");
+
+                    switch (patch.PatchType)
+                    {
+                        case "Prefix":
+                            harmony.Patch(targetMethod, prefix: patch.HarmonyPatch);
+                            break;
+                        case "Postfix":
+                            harmony.Patch(targetMethod, postfix: patch.HarmonyPatch);
+                            break;
+                        case "Transpiler":
+                            harmony.Patch(targetMethod, transpiler: patch.HarmonyPatch);
+                            break;
+                        case "Finalizer":
+                            harmony.Patch(targetMethod, finalizer: patch.HarmonyPatch);
+                            break;
+                    }
+
+                    patch.IsEnabled = true;
+                }
+                else if (!enable && patch.IsEnabled)
+                {
+                    var harmony = new Harmony(patch.HarmonyId ?? "harmony.patch.inspector.temp");
+                    harmony.Unpatch(targetMethod, patch.PatchMethod as MethodInfo);
+                    patch.IsEnabled = false;
+                }
+            }
+            catch (Exception e)
+            {
+                //patch.IsEnabled = !enable;
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Message, $"Failed to {(enable ? "enable" : "disable")} Harmony patch {patch.HarmonyId ?? "<NULL>"}:{patch.HarmonyPatch?.methodName}");
+                RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, e);
+            }
+
+            var existing = _foundPatches.Find(fp => fp.TargetMethod == targetMethod && fp.PatchType == patch.PatchType && fp.PatcherNamespace == patch.PatcherNamespace);
+            if (existing != null)
+            {
+                existing.IsEnabled = patch.IsEnabled;
+            }
+            else
+            {
+                SearchPatches();
             }
         }
 

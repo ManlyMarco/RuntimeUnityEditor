@@ -6,7 +6,7 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
 	internal class PatchInfo
 	{
 		public Patch Patch;
-		public string MethodName;
+		public string TargetMethodName;
 		public string TargetType;
 		public string PatcherAssembly;
 		public string PatcherNamespace;
