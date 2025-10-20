@@ -5,8 +5,12 @@ using System.Reflection;
 using BepInEx;
 using HarmonyLib;
 using RuntimeUnityEditor.Core;
+using RuntimeUnityEditor.Core.Inspector;
+using RuntimeUnityEditor.Core.Inspector.Entries;
+using RuntimeUnityEditor.Core.Utils;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
+using ContextMenu = RuntimeUnityEditor.Core.ContextMenu;
 
 namespace RuntimeUnityEditor.Bepin5.PatchInspector
 {
@@ -15,14 +19,19 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
     /// </summary>
     public class PatchInspector : Window<PatchInspector>
     {
-        private string _searchInput = String.Empty;
-        private Vector2 _scrollPos;
-        private List<PatchInfo> _foundPatches = new List<PatchInfo>();
-        private bool _showFilePaths = true;
-
-        private int _nextWindowId = 13000;
+        private readonly List<PatchInfo> _foundPatches = new List<PatchInfo>();
         private readonly List<ILViewerWindow> _ilViewerWindows = new List<ILViewerWindow>();
         private readonly Dictionary<string, List<PatchMethodInfo>> _opPatchStates = new Dictionary<string, List<PatchMethodInfo>>();
+
+        private int _nextWindowId = 13000;
+        private Vector2 _scrollPos;
+        private string _searchInput = string.Empty;
+
+        private string SearchInput
+        {
+            get => _searchInput;
+            set => _searchInput = value ?? string.Empty;
+        }
 
         /// <inheritdoc />
         protected override void Initialize(InitSettings initSettings)
@@ -30,7 +39,7 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
             Enabled = false;
             DefaultScreenPosition = ScreenPartition.LeftUpper;
             DisplayName = "Patch Inspector";
-            Title = "Patch Inspector";
+            Title = "Harmony Patch Inspector";
         }
 
         /// <inheritdoc />
@@ -75,109 +84,125 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
         /// <inheritdoc />
         protected override void DrawContents()
         {
-            GUILayout.BeginVertical();
-
-            GUILayout.Label("Search for patches by method, class, or namespace:", GUI.skin.label);
-            GUILayout.Label("Examples: 'OnClick', 'method:OnClick class:AddButtonCtrl', 'namespace:SimpleGame'");
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Search:", GUILayout.Width(60));
-
-            string newSearchInput = GUILayout.TextField(_searchInput);
-            if (newSearchInput != _searchInput)
+            //GUILayout.BeginVertical();
+            GUILayout.BeginHorizontal(GUI.skin.box);
             {
-                _searchInput = newSearchInput;
-                SearchPatches();
-                return;
-            }
+                GUILayout.Label("Search: ", IMGUIUtils.LayoutOptionsExpandWidthFalse);
 
-            // Replaced by upper OnValueChanged
-            /*if (GUILayout.Button("Search", GUILayout.Width(80)))
-			{
-				SearchPatches();
-			}*/
+                string newSearchInput = GUILayout.TextField(SearchInput, IMGUIUtils.LayoutOptionsExpandWidthTrue);
+                if (newSearchInput != SearchInput)
+                {
+                    SearchInput = newSearchInput;
+                    SearchPatches();
+                    return;
+                }
 
-            if (GUILayout.Button("Clear", GUILayout.Width(60)))
-            {
-                _searchInput = string.Empty;
-                _foundPatches.Clear();
+                if (GUILayout.Button("Clear", IMGUIUtils.LayoutOptionsExpandWidthFalse))
+                {
+                    SearchInput = string.Empty;
+                    _foundPatches.Clear();
+                }
             }
             GUILayout.EndHorizontal();
 
-            _showFilePaths = GUILayout.Toggle(_showFilePaths, "Show file paths");
-
-            GUILayout.Space(10);
-
             if (_foundPatches.Count > 0)
             {
-                GUILayout.Label($"Found {_foundPatches.Count} patches:");
-                _scrollPos = GUILayout.BeginScrollView(_scrollPos, GUILayoutShim.ExpandHeight(true));
+                _scrollPos = GUILayout.BeginScrollView(_scrollPos, GUI.skin.box);
+                GUILayout.Label($"Found {_foundPatches.Count} patches", IMGUIUtils.UpperCenterLabelStyle);
 
-                foreach (var patch in _foundPatches)
+                for (var i = 0; i < _foundPatches.Count; i++)
                 {
-                    GUILayout.BeginVertical();
-                    Color bgColor = patch.IsEnabled ? Color.white : new Color(1f, 0.39f, 0.39f, 0.3f);
+                    var patch = _foundPatches[i];
 
-                    GUILayout.BeginVertical("box");
-                    GUILayout.BeginHorizontal();
-                    GUILayout.BeginVertical();
+                    Color prevColor = GUI.color;
+                    GUI.color = patch.IsEnabled ? Color.white : new Color(0.8f, 0.8f, 0.8f, 1f);
 
-                    GUI.color = bgColor;
-                    GUILayout.Label($"Method: {patch.TargetType}.{patch.MethodName}");
-                    GUILayout.Label($"Patch Type: {patch.PatchType}");
-                    GUILayout.Label($"Patcher: {patch.PatcherNamespace}");
-                    GUILayout.Label($"Assembly: {patch.PatcherAssembly}");
-
-                    if (_showFilePaths && !string.IsNullOrEmpty(patch.FilePath))
+                    GUILayout.BeginVertical(GUI.skin.box);
                     {
-                        GUILayout.Label($"File: {patch.FilePath}");
+                        GUILayout.BeginHorizontal();
+                        {
+                            bool newEnabled = GUILayout.Toggle(patch.IsEnabled, "", IMGUIUtils.LayoutOptionsExpandWidthFalse);
+                            if (newEnabled != patch.IsEnabled)
+                                TogglePatchDirect(patch, newEnabled);
+
+                            if (GUILayout.Button(
+                                    new GUIContent($"Target: {patch.TargetType}.{patch.MethodName}", null, "Click to view IL and a full list of patches applied to this method. Right click for more options"),
+                                    GUI.skin.label, IMGUIUtils.LayoutOptionsExpandWidthTrue))
+                            {
+                                if (IMGUIUtils.IsMouseRightClick())
+                                    ContextMenu.Instance.Show(patch.TargetMethod, null, $"MethodInfo: {patch.TargetType}.{patch.MethodName}", null, null);
+                                else
+                                    OpenILViewer(patch.TargetMethod);
+                            }
+                        }
+                        GUILayout.EndHorizontal();
+
+                        var patchName = $"Patch: [{patch.PatchType}] {patch.Patch?.PatchMethod?.Name ?? "Not applied"}";
+
+                        if (patch.Patch == null) GUI.enabled = false;
+                        if (GUILayout.Button(new GUIContent(patchName, null, "Click to see more information about the patch method. Right click for more options."), GUI.skin.label))
+                        {
+                            if (IMGUIUtils.IsMouseRightClick())
+                                ContextMenu.Instance.Show(patch.Patch.PatchMethod, null, $"MethodInfo: {patch.Patch.PatchMethod?.DeclaringType?.Name}.{patch.Patch.PatchMethod?.Name}", null, null);
+                            else
+                                Inspector.Instance.Push(new InstanceStackEntry(patch.Patch, patchName), true);
+                        }
+
+                        GUI.enabled = true;
+
+                        if (GUILayout.Button(new GUIContent($"Patcher: {patch.PatcherNamespace}", null, "Click to search for types in this namespace."), GUI.skin.label))
+                            Inspector.Instance.Push(new InstanceStackEntry(AccessTools.AllTypes().Where(x => x.Namespace == patch.PatcherNamespace).ToArray(), "Types in " + patch.PatcherNamespace), true);
+
+                        if (GUILayout.Button(
+                                new GUIContent($"Assembly: {patch.PatcherAssembly}", null,
+                                               $"File: {patch.FilePath}\n\nClick to open explorer focused on this file. Right click for to inspect the Assembly instance."), GUI.skin.label))
+                        {
+                            if (IMGUIUtils.IsMouseRightClick())
+                                ContextMenu.Instance.Show(AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(x => x.GetName().Name == patch.PatcherAssembly), null, "Assembly: " + patch.PatcherAssembly,
+                                                          null, null);
+                            else
+                            {
+                                try
+                                {
+                                    if (!System.IO.File.Exists(patch.FilePath))
+                                        throw new Exception("File does not exist on disk: " + (patch.FilePath ?? "NULL"));
+
+                                    // Start explorer focused on the dll
+                                    System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{patch.FilePath}\"");
+                                }
+                                catch (Exception e)
+                                {
+                                    RuntimeUnityEditorCore.Logger.Log(LogLevel.Message, "Failed to open explorer: " + e.Message);
+                                    RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, e);
+                                }
+                            }
+                        }
                     }
-
-                    GUI.color = Color.white;
                     GUILayout.EndVertical();
-
-                    GUILayout.BeginVertical(GUILayout.Width(80));
-
-                    bool newEnabled = GUILayout.Toggle(patch.IsEnabled, "Enabled");
-                    if (newEnabled != patch.IsEnabled)
-                    {
-                        TogglePatchDirect(patch, newEnabled);
-                        SearchPatches();
-                        return;
-                    }
-
-                    if (GUILayout.Button("View IL", GUILayout.Height(25)))
-                    {
-                        OpenILViewer(patch.TargetMethod);
-                    }
-
-                    GUILayout.EndVertical();
-                    GUILayout.EndHorizontal();
-                    GUILayout.EndVertical();
-                    GUILayout.EndVertical();
-                    GUILayout.Space(5);
+                    GUI.color = prevColor;
                 }
 
                 GUILayout.EndScrollView();
             }
-            else if (!string.IsNullOrEmpty(_searchInput))
+            else if (!string.IsNullOrEmpty(SearchInput))
             {
-                GUILayout.Label("No patches found.");
+                GUILayout.Space(10);
+                GUILayout.Label("No patches found.", IMGUIUtils.UpperCenterLabelStyle);
+                GUILayout.FlexibleSpace();
             }
             else
             {
-                GUILayout.Label("Enter a method name, namespace, or type to search for patches.");
+                GUILayout.Space(10);
+                GUILayout.Label("Use the search box to search for currently applied Harmony patches by method, class, or namespace.\n\nExamples: 'OnClick', 'method:OnClick class:AddButtonCtrl', 'namespace:SimpleGame'", IMGUIUtils.UpperCenterLabelStyle);
+                GUILayout.FlexibleSpace();
             }
-
-            GUILayout.Space(10);
-            GUILayout.EndVertical();
         }
 
         private void SearchPatches()
         {
             _foundPatches.Clear();
 
-            string searchTerm = _searchInput?.Trim();
+            string searchTerm = SearchInput.Trim();
 
             if (string.IsNullOrEmpty(searchTerm))
                 return;
@@ -203,7 +228,14 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
                     AddPatchesToList(patches.Finalizers.ToArray(), method, "Finalizer");
                 }
 
-                _foundPatches = _foundPatches.OrderBy(info => info.TargetType).ThenBy(info => info.MethodName).ToList();
+                _foundPatches.Sort((p1, p2) =>
+                {
+                    var c1 = string.Compare(p1.TargetType, p2.TargetType, StringComparison.Ordinal);
+                    if (c1 != 0)
+                        return c1;
+
+                    return string.Compare(p1.MethodName, p2.MethodName, StringComparison.Ordinal);
+                });
             }
             catch (Exception ex)
             {
@@ -301,6 +333,7 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
 
                 var patchInfo = new PatchInfo
                 {
+                    Patch = patch,
                     MethodName = targetMethod.Name,
                     TargetType = targetMethod.DeclaringType?.FullName ?? "Unknown",
                     PatcherAssembly = assembly?.GetName().Name ?? "Unknown",
@@ -308,7 +341,7 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
                     FilePath = GetAssemblyFilePath(assembly),
                     PatcherNamespace = patchMethod.DeclaringType?.Namespace ?? "Unknown",
                     TargetMethod = targetMethod,
-                    IsEnabled = true
+                    IsEnabled = true,
                 };
 
                 _foundPatches.Add(patchInfo);
