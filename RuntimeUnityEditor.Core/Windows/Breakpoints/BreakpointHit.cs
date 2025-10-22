@@ -12,15 +12,21 @@ namespace RuntimeUnityEditor.Core.Breakpoints
         /// <summary>
         /// Create a new breakpoint hit.
         /// </summary>
-        public BreakpointHit(BreakpointPatchInfo origin, object instance, object[] args, object result, StackTrace trace)
+        public BreakpointHit(BreakpointPatchInfo origin, object instance, StackTrace trace)
         {
             Origin = origin;
             Instance = instance;
-            Args = args;
-            Result = result;
             Trace = trace;
             TraceString = trace.ToString();
             Time = DateTime.UtcNow;
+            _sw = Stopwatch.StartNew();
+        }
+
+        internal void Finalize(object[] args, object result)
+        {
+            ElapsedMilliseconds = _sw.ElapsedMilliseconds;
+            Args = args;
+            Result = result;
         }
 
         /// <summary>
@@ -34,11 +40,11 @@ namespace RuntimeUnityEditor.Core.Breakpoints
         /// <summary>
         /// The arguments that were passed to the method.
         /// </summary>
-        public readonly object[] Args;
+        public object[] Args { get; private set; }
         /// <summary>
         /// The result of the method call.
         /// </summary>
-        public readonly object Result;
+        public object Result { get; private set; }
         /// <summary>
         /// The stack trace at the time of the hit.
         /// </summary>
@@ -48,6 +54,12 @@ namespace RuntimeUnityEditor.Core.Breakpoints
         /// The time at which the breakpoint was hit.
         /// </summary>
         public readonly DateTime Time;
+
+        private readonly Stopwatch _sw;
+        /// <summary>
+        /// Gets the total time the target method ran for, in milliseconds.
+        /// </summary>
+        public long ElapsedMilliseconds { get; private set; }
 
         private string _toStr, _searchStr;
         /// <summary>
