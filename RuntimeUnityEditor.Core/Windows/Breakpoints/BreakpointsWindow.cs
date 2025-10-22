@@ -169,7 +169,7 @@ namespace RuntimeUnityEditor.Core.Breakpoints
 
                         GUILayout.BeginHorizontal(GUI.skin.box);
                         {
-                            GUILayout.Label($"{hit.Time:HH:mm:ss.fff}", GUILayout.Width(85));
+                            GUILayout.Label($"{hit.Time:HH:mm:ss.fff}\nTook {hit.ElapsedMilliseconds}ms", GUILayout.Width(85));
 
                             DrawHitOriginButton(hit.Origin);
 
