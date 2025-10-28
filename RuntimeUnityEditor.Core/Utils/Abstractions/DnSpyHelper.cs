@@ -22,6 +22,10 @@ namespace RuntimeUnityEditor.Core.Utils.Abstractions
             OnPathChanged(_dnSpyPath.Value);
 
             _dnSpyArgs = initSettings.RegisterSetting("Inspector", "Optional dnSpy arguments", string.Empty, "Additional parameters that are added to the end of each call to dnSpy.");
+
+            ContextMenu.MenuContents.Add(new ContextMenuEntry((GUIContent)null, (o, info) => IsAvailable, null));
+            ContextMenu.MenuContents.Add(new ContextMenuEntry("Find member in dnSpy", (o, info) => IsAvailable && info != null, (o, info, name) => OpenInDnSpy(info)));
+            ContextMenu.MenuContents.Add(new ContextMenuEntry("Find member type in dnSpy", (o, info) => IsAvailable, (o, info, name) => OpenInDnSpy(o.GetType())));
         }
 
         private static void OnPathChanged(string newPath)

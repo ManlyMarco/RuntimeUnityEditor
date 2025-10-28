@@ -91,6 +91,8 @@ namespace RuntimeUnityEditor.Core.REPL
             MinimumSize = new Vector2(280, 130);
             Enabled = false;
             DefaultScreenPosition = ScreenPartition.CenterLower;
+
+            ContextMenu.MenuContents.Add(new ContextMenuEntry("Send to REPL", (o, _) => o != null, (o, info, name) => Instance.IngestObject(o)));
         }
 
         /// <inheritdoc />

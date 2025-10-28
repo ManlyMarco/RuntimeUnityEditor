@@ -5,13 +5,10 @@ using System.Reflection;
 using HarmonyLib;
 using RuntimeUnityEditor.Core.ChangeHistory;
 using RuntimeUnityEditor.Core.Inspector.Entries;
-using RuntimeUnityEditor.Core.ObjectTree;
-using RuntimeUnityEditor.Core.ObjectView;
 using RuntimeUnityEditor.Core.Utils;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using RuntimeUnityEditor.Core.Utils.ObjectDumper;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.UI;
 
 namespace RuntimeUnityEditor.Core
@@ -47,58 +44,26 @@ namespace RuntimeUnityEditor.Core
         /// <summary>
         /// Contents of the context menu.
         /// </summary>
-        public List<MenuEntry> MenuContents { get; } = new List<MenuEntry>();
-        private List<MenuEntry> _currentContents;
+        public static List<ContextMenuEntry> MenuContents { get; } = new List<ContextMenuEntry>();
+        private List<ContextMenuEntry> _currentContents;
 
         /// <inheritdoc />
         protected override void Initialize(InitSettings initSettings)
         {
-            // TODO This mess needs a rewrite with a sane API
-            MenuContents.AddRange(new[]
-            {
-                new MenuEntry("! Destroyed unity Object !", obj => obj is UnityEngine.Object uobj && !uobj, null),
-
-                new MenuEntry("Preview", o => o != null && ObjectViewWindow.Initialized && ObjectViewWindow.Instance.CanPreview(o), o => ObjectViewWindow.Instance.SetShownObject(o, _objName)),
-
-                new MenuEntry("Show event details", o => o is UnityEventBase && ObjectViewWindow.Initialized,
-                              o => ObjectViewWindow.Instance.SetShownObject(ReflectionUtils.GetEventDetails((UnityEventBase)o), o + " - Event details")),
-
-                new MenuEntry("Find in object tree", o => o is GameObject || o is Component, o => ObjectTreeViewer.Instance.SelectAndShowObject((o as GameObject)?.transform ?? ((Component)o).transform)),
-
-                new MenuEntry(),
-
-                new MenuEntry("Send to inspector", o => o != null && Inspector.Inspector.Initialized, o =>
-                {
-                    if (o is Type t)
-                        Inspector.Inspector.Instance.Push(new StaticStackEntry(t, _objName), true);
-                    else
-                        Inspector.Inspector.Instance.Push(new InstanceStackEntry(o, _objName), true);
-                }),
-
-                new MenuEntry("Send to REPL", o => o != null && REPL.ReplWindow.Initialized, o => REPL.ReplWindow.Instance.IngestObject(o)),
-
-                new MenuEntry(),
-            });
-
-            AddBreakpointControls(MenuContents);
+            MenuContents.Insert(0, ContextMenuEntry.Create<UnityEngine.Object>("! Destroyed unity Object !", (o, info) => !o, null));
 
             MenuContents.AddRange(new[]
             {
-                new MenuEntry("Copy to clipboard", o => o != null && Clipboard.ClipboardWindow.Initialized, o =>
-                {
-                    if (Clipboard.ClipboardWindow.Contents.LastOrDefault() != o)
-                        Clipboard.ClipboardWindow.Contents.Add(o);
-                }),
-                //todo Paste from clipboard, kind of difficult
+                ContextMenuEntry.Separator,
 
-                new MenuEntry("Export texture...",
-                              o => o is Texture ||
+                new ContextMenuEntry("Export texture...",
+                              (o, info) => o is Texture ||
                                    o is Sprite ||
                                    (o is Material m && m.mainTexture != null) ||
                                    (o is Image i && i.mainTexture != null) ||
                                    (o is RawImage ri && ri.mainTexture != null) ||
                                    (o is Renderer r && (r.sharedMaterial ?? r.material) != null && (r.sharedMaterial ?? r.material).mainTexture != null),
-                              o =>
+                              (o, info, name) =>
                               {
                                   if (o is Texture t)
                                       t.SaveTextureToFileWithDialog();
@@ -114,13 +79,13 @@ namespace RuntimeUnityEditor.Core
                                       (r.sharedMaterial ?? r.material).mainTexture.SaveTextureToFileWithDialog();
                               }),
 
-                new MenuEntry("Replace texture...",
-                              o => o is Texture2D ||
+                new ContextMenuEntry("Replace texture...",
+                              (o, info) => o is Texture2D ||
                                    o is Texture && _setValue != null ||
                                    o is Material ||
                                    o is RawImage ||
                                    (o is Renderer r && (r.sharedMaterial != null || r.material != null)),
-                              o =>
+                              (o, info, name) =>
                               {
                                   string filename = "null";
                                   var newTex = TextureUtils.LoadTextureFromFileWithDialog(ref filename);
@@ -187,61 +152,18 @@ namespace RuntimeUnityEditor.Core
                                   }
                               }),
 
-                new MenuEntry("Export mesh to .obj", o => o is Renderer r && MeshExport.CanExport(r), o => MeshExport.ExportObj((Renderer)o, false, false)),
-                new MenuEntry("Export mesh to .obj (Baked)", o => o is Renderer r && MeshExport.CanExport(r), o => MeshExport.ExportObj((Renderer)o, true, false)),
-                new MenuEntry("Export mesh to .obj (World)", o => o is Renderer r && MeshExport.CanExport(r), o => MeshExport.ExportObj((Renderer)o, true, true)),
+                ContextMenuEntry.Create<Renderer>("Export mesh to .obj", (o, info) => MeshExport.CanExport(o), (o, info, name) => MeshExport.ExportObj(o, false, false)),
+                ContextMenuEntry.Create<Renderer>("Export mesh to .obj (Baked)", (o, info) => MeshExport.CanExport(o), (o, info, name) => MeshExport.ExportObj(o, true, false)),
+                ContextMenuEntry.Create<Renderer>("Export mesh to .obj (World)", (o, info) => MeshExport.CanExport(o), (o, info, name) => MeshExport.ExportObj(o, true, true)),
 
-                new MenuEntry("Dump object to file...", o => o != null, o => Dumper.DumpToTempFile(o, _objName)),
+                new ContextMenuEntry("Dump object to file...", (o, _) => o != null, (o, info, name) => Dumper.DumpToTempFile(o, name)),
 
-                new MenuEntry("Destroy", o => o is UnityEngine.Object uo && uo, o => Change.Action("(ContextMenu)::UnityEngine.Object.Destroy({0})", o is Transform t ? t.gameObject : (UnityEngine.Object)o, UnityEngine.Object.Destroy)),
-
-                new MenuEntry(),
-
-                new MenuEntry("Find references in scene", o => o != null && ObjectViewWindow.Initialized && o.GetType().IsClass, o => ObjectTreeViewer.Instance.FindReferencesInScene(o)),
-
-                new MenuEntry("Find member in dnSpy", o => DnSpyHelper.IsAvailable && _objMemberInfo != null, o => DnSpyHelper.OpenInDnSpy(_objMemberInfo)),
-                new MenuEntry("Find member type in dnSpy", o => o != null && DnSpyHelper.IsAvailable, o => DnSpyHelper.OpenInDnSpy(o.GetType()))
+                ContextMenuEntry.Create<UnityEngine.Object>("Destroy", (o, info) => o, (o, info, name) => Change.Action("(ContextMenu)::UnityEngine.Object.Destroy({0})", o is Transform t ? t.gameObject : o, UnityEngine.Object.Destroy)),
             });
 
             _windowId = base.GetHashCode();
             Enabled = false;
             DisplayType = FeatureDisplayType.Hidden;
-        }
-
-        private void AddBreakpointControls(List<MenuEntry> menuContents)
-        {
-            menuContents.AddRange(AddGroup("call", (o, info) => info as MethodBase));
-            menuContents.AddRange(AddGroup("getter", (o, info) => info is PropertyInfo pi ? pi.GetGetMethod(true) : null));
-            menuContents.AddRange(AddGroup("setter", (o, info) => info is PropertyInfo pi ? pi.GetSetMethod(true) : null));
-            menuContents.Add(new MenuEntry());
-            return;
-
-            IEnumerable<MenuEntry> AddGroup(string name, Func<object, MemberInfo, MethodBase> getMethod)
-            {
-                yield return new MenuEntry("Attach " + name + " breakpoint (this instance)", o =>
-                {
-                    if (o == null) return false;
-                    var target = getMethod(o, _objMemberInfo);
-                    return target != null && !Breakpoints.Breakpoints.IsAttached(target, o);
-                }, o => Breakpoints.Breakpoints.AttachBreakpoint(getMethod(o, _objMemberInfo), o));
-                yield return new MenuEntry("Detach " + name + " breakpoint (this instance)", o =>
-                {
-                    if (o == null) return false;
-                    var target = getMethod(o, _objMemberInfo);
-                    return target != null && Breakpoints.Breakpoints.IsAttached(target, o);
-                }, o => Breakpoints.Breakpoints.DetachBreakpoint(getMethod(o, _objMemberInfo), o));
-
-                yield return new MenuEntry("Attach " + name + " breakpoint (all instances)", o =>
-                {
-                    var target = getMethod(o, _objMemberInfo);
-                    return target != null && !Breakpoints.Breakpoints.IsAttached(target, null);
-                }, o => Breakpoints.Breakpoints.AttachBreakpoint(getMethod(o, _objMemberInfo), null));
-                yield return new MenuEntry("Detach " + name + " breakpoint (all instances)", o =>
-                {
-                    var target = getMethod(o, _objMemberInfo);
-                    return target != null && Breakpoints.Breakpoints.IsAttached(target, null);
-                }, o => Breakpoints.Breakpoints.DetachBreakpoint(getMethod(o, _objMemberInfo), null));
-            }
         }
 
         /// <summary>
@@ -277,7 +199,7 @@ namespace RuntimeUnityEditor.Core
             var entryValid = objEntry.CanSetValue();
             Show(obj, objEntry.MemberInfo, name, entryValid ? objEntry.SetValue : (Action<object>)null, entryValid ? objEntry.GetValue : (Func<object>)null);
         }
-        
+
         /// <summary>
         /// Show the context menu at current cursor position.
         /// </summary>
@@ -315,7 +237,9 @@ namespace RuntimeUnityEditor.Core
                 _setValue = setObj;
                 _getValue = getObj;
 
-                _currentContents = MenuContents.Where(x => x.IsVisible(_obj)).ToList();
+                _currentContents = MenuContents.Where(x => x.IsVisible(_obj, _objMemberInfo)).ToList();
+                if (_currentContents.Count > 0 && _currentContents[0].IsSeparator())
+                    _currentContents.RemoveAt(0);
 
                 // hack to discard old state of the window and make sure it appears correctly when rapidly opened on different items
                 _windowId++;
@@ -387,75 +311,13 @@ namespace RuntimeUnityEditor.Core
 
             GUILayout.BeginVertical();
             {
-                foreach (var menuEntry in _currentContents)
+                for (var i = 0; i < _currentContents.Count; i++)
                 {
-                    if (menuEntry.Draw(_obj))
+                    if (_currentContents[i].Draw(_obj, _objMemberInfo, _objName))
                         Enabled = false;
                 }
             }
             GUILayout.EndVertical();
-        }
-
-        /// <summary>
-        /// A single entry in the context menu.
-        /// </summary>
-        public readonly struct MenuEntry
-        {
-            /// <summary>
-            /// Create a new context menu entry.
-            /// </summary>
-            /// <param name="name">Name of the enry.</param>
-            /// <param name="onCheckVisible">Callback that checks if this item is visible for a given object.</param>
-            /// <param name="onClick">Callback invoked when user clicks on this menu entry with the object as argument.</param>
-            public MenuEntry(string name, Func<object, bool> onCheckVisible, Action<object> onClick) : this(new GUIContent(name), onCheckVisible, onClick) { }
-
-            /// <inheritdoc cref="MenuEntry(string,Func&lt;object, bool&gt;, Action&lt;object&gt;)"/>
-            public MenuEntry(GUIContent name, Func<object, bool> onCheckVisible, Action<object> onClick)
-            {
-                _name = name;
-                _onCheckVisible = onCheckVisible;
-                _onClick = onClick;
-            }
-
-            private readonly GUIContent _name;
-            private readonly Func<object, bool> _onCheckVisible;
-            private readonly Action<object> _onClick;
-
-            /// <summary>
-            /// Check if this menu entry should be visible for a given object.
-            /// </summary>
-            public bool IsVisible(object obj)
-            {
-                return _onCheckVisible == null || _onCheckVisible(obj);
-            }
-
-            /// <summary>
-            /// Draw this menu entry. Handles user clicking on the entry too.
-            /// </summary>
-            public bool Draw(object obj)
-            {
-                if (_onClick != null)
-                {
-                    if (GUILayout.Button(_name))
-                    {
-                        if (IMGUIUtils.IsMouseRightClick())
-                            return false;
-
-                        _onClick(obj);
-                        return true;
-                    }
-                }
-                else if (_name != null)
-                {
-                    GUILayout.Label(_name);
-                }
-                else
-                {
-                    GUILayout.Space(4);
-                }
-
-                return false;
-            }
         }
     }
 }

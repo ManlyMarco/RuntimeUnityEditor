@@ -5,6 +5,7 @@ using HarmonyLib;
 using RuntimeUnityEditor.Core.Utils;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace RuntimeUnityEditor.Core.ObjectView
 {
@@ -102,6 +103,10 @@ namespace RuntimeUnityEditor.Core.ObjectView
             Title = "Object viewer - Empty";
             DisplayName = "Viewer";
             DefaultScreenPosition = ScreenPartition.LeftUpper;
+
+            //ContextMenu.MenuContents.Add(ContextMenuEntry.Separator);
+            ContextMenu.MenuContents.Add(ContextMenuEntry.Create<object>("Preview", (o, info) => Instance.CanPreview(o), (o, info, name) => Instance.SetShownObject(o, name)));
+            ContextMenu.MenuContents.Add(ContextMenuEntry.Create<UnityEventBase>("Show event details", null, (o, info, name) => Instance.SetShownObject(ReflectionUtils.GetEventDetails(o), o + " - Event details")));
         }
     }
 }

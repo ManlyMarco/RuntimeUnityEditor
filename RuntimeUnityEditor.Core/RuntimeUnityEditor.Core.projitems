@@ -12,6 +12,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)AssemblyInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FeatureBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Features\ContextMenu.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Features\ContextMenuEntry.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Features\CursorUnlocker.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Features\Gizmos\GizmoDrawer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Features\Gizmos\lib\Constants.cs" />
