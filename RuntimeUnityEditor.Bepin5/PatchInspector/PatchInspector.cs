@@ -40,6 +40,11 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
             DefaultScreenPosition = ScreenPartition.LeftUpper;
             DisplayName = "Patch Inspector";
             Title = "Harmony Patch Inspector";
+
+            ContextMenu.MenuContents.Add(new ContextMenuEntry((GUIContent)null, (o, info) => info != null, null));
+            ContextMenu.MenuContents.Add(new ContextMenuEntry("Manage harmony patches", (o, info) => info is MethodBase, (o, info, name) => OpenILViewer((MethodBase)info)));
+            ContextMenu.MenuContents.Add(new ContextMenuEntry("Manage harmony patches (get)", (o, info) => info is PropertyInfo p && p.CanRead, (o, info, name) => OpenILViewer(((PropertyInfo)info).GetGetMethod(true))));
+            ContextMenu.MenuContents.Add(new ContextMenuEntry("Manage harmony patches (set)", (o, info) => info is PropertyInfo p && p.CanWrite, (o, info, name) => OpenILViewer(((PropertyInfo)info).GetSetMethod(true))));
         }
 
         /// <inheritdoc />

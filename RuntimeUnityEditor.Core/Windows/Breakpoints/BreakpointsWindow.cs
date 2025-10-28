@@ -1,8 +1,10 @@
-using System.Collections.Generic;
+using System;
 using HarmonyLib;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.Utils;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
+using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
 namespace RuntimeUnityEditor.Core.Breakpoints
@@ -23,6 +25,44 @@ namespace RuntimeUnityEditor.Core.Breakpoints
             DefaultScreenPosition = ScreenPartition.CenterLower;
 
             Breakpoints.OnBreakpointHit += hit => _hits.Add(hit);
+
+            AddToContextMenu();
+        }
+
+        private static void AddToContextMenu()
+        {
+            ContextMenu.MenuContents.Add(ContextMenuEntry.Separator);
+            ContextMenu.MenuContents.AddRange(AddGroup("call", (o, info) => info as MethodBase));
+            ContextMenu.MenuContents.AddRange(AddGroup("getter", (o, info) => info is PropertyInfo pi ? pi.GetGetMethod(true) : null));
+            ContextMenu.MenuContents.AddRange(AddGroup("setter", (o, info) => info is PropertyInfo pi ? pi.GetSetMethod(true) : null));
+            return;
+
+            IEnumerable<ContextMenuEntry> AddGroup(string kind, Func<object, MemberInfo, MethodBase> getMethod)
+            {
+                yield return new ContextMenuEntry("Attach " + kind + " breakpoint (this instance)", (o, info) =>
+                {
+                    if (o == null) return false;
+                    var target = getMethod(o, info);
+                    return target != null && !Breakpoints.IsAttached(target, o);
+                }, (o, info, name) => Breakpoints.AttachBreakpoint(getMethod(o, info), o));
+                yield return new ContextMenuEntry("Detach " + kind + " breakpoint (this instance)", (o, info) =>
+                {
+                    if (o == null) return false;
+                    var target = getMethod(o, info);
+                    return target != null && Breakpoints.IsAttached(target, o);
+                }, (o, info, name) => Breakpoints.DetachBreakpoint(getMethod(o, info), o));
+
+                yield return new ContextMenuEntry("Attach " + kind + " breakpoint (all instances)", (o, info) =>
+                {
+                    var target = getMethod(o, info);
+                    return target != null && !Breakpoints.IsAttached(target, null);
+                }, (o, info, name) => Breakpoints.AttachBreakpoint(getMethod(o, info), null));
+                yield return new ContextMenuEntry("Detach " + kind + " breakpoint (all instances)", (o, info) =>
+                {
+                    var target = getMethod(o, info);
+                    return target != null && Breakpoints.IsAttached(target, null);
+                }, (o, info, name) => Breakpoints.DetachBreakpoint(getMethod(o, info), null));
+            }
         }
 
         /// <inheritdoc />

@@ -43,6 +43,14 @@ namespace RuntimeUnityEditor.Core.Inspector
             MinimumSize = new Vector2(570, 170);
             Enabled = false;
             DefaultScreenPosition = ScreenPartition.CenterUpper;
+
+            ContextMenu.MenuContents.Add(new ContextMenuEntry("Send to inspector", (o, _) => o != null, (o, info, name) =>
+            {
+                if (o is Type t)
+                    Instance.Push(new StaticStackEntry(t, name), true);
+                else
+                    Instance.Push(new InstanceStackEntry(o, name), true);
+            }));
         }
 
         private bool _focusSearchBox;
@@ -430,7 +438,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                     visibleFieldsQuery = visibleFieldsQuery.Where(x =>
                     {
                         // TODO add filtering option
-                        if (x is IFakeCacheEntry) 
+                        if (x is IFakeCacheEntry)
                             return true;
 #if IL2CPP
                         if (IL2CPPCacheEntryHelper.IsIl2CppCacheEntry(x))

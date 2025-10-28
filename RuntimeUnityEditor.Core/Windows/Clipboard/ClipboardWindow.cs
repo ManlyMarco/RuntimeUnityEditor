@@ -28,6 +28,9 @@ namespace RuntimeUnityEditor.Core.Clipboard
             Title = "Clipboard";
             MinimumSize = new Vector2(250, 100);
             DefaultScreenPosition = ScreenPartition.LeftUpper;
+
+            ContextMenu.MenuContents.Add(new ContextMenuEntry("Copy to clipboard", null, (o, info, name) => { if (Contents.LastOrDefault() != (o ?? info)) Contents.Add(o ?? info); }));
+            //todo Paste from clipboard, kind of difficult
         }
 
         protected override void DrawContents()

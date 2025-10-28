@@ -77,6 +77,10 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
             _searchComponents = initSettings.RegisterSetting(Title, "Search component names", true, "Include names of components on a GameObject when searching with the search box.");
             _searchProperties = initSettings.RegisterSetting(Title, "Search component properties", false, "Include values of properties of components on a GameObject when searching with the search box. Very slow and may have side effects!");
+
+            ContextMenu.MenuContents.Add(ContextMenuEntry.Create<GameObject>("Find in object tree", (o, info) => o, (o, info, name) => Instance.SelectAndShowObject(o.transform)));
+            ContextMenu.MenuContents.Add(ContextMenuEntry.Create<Component>("Find in object tree", (o, info) => o, (o, info, name) => Instance.SelectAndShowObject(o.transform)));
+            ContextMenu.MenuContents.Add(new ContextMenuEntry("Find references in scene", (o, info) => o != null && o.GetType().IsClass, (o, info, name) => Instance.FindReferencesInScene(o)));
         }
 
         /// <summary>
