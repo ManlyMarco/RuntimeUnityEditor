@@ -74,7 +74,7 @@ namespace RuntimeUnityEditor.Core
                     if (IMGUIUtils.IsMouseRightClick())
                         return false;
 
-                    _onClick(obj, info, name ?? _name?.text);
+                    _onClick(obj, info, name ?? _name?.text ?? "<NULL>");
                     return true;
                 }
             }
