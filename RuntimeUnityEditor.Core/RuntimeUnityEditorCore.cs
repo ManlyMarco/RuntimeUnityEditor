@@ -53,7 +53,7 @@ namespace RuntimeUnityEditor.Core
                 return Instance != null;
             }
         }
-        
+
         /// <summary>
         /// Hotkey used to show/hide RuntimeUnityEditor. Changing this at runtime also updates the config file, so the value will be set on the next start.
         /// </summary>
@@ -147,17 +147,24 @@ namespace RuntimeUnityEditor.Core
                     var featureTotal = 0;
                     foreach (var type in typeof(RuntimeUnityEditorCore).Assembly.GetTypesSafe())
                     {
-                        if (!type.IsAbstract && iFeatureType.IsAssignableFrom(type))
+                        try
                         {
-                            featureTotal++;
-                            try
+                            if (!type.IsAbstract && iFeatureType.IsAssignableFrom(type))
                             {
-                                allFeatures.Add((IFeature)Activator.CreateInstance(type));
+                                featureTotal++;
+                                try
+                                {
+                                    allFeatures.Add((IFeature)Activator.CreateInstance(type));
+                                }
+                                catch (Exception e)
+                                {
+                                    Logger.Log(LogLevel.Warning, $"Failed to create instance of {type.Name} - {e}");
+                                }
                             }
-                            catch (Exception e)
-                            {
-                                Logger.Log(LogLevel.Warning, $"Failed to create instance of {type.Name} - {e}");
-                            }
+                        }
+                        catch (TypeLoadException e)
+                        {
+                            Logger.Log(LogLevel.Warning, $"Failed to load type information of {type.Name}, some dll is likly missing - {e}");
                         }
                     }
 
