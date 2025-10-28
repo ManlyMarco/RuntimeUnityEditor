@@ -29,7 +29,7 @@ namespace RuntimeUnityEditor.Core
         /// <summary>
         /// Create a new context menu entry.
         /// </summary>
-        /// <param name="name">Name of the enry.</param>
+        /// <param name="name">Name of the entry.</param>
         /// <param name="onCheckVisible">Callback that checks if this item is visible for a given object.</param>
         /// <param name="onClick">Callback invoked when user clicks on this menu entry with the object as argument.</param>
         public ContextMenuEntry(string name, Func<object, MemberInfo, bool> onCheckVisible, Action<object, MemberInfo, string> onClick) : this(new GUIContent(name), onCheckVisible, onClick) { }
