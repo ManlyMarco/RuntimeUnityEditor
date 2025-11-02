@@ -184,7 +184,7 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
 
             var heightMeasured = _itemHeight != 0;
 
-            _scrollPosition = GUILayout.BeginScrollView(_scrollPosition, false, true,IMGUIUtils.EmptyLayoutOptions);
+            _scrollPosition = GUILayout.BeginScrollView(_scrollPosition, false, true, IMGUIUtils.EmptyLayoutOptions);
             {
                 var logEntries = _filteredLogEntries;
 
