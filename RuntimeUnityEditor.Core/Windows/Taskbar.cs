@@ -15,18 +15,19 @@ namespace RuntimeUnityEditor.Core
     {
         private int _windowId;
         private Rect _windowRect;
+
+        private readonly GUILayoutOption[] _taskbarLayoutOptions = { GUILayoutShim.MaxWidth(Screen.width), GUILayoutShim.ExpandHeight(false), GUILayoutShim.ExpandWidth(false) };
+        private readonly GUILayoutOption[] _timescaleTextfieldOptions = { GUILayout.Width(38) };
+
         private List<IFeature> _orderedFeatures;
         private string _title;
+        private string _titleFull;
+        private bool _enabled;
 
         /// <summary>
         /// Current instance.
         /// </summary>
         public static Taskbar Instance { get; private set; }
-
-        /// <summary>
-        /// Text shown in the title bar of the taskbar.
-        /// </summary>
-        protected string GetTitle() => RuntimeUnityEditorCore.Instance.ShowHotkey == KeyCode.None ? _title : _title + $" / Press {RuntimeUnityEditorCore.Instance.ShowHotkey} to show/hide";
 
         /// <summary>
         /// Height of the taskbar.
@@ -62,10 +63,8 @@ namespace RuntimeUnityEditor.Core
                 _windowId,
                 _windowRect,
                 (GUI.WindowFunction)DrawTaskbar,
-                GetTitle(),
-                GUILayoutShim.ExpandHeight(false),
-                GUILayoutShim.ExpandWidth(false),
-                GUILayoutShim.MaxWidth(Screen.width)
+                _titleFull,
+                _taskbarLayoutOptions
             );
             IMGUIUtils.EatInputInRect(_windowRect);
             _windowRect.x = (int)((Screen.width - _windowRect.width) / 2);
@@ -74,15 +73,16 @@ namespace RuntimeUnityEditor.Core
 
         private void DrawTaskbar(int id)
         {
-            GUILayout.BeginHorizontal();
+            GUILayout.BeginHorizontal(IMGUIUtils.EmptyLayoutOptions);
 
             var firstFeature = true;
-            foreach (var feature in _orderedFeatures)
+            for (var i = 0; i < _orderedFeatures.Count; i++)
             {
+                var feature = _orderedFeatures[i];
                 if (feature.DisplayType == FeatureDisplayType.Window)
                 {
                     GUI.color = feature.Enabled ? Color.cyan : Color.white;
-                    if (GUILayout.Button(feature.DisplayName))
+                    if (GUILayout.Button(feature.DisplayName, IMGUIUtils.EmptyLayoutOptions))
                         feature.Enabled = !feature.Enabled;
                 }
                 else if (feature.DisplayType == FeatureDisplayType.Feature)
@@ -90,7 +90,7 @@ namespace RuntimeUnityEditor.Core
                     if (firstFeature)
                     {
                         GUI.color = new Color(1f, 1f, 1f, 0.75f);
-                        if (GUILayout.Button("Reset"))
+                        if (GUILayout.Button("Reset", IMGUIUtils.EmptyLayoutOptions))
                         {
                             // Needed to avoid WindowManager.ResetWindowRect using old rects as reference to where new windows should be placed.
                             foreach (var window in _orderedFeatures.OfType<IWindow>())
@@ -103,15 +103,17 @@ namespace RuntimeUnityEditor.Core
                                 WindowManager.ResetWindowRect(window);
                             }
                         }
+
                         firstFeature = false;
                         GUI.color = Color.white;
-                        GUILayout.Label("|");
+                        GUILayout.Label("|", IMGUIUtils.EmptyLayoutOptions);
                     }
-                    feature.Enabled = GUILayout.Toggle(feature.Enabled, feature.DisplayName);
+
+                    feature.Enabled = GUILayout.Toggle(feature.Enabled, feature.DisplayName, IMGUIUtils.EmptyLayoutOptions);
                 }
             }
 
-            GUILayout.Label("|");
+            GUILayout.Label("|", IMGUIUtils.EmptyLayoutOptions);
 
             GUILayout.Label("Time", IMGUIUtils.LayoutOptionsExpandWidthFalse);
 
@@ -120,14 +122,14 @@ namespace RuntimeUnityEditor.Core
             if (GUILayout.Button("||", IMGUIUtils.LayoutOptionsExpandWidthFalse))
                 Time.timeScale = 0;
 
-            if (float.TryParse(GUILayout.TextField(Time.timeScale.ToString("F2", CultureInfo.InvariantCulture), GUILayout.Width(38)), NumberStyles.Any, CultureInfo.InvariantCulture, out var newVal))
+            if (float.TryParse(GUILayout.TextField(Time.timeScale.ToString("F2", CultureInfo.InvariantCulture), _timescaleTextfieldOptions), NumberStyles.Any, CultureInfo.InvariantCulture, out var newVal))
                 Time.timeScale = newVal;
 
             GUI.changed = false;
-            var n = GUILayout.Toggle(Application.runInBackground, "in BG");
+            var n = GUILayout.Toggle(Application.runInBackground, "in BG", IMGUIUtils.EmptyLayoutOptions);
             if (GUI.changed) Application.runInBackground = n;
 
-            GUILayout.Label("|");
+            GUILayout.Label("|", IMGUIUtils.EmptyLayoutOptions);
 
             if (GUILayout.Button("Log", IMGUIUtils.LayoutOptionsExpandWidthFalse))
                 UnityFeatureHelper.OpenLog();
@@ -140,7 +142,20 @@ namespace RuntimeUnityEditor.Core
         /// <summary>
         /// Show the taskbar, and by extension entire RUE interface. Use <see cref="RuntimeUnityEditorCore.Show"/> instead.
         /// </summary>
-        public bool Enabled { get; set; }
+        public bool Enabled
+        {
+            get => _enabled;
+            set
+            {
+                if (value)
+                {
+                    _taskbarLayoutOptions[0] = GUILayoutShim.MaxWidth(Screen.width);
+                    _titleFull = RuntimeUnityEditorCore.Instance.ShowHotkey == KeyCode.None ? _title : $"{_title} / Press {RuntimeUnityEditorCore.Instance.ShowHotkey} to show/hide";
+                }
+                _enabled = value;
+            }
+        }
+
         void IFeature.OnUpdate() { }
         void IFeature.OnLateUpdate() { }
         void IFeature.OnEditorShownChanged(bool visible) { }

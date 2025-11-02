@@ -8,6 +8,7 @@ using RuntimeUnityEditor.Core.Inspector.IL2CPP;
 using RuntimeUnityEditor.Core.Utils;
 using RuntimeUnityEditor.Core.Utils.Abstractions;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace RuntimeUnityEditor.Core.Inspector
 {
@@ -191,9 +192,9 @@ namespace RuntimeUnityEditor.Core.Inspector
                 if (tab.InspectorStack.Count == 0) RemoveTab(tab);
             }
 
-            GUILayout.BeginVertical();
+            GUILayout.BeginVertical(IMGUIUtils.EmptyLayoutOptions);
             {
-                GUILayout.BeginHorizontal();
+                GUILayout.BeginHorizontal(IMGUIUtils.EmptyLayoutOptions);
                 {
                     GUILayout.BeginHorizontal(GUI.skin.box, IMGUIUtils.LayoutOptionsExpandWidthTrue);
                     {
@@ -209,17 +210,17 @@ namespace RuntimeUnityEditor.Core.Inspector
                             _focusSearchBox = false;
                         }
 
-                        _showFields = GUILayout.Toggle(_showFields, "Fields");
-                        _showProperties = GUILayout.Toggle(_showProperties, "Properties");
-                        _showMethods = GUILayout.Toggle(_showMethods, "Methods");
-                        _showEvents = GUILayout.Toggle(_showEvents, "Events");
+                        _showFields = GUILayout.Toggle(_showFields, "Fields", IMGUIUtils.EmptyLayoutOptions);
+                        _showProperties = GUILayout.Toggle(_showProperties, "Properties", IMGUIUtils.EmptyLayoutOptions);
+                        _showMethods = GUILayout.Toggle(_showMethods, "Methods", IMGUIUtils.EmptyLayoutOptions);
+                        _showEvents = GUILayout.Toggle(_showEvents, "Events", IMGUIUtils.EmptyLayoutOptions);
 #if IL2CPP
                         GUI.color = _il2CPPMemberColor;
-                        _showNative = GUILayout.Toggle(_showNative, new GUIContent("Native", null, "Display members from the IL2CPP runtime (i.e. the game code)."));
+                        _showNative = GUILayout.Toggle(_showNative, new GUIContent("Native", null, "Display members from the IL2CPP runtime (i.e. the game code)."), IMGUIUtils.EmptyLayoutOptions);
                         GUI.color = Color.white;
-                        _showManaged = GUILayout.Toggle(_showManaged, new GUIContent("Managed", null, "Display members from the BepInEx's runtime (i.e. interop and plugin code)."));
+                        _showManaged = GUILayout.Toggle(_showManaged, new GUIContent("Managed", null, "Display members from the BepInEx's runtime (i.e. interop and plugin code)."), IMGUIUtils.EmptyLayoutOptions);
 #endif
-                        _showDeclaredOnly = GUILayout.Toggle(_showDeclaredOnly, "Only declared");
+                        _showDeclaredOnly = GUILayout.Toggle(_showDeclaredOnly, "Only declared", IMGUIUtils.EmptyLayoutOptions);
 
                         /* todo
                         GUILayout.Label("Find:", IMGUIUtils.LayoutOptionsExpandWidthFalse);
@@ -242,16 +243,16 @@ namespace RuntimeUnityEditor.Core.Inspector
                     GUILayout.BeginHorizontal(GUI.skin.box, GUILayout.Width(80));
                     {
                         if (_tabs.Count == 0) GUI.enabled = false;
-                        if (GUILayout.Button("Close all tabs"))
+                        if (GUILayout.Button("Close all tabs", IMGUIUtils.EmptyLayoutOptions))
                         {
                             _tabs.Clear();
                             _currentTab = null;
                         }
                         GUI.enabled = true;
 
-                        _showTooltips = GUILayout.Toggle(_showTooltips, "Tooltips");
+                        _showTooltips = GUILayout.Toggle(_showTooltips, "Tooltips", IMGUIUtils.EmptyLayoutOptions);
 
-                        if (GUILayout.Button("Help"))
+                        if (GUILayout.Button("Help", IMGUIUtils.EmptyLayoutOptions))
                             Push(InspectorHelpObject.Create(), true);
                     }
                     GUILayout.EndHorizontal();
@@ -263,9 +264,9 @@ namespace RuntimeUnityEditor.Core.Inspector
                 if (_tabs.Count >= 2)
                 {
                     _tabScrollPos = GUILayout.BeginScrollView(_tabScrollPos, false, false,
-                        GUI.skin.horizontalScrollbar, GUIStyle.none, GUIStyle.none); //, GUILayout.Height(46)
+                        GUI.skin.horizontalScrollbar, GUIStyle.none, GUIStyle.none, IMGUIUtils.EmptyLayoutOptions);
                     {
-                        GUILayout.BeginHorizontal(GUILayoutShim.ExpandWidth(false), GUILayoutShim.ExpandHeight(false));
+                        GUILayout.BeginHorizontal(IMGUIUtils.LayoutOptionsNoExpansion);
                         for (var index = 0; index < _tabs.Count; index++)
                         {
                             var tab = _tabs[index];
@@ -298,9 +299,9 @@ namespace RuntimeUnityEditor.Core.Inspector
                 if (currentTab != null)
                 {
                     currentTab.InspectorStackScrollPos = GUILayout.BeginScrollView(currentTab.InspectorStackScrollPos, false, false,
-                        GUI.skin.horizontalScrollbar, GUIStyle.none, GUIStyle.none); //, GUILayout.Height(46)
+                        GUI.skin.horizontalScrollbar, GUIStyle.none, GUIStyle.none, IMGUIUtils.EmptyLayoutOptions);
                     {
-                        GUILayout.BeginHorizontal(GUI.skin.box, GUILayoutShim.ExpandWidth(false), GUILayoutShim.ExpandHeight(false));
+                        GUILayout.BeginHorizontal(GUI.skin.box, IMGUIUtils.LayoutOptionsNoExpansion);
                         var stackEntries = currentTab.InspectorStack.Reverse().ToArray();
                         for (var i = 0; i < stackEntries.Length; i++)
                         {
@@ -329,9 +330,9 @@ namespace RuntimeUnityEditor.Core.Inspector
                     }
                     GUILayout.EndScrollView();
 
-                    GUILayout.BeginVertical(GUI.skin.box);
+                    GUILayout.BeginVertical(GUI.skin.box, IMGUIUtils.EmptyLayoutOptions);
                     {
-                        GUILayout.BeginHorizontal();
+                        GUILayout.BeginHorizontal(IMGUIUtils.EmptyLayoutOptions);
                         {
                             GUILayout.Space(1);
                             GUILayout.Label("Value/return type", GUI.skin.box, _inspectorTypeWidth);
@@ -368,14 +369,14 @@ namespace RuntimeUnityEditor.Core.Inspector
                 else
                 {
                     // Nothing to show
-                    GUILayout.BeginHorizontal(GUI.skin.box);
+                    GUILayout.BeginHorizontal(GUI.skin.box, IMGUIUtils.EmptyLayoutOptions);
                     {
                         GUILayout.Space(8);
-                        GUILayout.BeginVertical();
+                        GUILayout.BeginVertical(IMGUIUtils.EmptyLayoutOptions);
                         {
                             GUILayout.Space(8);
-                            GUILayout.Label("Nothing to show. You can inspect objects by clicking the \"Inspect\" buttons in other windows. Each object will be opened in a new tab. You can also send instances or types to be inspected from repl by using the \"seti(instance)\" and \"setis(type)\" commands.");
-                            GUILayout.Label("Tip: You can right click on a member inside inspector to open it in a new tab instead of opening it in the current tab. You can also right click on tabs to close them.");
+                            GUILayout.Label("Nothing to show. You can inspect objects by clicking the \"Inspect\" buttons in other windows. Each object will be opened in a new tab. You can also send instances or types to be inspected from repl by using the \"seti(instance)\" and \"setis(type)\" commands.", IMGUIUtils.EmptyLayoutOptions);
+                            GUILayout.Label("Tip: You can right click on a member inside inspector to open it in a new tab instead of opening it in the current tab. You can also right click on tabs to close them.", IMGUIUtils.EmptyLayoutOptions);
                             GUILayout.Space(8);
                         }
                         GUILayout.EndVertical();
@@ -400,6 +401,84 @@ namespace RuntimeUnityEditor.Core.Inspector
             return name;
         }
 
+        #region Entry list filtering
+
+        private readonly List<ICacheEntry> _filteredListEntries = new List<ICacheEntry>();
+
+        /// <inheritdoc />
+        protected override void Update()
+        {
+            base.Update();
+
+            _filteredListEntries.Clear();
+
+            var tab = GetCurrentTab();
+            if (tab == null) return;
+
+            var searchStr = SearchString;
+            for (var i = 0; i < tab.FieldCache.Count; i++)
+            {
+                var cacheEntry = tab.FieldCache[i];
+                if (searchStr.Length > 0 && !EntryMatchesSearchString(cacheEntry, searchStr))
+                    continue;
+
+                if (!EntryTypeIsVisible(cacheEntry))
+                    continue;
+
+                _filteredListEntries.Add(cacheEntry);
+            }
+        }
+
+        private static bool EntryMatchesSearchString(ICacheEntry x, string searchString)
+        {
+            try
+            {
+                var name = x.Name();
+                if (name != null && name.Contains(searchString, StringComparison.OrdinalIgnoreCase)) return true;
+                var typeName = x.TypeName();
+                if (typeName != null && typeName.Contains(searchString, StringComparison.OrdinalIgnoreCase)) return true;
+                var value = x.GetValue();
+                if (value == null || (value is Object obj && !obj)) return false;
+                return value.ToString().Contains(searchString, StringComparison.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private bool EntryTypeIsVisible(ICacheEntry x)
+        {
+            // TODO add filtering option
+            if (x is IFakeCacheEntry) return true;
+#if IL2CPP
+            if (IL2CPPCacheEntryHelper.IsIl2CppCacheEntry(x))
+            {
+                if (!_showNative)
+                    return false;
+            }
+            else
+            {
+                if (!_showManaged)
+                    return false;
+            }
+            if (x is IL2CPPFieldCacheEntry cf)
+                return _showFields && (!_showDeclaredOnly || cf.IsDeclared);
+#endif
+            switch (x)
+            {
+                case PropertyCacheEntry p when !_showProperties || _showDeclaredOnly && !p.IsDeclared:
+                case FieldCacheEntry f when !_showFields || _showDeclaredOnly && !f.IsDeclared:
+                case MethodCacheEntry m when !_showMethods || _showDeclaredOnly && !m.IsDeclared:
+                case EventCacheEntry e when !_showEvents || _showDeclaredOnly && !e.IsDeclared:
+                    return false;
+                default:
+                    return true;
+            }
+        }
+
+        #endregion
+
         private void DrawContentScrollView(InspectorTab tab)
         {
             if (tab == null || tab.InspectorStack.Count == 0)
@@ -409,64 +488,10 @@ namespace RuntimeUnityEditor.Core.Inspector
             }
 
             var currentItem = tab.CurrentStackItem;
-            currentItem.ScrollPosition = GUILayout.BeginScrollView(currentItem.ScrollPosition);
+            currentItem.ScrollPosition = GUILayout.BeginScrollView(currentItem.ScrollPosition, IMGUIUtils.EmptyLayoutOptions);
             {
-                GUILayout.BeginVertical();
+                GUILayout.BeginVertical(IMGUIUtils.EmptyLayoutOptions);
                 {
-                    //todo optimize gc
-                    IEnumerable<ICacheEntry> visibleFieldsQuery = tab.FieldCache;
-                    if (!string.IsNullOrEmpty(SearchString))
-                    {
-                        visibleFieldsQuery = visibleFieldsQuery.Where(x =>
-                        {
-                            try
-                            {
-                                var name = x.Name();
-                                if (name != null && name.Contains(SearchString, StringComparison.OrdinalIgnoreCase)) return true;
-                                var typeName = x.TypeName();
-                                if (typeName != null && typeName.Contains(SearchString, StringComparison.OrdinalIgnoreCase)) return true;
-                                var value = x.GetValue();
-                                if (value == null || (value is UnityEngine.Object obj && !obj)) return false;
-                                return value.ToString().Contains(SearchString, StringComparison.OrdinalIgnoreCase);
-                            }
-                            catch
-                            {
-                                return false;
-                            }
-                        });
-                    }
-                    visibleFieldsQuery = visibleFieldsQuery.Where(x =>
-                    {
-                        // TODO add filtering option
-                        if (x is IFakeCacheEntry)
-                            return true;
-#if IL2CPP
-                        if (IL2CPPCacheEntryHelper.IsIl2CppCacheEntry(x))
-                        {
-                            if (!_showNative)
-                                return false;
-                        }
-                        else
-                        {
-                            if (!_showManaged)
-                                return false;
-                        }
-                        if (x is IL2CPPFieldCacheEntry cf)
-                            return _showFields && (!_showDeclaredOnly || cf.IsDeclared);
-#endif
-                        switch (x)
-                        {
-                            case PropertyCacheEntry p when !_showProperties || _showDeclaredOnly && !p.IsDeclared:
-                            case FieldCacheEntry f when !_showFields || _showDeclaredOnly && !f.IsDeclared:
-                            case MethodCacheEntry m when !_showMethods || _showDeclaredOnly && !m.IsDeclared:
-                            case EventCacheEntry e when !_showEvents || _showDeclaredOnly && !e.IsDeclared:
-                                return false;
-                            default:
-                                return true;
-                        }
-                    });
-                    var visibleFields = visibleFieldsQuery.ToList();
-
                     var scrollPositionY = (int)currentItem.ScrollPosition.y;
                     var scrollMaxVisibleY = scrollPositionY + ((int)WindowRect.height - 130); // TODO conservative value, properly measure at runtime for less overdraw
 
@@ -474,9 +499,9 @@ namespace RuntimeUnityEditor.Core.Inspector
                     var index = 0;
 
                     // Empty space at the top
-                    for (; index < visibleFields.Count; index++)
+                    for (; index < _filteredListEntries.Count; index++)
                     {
-                        var newHeight = topCombinedHeight + visibleFields[index].ItemHeight;
+                        var newHeight = topCombinedHeight + _filteredListEntries[index].ItemHeight;
                         if (newHeight >= scrollPositionY) break;
                         else topCombinedHeight = newHeight;
                     }
@@ -485,9 +510,9 @@ namespace RuntimeUnityEditor.Core.Inspector
                         GUILayout.Space(topCombinedHeight);
 
                     // Actual entries
-                    for (; index < visibleFields.Count; index++)
+                    for (; index < _filteredListEntries.Count; index++)
                     {
-                        var entry = visibleFields[index];
+                        var entry = _filteredListEntries[index];
 
                         DrawSingleContentEntry(entry);
 
@@ -508,8 +533,8 @@ namespace RuntimeUnityEditor.Core.Inspector
 
                     // Empty space at the bottom
                     var bottomCombinedHeight = 0;
-                    for (; index < visibleFields.Count; index++)
-                        bottomCombinedHeight += visibleFields[index].ItemHeight;
+                    for (; index < _filteredListEntries.Count; index++)
+                        bottomCombinedHeight += _filteredListEntries[index].ItemHeight;
 
                     try
                     {
@@ -544,7 +569,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                 }
                 catch (Exception ex)
                 {
-                    RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, $"[{Title}] Failed to draw setting {entry?.Name()} - {ex.Message}");
+                    RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, $"[{Title}] Failed to draw setting {entry.Name()} - {ex.Message}");
                 }
             }
             GUILayout.EndHorizontal();

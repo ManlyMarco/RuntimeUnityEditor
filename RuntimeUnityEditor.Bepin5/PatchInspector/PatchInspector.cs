@@ -86,7 +86,7 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
         /// <inheritdoc />
         protected override void DrawContents()
         {
-            GUILayout.BeginHorizontal(GUI.skin.box);
+            GUILayout.BeginHorizontal(GUI.skin.box,IMGUIUtils.EmptyLayoutOptions);
             {
                 GUILayout.Label("Search: ", IMGUIUtils.LayoutOptionsExpandWidthFalse);
 
@@ -109,7 +109,7 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
             if (_foundPatches.Count > 0)
             {
                 _scrollPos = GUILayout.BeginScrollView(_scrollPos, GUI.skin.box);
-                GUILayout.Label($"Found {_foundPatches.Count} patches", IMGUIUtils.UpperCenterLabelStyle);
+                GUILayout.Label($"Found {_foundPatches.Count} patches", IMGUIUtils.UpperCenterLabelStyle, IMGUIUtils.EmptyLayoutOptions);
 
                 for (var i = 0; i < _foundPatches.Count; i++)
                 {
@@ -118,9 +118,9 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
                     Color prevColor = GUI.color;
                     GUI.color = patch.IsEnabled ? Color.white : new Color(0.8f, 0.8f, 0.8f, 1f);
 
-                    GUILayout.BeginVertical(GUI.skin.box);
+                    GUILayout.BeginVertical(GUI.skin.box, IMGUIUtils.EmptyLayoutOptions);
                     {
-                        GUILayout.BeginHorizontal();
+                        GUILayout.BeginHorizontal(IMGUIUtils.EmptyLayoutOptions);
                         {
                             bool newEnabled = GUILayout.Toggle(patch.IsEnabled, "", IMGUIUtils.LayoutOptionsExpandWidthFalse);
                             if (newEnabled != patch.IsEnabled)
@@ -141,7 +141,7 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
                         var patchName = $"Patch: [{patch.PatchType}] {patch.Patch?.PatchMethod?.Name ?? "Not applied"}";
 
                         if (patch.Patch == null) GUI.enabled = false;
-                        if (GUILayout.Button(new GUIContent(patchName, null, "Click to see more information about the patch method. Right click for more options."), GUI.skin.label))
+                        if (GUILayout.Button(new GUIContent(patchName, null, "Click to see more information about the patch method. Right click for more options."), GUI.skin.label, IMGUIUtils.EmptyLayoutOptions))
                         {
                             if (IMGUIUtils.IsMouseRightClick())
                                 ContextMenu.Instance.Show(patch.Patch.PatchMethod, null, $"MethodInfo: {patch.Patch.PatchMethod?.DeclaringType?.Name}.{patch.Patch.PatchMethod?.Name}", null, null);
@@ -151,12 +151,12 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
 
                         GUI.enabled = true;
 
-                        if (GUILayout.Button(new GUIContent($"Patcher: {patch.PatcherNamespace}", null, "Click to search for types in this namespace."), GUI.skin.label))
+                        if (GUILayout.Button(new GUIContent($"Patcher: {patch.PatcherNamespace}", null, "Click to search for types in this namespace."), GUI.skin.label, IMGUIUtils.EmptyLayoutOptions))
                             Inspector.Instance.Push(new InstanceStackEntry(AccessTools.AllTypes().Where(x => x.Namespace == patch.PatcherNamespace).ToArray(), "Types in " + patch.PatcherNamespace), true);
 
                         if (GUILayout.Button(
                                 new GUIContent($"Assembly: {patch.PatcherAssembly}", null,
-                                               $"File: {patch.FilePath}\n\nClick to open explorer focused on this file. Right click for to inspect the Assembly instance."), GUI.skin.label))
+                                               $"File: {patch.FilePath}\n\nClick to open explorer focused on this file. Right click for to inspect the Assembly instance."), GUI.skin.label, IMGUIUtils.EmptyLayoutOptions))
                         {
                             if (IMGUIUtils.IsMouseRightClick())
                                 ContextMenu.Instance.Show(AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(x => x.GetName().Name == patch.PatcherAssembly), null, "Assembly: " + patch.PatcherAssembly,
@@ -188,13 +188,13 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
             else if (!string.IsNullOrEmpty(SearchInput))
             {
                 GUILayout.Space(10);
-                GUILayout.Label("No patches found.", IMGUIUtils.UpperCenterLabelStyle);
+                GUILayout.Label("No patches found.", IMGUIUtils.UpperCenterLabelStyle, IMGUIUtils.EmptyLayoutOptions);
                 GUILayout.FlexibleSpace();
             }
             else
             {
                 GUILayout.Space(10);
-                GUILayout.Label("Use the search box to search for currently applied Harmony patches by method, class, or namespace.\n\nExamples: 'OnClick', 'method:OnClick class:AddButtonCtrl', 'namespace:SimpleGame'", IMGUIUtils.UpperCenterLabelStyle);
+                GUILayout.Label("Use the search box to search for currently applied Harmony patches by method, class, or namespace.\n\nExamples: 'OnClick', 'method:OnClick class:AddButtonCtrl', 'namespace:SimpleGame'", IMGUIUtils.UpperCenterLabelStyle, IMGUIUtils.EmptyLayoutOptions);
                 GUILayout.FlexibleSpace();
             }
         }

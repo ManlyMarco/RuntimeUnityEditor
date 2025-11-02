@@ -2,8 +2,12 @@ using UnityEngine;
 
 namespace RuntimeUnityEditor.Core
 {
+    /// <summary>
+    /// Provides a shim for GUILayout methods that are often missing in IL2CPP.
+    /// </summary>
     public static class GUILayoutShim
     {
+        /// <inheritdoc cref="GUILayout.MaxWidth"/>
         public static GUILayoutOption MaxWidth(float width)
         {
 #if IL2CPP
@@ -14,6 +18,7 @@ namespace RuntimeUnityEditor.Core
 #endif
         }
 
+        /// <inheritdoc cref="GUILayout.ExpandWidth"/>
         public static GUILayoutOption ExpandWidth(bool expand)
         {
 #if IL2CPP
@@ -24,6 +29,7 @@ namespace RuntimeUnityEditor.Core
 #endif
         }
 
+        /// <inheritdoc cref="GUILayout.ExpandHeight"/>
         public static GUILayoutOption ExpandHeight(bool expand)
         {
 #if IL2CPP
@@ -35,6 +41,7 @@ namespace RuntimeUnityEditor.Core
         }
 
 
+        /// <inheritdoc cref="GUILayout.MinWidth"/>
         public static GUILayoutOption MinWidth(float width)
         {
 #if IL2CPP

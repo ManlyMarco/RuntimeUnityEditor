@@ -223,6 +223,16 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             }
         }
 
+        private static readonly HashSet<string> _searchMemberBlacklist = new HashSet<string>
+        {
+            "parent", "parentInternal", "root", "transform", "gameObject",
+            // Animator properties inaccessible outside of OnAnimatorIK
+            "bodyPosition", "bodyRotation",
+            // AudioSource obsolete properties
+            "minVolume", "maxVolume", "rolloffFactor",
+            // NavMeshAgent properties often spewing errors
+            "destination", "remainingDistance"
+        };
         /// <summary>
         /// Search for a string inside a given component. Component name is always searched.
         /// </summary>
@@ -234,54 +244,41 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             if (c == null) return false;
 
             var type = c.GetType();
-            if (type.Name.Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
+            if (type.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
                 return true;
 
             if (!searchProperties)
                 return false;
 
-            var nameBlacklist = new HashSet<string>
-                {
-                    "parent", "parentInternal", "root", "transform", "gameObject",
-                    // Animator properties inaccessible outside of OnAnimatorIK
-                    "bodyPosition", "bodyRotation",
-                    // AudioSource obsolete properties
-                    "minVolume", "maxVolume", "rolloffFactor",
-                    // NavMeshAgent properties often spewing errors
-                    "destination", "remainingDistance"
-                };
-            var typeBlacklist = new[] { typeof(bool) };
-
-            foreach (var prop in type
-                .GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                .Where(x => x.CanRead && !nameBlacklist.Contains(x.Name) &&
-                            !typeBlacklist.Contains(x.PropertyType)))
+            foreach (var prop in type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
             {
-                try
+                if (prop.PropertyType != typeof(bool) && prop.CanRead && !_searchMemberBlacklist.Contains(prop.Name))
                 {
-                    if (prop.GetValue(c, null).ToString()
-                        .Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
-                        return true;
-                }
-                catch
-                {
-                    // Skip invalid values
+                    try
+                    {
+                        if (prop.GetValue(c, null).ToString().Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
+                            return true;
+                    }
+                    catch
+                    {
+                        // Skip invalid values
+                    }
                 }
             }
 
-            foreach (var field in type
-                .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                .Where(x => !nameBlacklist.Contains(x.Name) && !typeBlacklist.Contains(x.FieldType)))
+            foreach (var field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
             {
-                try
+                if (field.FieldType != typeof(bool) && !_searchMemberBlacklist.Contains(field.Name))
                 {
-                    if (field.GetValue(c).ToString()
-                        .Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
-                        return true;
-                }
-                catch
-                {
-                    // Skip invalid values
+                    try
+                    {
+                        if (field.GetValue(c).ToString().Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
+                            return true;
+                    }
+                    catch
+                    {
+                        // Skip invalid values
+                    }
                 }
             }
 

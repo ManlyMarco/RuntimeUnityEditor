@@ -48,17 +48,17 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
 
         protected override void DrawContents()
         {
-            if (GUILayout.Button(_headingGc, IMGUIUtils.UpperCenterLabelStyle))
+            if (GUILayout.Button(_headingGc, IMGUIUtils.UpperCenterLabelStyle, IMGUIUtils.EmptyLayoutOptions))
             {
                 //if (IMGUIUtils.IsMouseRightClick())
                 ContextMenu.Instance.Show(_method);
             }
 
-            GUILayout.BeginHorizontal();
+            GUILayout.BeginHorizontal(IMGUIUtils.EmptyLayoutOptions);
             {
                 _patchesScrollPosition = GUILayout.BeginScrollView(_patchesScrollPosition, GUI.skin.box, GUILayoutShim.ExpandHeight(true), GUILayout.Width(400));
                 {
-                    GUILayout.BeginVertical(GUI.skin.box);
+                    GUILayout.BeginVertical(GUI.skin.box, IMGUIUtils.EmptyLayoutOptions);
                     {
                         var isSelected = _selectedPatchIndex == -1;
                         if (isSelected) GUI.color = Color.cyan;
@@ -80,7 +80,7 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
                     }
                     GUILayout.EndVertical();
 
-                    GUILayout.BeginHorizontal();
+                    GUILayout.BeginHorizontal(IMGUIUtils.EmptyLayoutOptions);
                     {
                         GUILayout.Label("Patches:", IMGUIUtils.LayoutOptionsExpandWidthTrue);
 
@@ -91,7 +91,7 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
 
                     if (_patchMethods.Count == 0)
                     {
-                        GUILayout.Label("No patches found for this method.", IMGUIUtils.UpperCenterLabelStyle);
+                        GUILayout.Label("No patches found for this method.", IMGUIUtils.UpperCenterLabelStyle, IMGUIUtils.EmptyLayoutOptions);
                     }
                     else
                     {
@@ -99,7 +99,7 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
                         {
                             var patch = _patchMethods[i];
 
-                            GUILayout.BeginHorizontal(GUI.skin.box);
+                            GUILayout.BeginHorizontal(GUI.skin.box, IMGUIUtils.EmptyLayoutOptions);
                             {
                                 var newEnabled = GUILayout.Toggle(patch.IsEnabled, "", GUILayout.Width(20));
                                 if (newEnabled != patch.IsEnabled)
@@ -132,19 +132,19 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
 
                 GUILayout.Space(5);
 
-                GUILayout.BeginVertical(GUI.skin.box, GUILayout.ExpandHeight(true), GUILayout.ExpandWidth(true));
+                GUILayout.BeginVertical(GUI.skin.box, GUILayoutShim.ExpandHeight(true), GUILayoutShim.ExpandWidth(true));
                 if (_selectedPatchIndex == -1)
                 {
-                    GUILayout.Label("IL Code for the Original Method (target being patched)");
+                    GUILayout.Label("IL Code for the Original Method (target being patched)", IMGUIUtils.EmptyLayoutOptions);
                     _ilScrollPosition = GUILayout.BeginScrollView(_ilScrollPosition, GUILayoutShim.ExpandHeight(true));
-                    GUILayout.TextArea(_originalIL);
+                    GUILayout.TextArea(_originalIL, IMGUIUtils.EmptyLayoutOptions);
                     GUILayout.EndScrollView();
                 }
                 else if (_selectedPatchIndex >= 0 && _selectedPatchIndex < _patchMethods.Count)
                 {
                     var selectedPatch = _patchMethods[_selectedPatchIndex];
 
-                    GUILayout.BeginHorizontal();
+                    GUILayout.BeginHorizontal(IMGUIUtils.EmptyLayoutOptions);
                     {
                         GUILayout.Space(3);
 
@@ -160,13 +160,13 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
 
                     _ilScrollPosition = GUILayout.BeginScrollView(_ilScrollPosition, GUILayoutShim.ExpandHeight(true));
 
-                    GUILayout.TextArea(selectedPatch.ILCode);
+                    GUILayout.TextArea(selectedPatch.ILCode, IMGUIUtils.EmptyLayoutOptions);
 
                     GUILayout.EndScrollView();
                 }
                 else
                 {
-                    GUILayout.Label("Select a method from the list on the left to view its IL code.", IMGUIUtils.MiddleCenterLabelStyle);
+                    GUILayout.Label("Select a method from the list on the left to view its IL code.", IMGUIUtils.MiddleCenterLabelStyle, IMGUIUtils.EmptyLayoutOptions);
                 }
                 GUILayout.EndVertical();
             }
