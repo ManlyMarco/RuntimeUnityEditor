@@ -569,7 +569,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                 }
                 catch (Exception ex)
                 {
-                    RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, $"[{Title}] Failed to draw setting {entry.Name()} - {ex.Message}");
+                    RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, $"[{Title}] Failed to draw setting {entry?.Name()} - {ex.Message}");
                 }
             }
             GUILayout.EndHorizontal();
