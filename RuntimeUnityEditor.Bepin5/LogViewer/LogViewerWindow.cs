@@ -157,7 +157,7 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
 
             GUILayout.BeginHorizontal(IMGUIUtils.EmptyLayoutOptions);
             {
-                GUILayout.BeginHorizontal(GUI.skin.box,IMGUIUtils.EmptyLayoutOptions);
+                GUILayout.BeginHorizontal(GUI.skin.box, IMGUIUtils.EmptyLayoutOptions);
                 {
                     GUILayout.Label(new GUIContent("Captured log levels:", "Only new log messages with these levels will be captured, therefore enabling levels will not show past log messages!"), IMGUIUtils.EmptyLayoutOptions);
                     var filter = LogLevelFilter;
