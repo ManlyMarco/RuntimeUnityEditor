@@ -1,18 +1,7 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using HarmonyLib;
 using RuntimeUnityEditor.Core.Inspector.Entries;
-using RuntimeUnityEditor.Core.ObjectTree;
-using RuntimeUnityEditor.Core.Utils;
-using RuntimeUnityEditor.Core.Utils.Abstractions;
-using RuntimeUnityEditor.Core.Utils.ObjectDumper;
 using UnityEngine;
-using Component = UnityEngine.Component;
 
 namespace RuntimeUnityEditor.Core.Inspector
 {

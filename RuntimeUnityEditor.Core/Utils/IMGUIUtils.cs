@@ -8,15 +8,14 @@ namespace RuntimeUnityEditor.Core.Utils
     /// </summary>
     public static class IMGUIUtils
     {
-        /// <summary>
-        /// Options with GUILayout.ExpandWidth(true). Useful for avoiding allocations.
-        /// </summary>
+        /// <summary> Options with GUILayout.ExpandWidth(true). Useful for avoiding allocations. </summary>
         public static readonly GUILayoutOption[] LayoutOptionsExpandWidthTrue = { GUILayoutShim.ExpandWidth(true) };
-
-        /// <summary>
-        /// Options with GUILayout.ExpandWidth(false). Useful for avoiding allocations.
-        /// </summary>
+        /// <summary> Options with GUILayout.ExpandWidth(false). Useful for avoiding allocations. </summary>
         public static readonly GUILayoutOption[] LayoutOptionsExpandWidthFalse = { GUILayoutShim.ExpandWidth(false) };
+        /// <summary> Options with GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false). Useful for avoiding allocations. </summary>
+        public static readonly GUILayoutOption[] LayoutOptionsNoExpansion = { GUILayoutShim.ExpandWidth(false), GUILayoutShim.ExpandHeight(false) };
+        /// <summary> Empty layout options array. Useful for avoiding allocations. </summary>
+        public static readonly GUILayoutOption[] EmptyLayoutOptions = new GUILayoutOption[0];
 
         private static Texture2D SolidBoxTex { get; set; }
 

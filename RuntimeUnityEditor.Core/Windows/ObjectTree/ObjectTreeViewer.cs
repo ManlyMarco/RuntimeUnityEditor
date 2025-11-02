@@ -40,8 +40,12 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         private readonly Dictionary<Image, Texture2D> _imagePreviewCache = new Dictionary<Image, Texture2D>();
         private static readonly GUILayoutOption _drawVector3FieldWidth = GUILayout.Width(38);
         private static readonly GUILayoutOption _drawVector3FieldHeight = GUILayout.Height(19);
-        private static readonly GUILayoutOption _drawVector3SliderHeight = GUILayout.Height(10);
+        private static readonly GUILayoutOption[] _drawVector3FieldOptions = { _drawVector3FieldWidth, _drawVector3FieldHeight };
         private static readonly GUILayoutOption _drawVector3SliderWidth = GUILayout.Width(33);
+        private static readonly GUILayoutOption _drawVector3SliderHeight = GUILayout.Height(10);
+        private static readonly GUILayoutOption[] _drawVector3SliderOptions = { _drawVector3SliderWidth, _drawVector3SliderHeight };
+
+        private static readonly GUILayoutOption[] _goListEntryLayoutOptions = { GUILayoutShim.ExpandWidth(true), GUILayoutShim.MinWidth(200), GUILayoutShim.ExpandHeight(false) };
 
         /// <summary>
         /// Invoked whenever a new Transform is selected in the tree.
@@ -166,11 +170,11 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                     GUI.color = new Color(1, 1, 1, 0.6f);
                 }
 
-                GUILayout.BeginHorizontal();
+                GUILayout.BeginHorizontal(IMGUIUtils.EmptyLayoutOptions);
                 {
                     GUILayout.Space(indent * 20f);
 
-                    GUILayout.BeginHorizontal();
+                    GUILayout.BeginHorizontal(IMGUIUtils.EmptyLayoutOptions);
                     {
                         if (go.transform.childCount != 0)
                         {
@@ -184,7 +188,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                             GUILayout.Space(20f);
                         }
 
-                        if (GUILayout.Button(go.name, GUI.skin.label, GUILayoutShim.ExpandWidth(true), GUILayoutShim.MinWidth(200), GUILayoutShim.ExpandHeight(false)))
+                        if (GUILayout.Button(go.name, GUI.skin.label, _goListEntryLayoutOptions))
                         {
                             if (IMGUIUtils.IsMouseRightClick())
                             {
@@ -201,6 +205,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                                 else
                                 {
                                     SelectedTransform = go.transform;
+                                    _componentNameContentCache.Clear();
                                 }
                             }
                         }
@@ -235,7 +240,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         /// <inheritdoc />
         protected override void DrawContents()
         {
-            GUILayout.BeginVertical();
+            GUILayout.BeginVertical(IMGUIUtils.EmptyLayoutOptions);
             {
                 DisplayObjectTree();
 
@@ -252,13 +257,13 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             {
                 if (!SelectedTransform)
                 {
-                    GUILayout.Label("No object selected");
+                    GUILayout.Label("No object selected", IMGUIUtils.EmptyLayoutOptions);
                 }
                 else
                 {
                     DrawTransformControls();
 
-                    GUILayout.BeginHorizontal();
+                    GUILayout.BeginHorizontal(IMGUIUtils.EmptyLayoutOptions);
                     {
                         GUILayout.Label("Search components ", IMGUIUtils.LayoutOptionsExpandWidthFalse);
 
@@ -286,21 +291,21 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
         private void DrawTransformControls()
         {
-            GUILayout.BeginVertical(GUI.skin.box);
+            GUILayout.BeginVertical(GUI.skin.box, IMGUIUtils.EmptyLayoutOptions);
             {
                 var transform = SelectedTransform;
                 var fullTransfromPath = transform.GetFullTransfromPath();
 
-                GUILayout.TextArea(fullTransfromPath, GUI.skin.label);
+                GUILayout.TextArea(fullTransfromPath, GUI.skin.label, IMGUIUtils.EmptyLayoutOptions);
 
-                GUILayout.BeginHorizontal();
+                GUILayout.BeginHorizontal(IMGUIUtils.EmptyLayoutOptions);
                 {
                     var selectedGameObject = transform.gameObject;
-                    GUILayout.Label($"Layer {selectedGameObject.layer} ({LayerMask.LayerToName(selectedGameObject.layer)})");
+                    GUILayout.Label($"Layer {selectedGameObject.layer} ({LayerMask.LayerToName(selectedGameObject.layer)})", IMGUIUtils.EmptyLayoutOptions);
 
                     GUILayout.Space(8);
 
-                    GUILayout.Toggle(selectedGameObject.isStatic, "isStatic");
+                    GUILayout.Toggle(selectedGameObject.isStatic, "isStatic", IMGUIUtils.EmptyLayoutOptions);
 
                     GUI.changed = false;
                     var newVal = GUILayout.Toggle(selectedGameObject.activeSelf, "Active", IMGUIUtils.LayoutOptionsExpandWidthFalse);
@@ -309,10 +314,10 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
                     GUILayout.FlexibleSpace();
 
-                    if (GUILayout.Button("Inspect"))
+                    if (GUILayout.Button("Inspect", IMGUIUtils.EmptyLayoutOptions))
                         OnInspectorOpen(new InstanceStackEntry(selectedGameObject, selectedGameObject.name));
 
-                    if (GUILayout.Button("X"))
+                    if (GUILayout.Button("X", IMGUIUtils.EmptyLayoutOptions))
                         Change.Action("Object.Destroy({0})", selectedGameObject, Object.Destroy);
                 }
                 GUILayout.EndHorizontal();
@@ -338,15 +343,15 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             var v3New = v3;
 
             GUI.changed = false;
-            GUILayout.BeginHorizontal();
+            GUILayout.BeginHorizontal(IMGUIUtils.EmptyLayoutOptions);
             {
                 GUILayout.Label(memberName, GUILayoutShim.ExpandWidth(true), _drawVector3FieldHeight);
-                v3New.x = GUILayout.HorizontalSlider(v3.x, minVal, maxVal, _drawVector3SliderWidth, _drawVector3SliderHeight);
-                float.TryParse(GUILayout.TextField(v3New.x.ToString("F2", CultureInfo.InvariantCulture), _drawVector3FieldWidth, _drawVector3FieldHeight), NumberStyles.Any, CultureInfo.InvariantCulture, out v3New.x);
-                v3New.y = GUILayout.HorizontalSlider(v3.y, minVal, maxVal, _drawVector3SliderWidth, _drawVector3SliderHeight);
-                float.TryParse(GUILayout.TextField(v3New.y.ToString("F2", CultureInfo.InvariantCulture), _drawVector3FieldWidth, _drawVector3FieldHeight), NumberStyles.Any, CultureInfo.InvariantCulture, out v3New.y);
-                v3New.z = GUILayout.HorizontalSlider(v3.z, minVal, maxVal, _drawVector3SliderWidth, _drawVector3SliderHeight);
-                float.TryParse(GUILayout.TextField(v3New.z.ToString("F2", CultureInfo.InvariantCulture), _drawVector3FieldWidth, _drawVector3FieldHeight), NumberStyles.Any, CultureInfo.InvariantCulture, out v3New.z);
+                v3New.x = GUILayout.HorizontalSlider(v3.x, minVal, maxVal, _drawVector3SliderOptions);
+                float.TryParse(GUILayout.TextField(v3New.x.ToString("F2", CultureInfo.InvariantCulture), _drawVector3FieldOptions), NumberStyles.Any, CultureInfo.InvariantCulture, out v3New.x);
+                v3New.y = GUILayout.HorizontalSlider(v3.y, minVal, maxVal, _drawVector3SliderOptions);
+                float.TryParse(GUILayout.TextField(v3New.y.ToString("F2", CultureInfo.InvariantCulture), _drawVector3FieldOptions), NumberStyles.Any, CultureInfo.InvariantCulture, out v3New.y);
+                v3New.z = GUILayout.HorizontalSlider(v3.z, minVal, maxVal, _drawVector3SliderOptions);
+                float.TryParse(GUILayout.TextField(v3New.z.ToString("F2", CultureInfo.InvariantCulture), _drawVector3FieldOptions), NumberStyles.Any, CultureInfo.InvariantCulture, out v3New.z);
             }
             GUILayout.EndHorizontal();
 
@@ -359,22 +364,23 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             var vector2New = vector2;
 
             GUI.changed = false;
-            GUILayout.BeginHorizontal();
+            GUILayout.BeginHorizontal(IMGUIUtils.EmptyLayoutOptions);
             {
                 GUILayout.Label(memberName, GUILayoutShim.ExpandWidth(true), _drawVector3FieldHeight);
-                vector2New.x = GUILayout.HorizontalSlider(vector2.x, minVal, maxVal, _drawVector3SliderWidth, _drawVector3SliderHeight);
-                float.TryParse(GUILayout.TextField(vector2New.x.ToString("F2", CultureInfo.InvariantCulture), _drawVector3FieldWidth, _drawVector3FieldHeight), NumberStyles.Any, CultureInfo.InvariantCulture, out vector2New.x);
-                vector2New.y = GUILayout.HorizontalSlider(vector2.y, minVal, maxVal, _drawVector3SliderWidth, _drawVector3SliderHeight);
-                float.TryParse(GUILayout.TextField(vector2New.y.ToString("F2", CultureInfo.InvariantCulture), _drawVector3FieldWidth, _drawVector3FieldHeight), NumberStyles.Any, CultureInfo.InvariantCulture, out vector2New.y);
+                vector2New.x = GUILayout.HorizontalSlider(vector2.x, minVal, maxVal, _drawVector3SliderOptions);
+                float.TryParse(GUILayout.TextField(vector2New.x.ToString("F2", CultureInfo.InvariantCulture), _drawVector3FieldOptions), NumberStyles.Any, CultureInfo.InvariantCulture, out vector2New.x);
+                vector2New.y = GUILayout.HorizontalSlider(vector2.y, minVal, maxVal, _drawVector3SliderOptions);
+                float.TryParse(GUILayout.TextField(vector2New.y.ToString("F2", CultureInfo.InvariantCulture), _drawVector3FieldOptions), NumberStyles.Any, CultureInfo.InvariantCulture, out vector2New.y);
             }
             GUILayout.EndHorizontal();
 
             if (GUI.changed && vector2 != vector2New) Change.WithUndo($"{{0}}.{memberName} = {{1}}", transform, vector2New, set, oldValue: vector2);
         }
 
+        private static readonly Dictionary<Component, GUIContent> _componentNameContentCache = new Dictionary<Component, GUIContent>();
         private void DrawSingleComponent(Component component)
         {
-            GUILayout.BeginHorizontal(GUI.skin.box);
+            GUILayout.BeginHorizontal(GUI.skin.box, IMGUIUtils.EmptyLayoutOptions);
             {
                 if (component is Behaviour bh)
                 {
@@ -384,8 +390,13 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                         Change.MemberAssignment(bh, enabledNew, b => b.enabled);
                 }
 
-                var type = component.GetType();
-                if (GUILayout.Button(new GUIContent(type.Name, null, $"{component}\n\nFull type: {type.GetFancyDescription()}\n\nLeft click to open in Inspector\nRight click to for more options"), GUI.skin.label))
+                if (!_componentNameContentCache.TryGetValue(component, out var componentName))
+                {
+                    var type = component.GetType();
+                    componentName = new GUIContent(type.Name, null, $"{component}\n\nFull type: {type.GetFancyDescription()}\n\nLeft click to open in Inspector\nRight click to for more options");
+                    _componentNameContentCache.Add(component, componentName);
+                }
+                if (GUILayout.Button(componentName, GUI.skin.label, IMGUIUtils.EmptyLayoutOptions))
                 {
                     if (IMGUIUtils.IsMouseRightClick())
                     {
@@ -395,7 +406,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                     {
                         var transform = component.transform;
                         OnInspectorOpen(new InstanceStackEntry(transform, transform.name),
-                                        new InstanceStackEntry(component, type.GetSourceCodeRepresentation()));
+                                        new InstanceStackEntry(component, component.GetType().GetSourceCodeRepresentation()));
                     }
                 }
 
@@ -406,7 +417,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                         var imgSprite = img.sprite;
                         if (imgSprite != null)
                         {
-                            GUILayout.Label(imgSprite.name);
+                            GUILayout.Label(imgSprite.name, IMGUIUtils.EmptyLayoutOptions);
                             var texture = imgSprite.texture;
                             if (texture != null)
                             {
@@ -427,7 +438,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
                                 if (tex != null)
                                 {
-                                    if (GUILayout.Button(tex, GUI.skin.box))
+                                    if (GUILayout.Button(tex, GUI.skin.box, IMGUIUtils.EmptyLayoutOptions))
                                         ObjectViewWindow.Instance.SetShownObject(tex, imgSprite.name);
                                     texShown = true;
                                 }
@@ -436,50 +447,50 @@ namespace RuntimeUnityEditor.Core.ObjectTree
 
                         if (!texShown && img.mainTexture != null)
                         {
-                            if (GUILayout.Button(img.mainTexture, GUI.skin.box))
+                            if (GUILayout.Button(img.mainTexture, GUI.skin.box, IMGUIUtils.EmptyLayoutOptions))
                                 ObjectViewWindow.Instance.SetShownObject(img.mainTexture, img.ToString());
                             texShown = true;
                         }
 
                         if (!texShown)
-                            GUILayout.Label("Can't display texture");
+                            GUILayout.Label("Can't display texture", IMGUIUtils.EmptyLayoutOptions);
 
                         GUILayout.FlexibleSpace();
                         break;
                     case Slider b:
                         {
                             for (var i = 0; i < b.onValueChanged.GetPersistentEventCount(); ++i)
-                                GUILayout.Label(ToStringConverter.EventEntryToString(b.onValueChanged, i));
+                                GUILayout.Label(ToStringConverter.EventEntryToString(b.onValueChanged, i), IMGUIUtils.EmptyLayoutOptions);
 
                             GUILayout.FlexibleSpace();
-                            if (GUILayout.Button("?"))
+                            if (GUILayout.Button("?", IMGUIUtils.EmptyLayoutOptions))
                                 ObjectViewWindow.Instance.SetShownObject(ReflectionUtils.GetEventDetails(b.onValueChanged), $"{b} / {b.onValueChanged} - Event details");
                             break;
                         }
                     case Text text:
-                        GUILayout.Label($"{text.text} {text.font} {text.fontStyle} {text.fontSize} {text.alignment} {text.resizeTextForBestFit} {text.color}");
+                        GUILayout.Label($"{text.text} {text.font} {text.fontStyle} {text.fontSize} {text.alignment} {text.resizeTextForBestFit} {text.color}", IMGUIUtils.EmptyLayoutOptions);
                         GUILayout.FlexibleSpace();
                         break;
                     case RawImage r:
                         var rMainTexture = r.mainTexture;
                         if (rMainTexture != null)
                         {
-                            if (GUILayout.Button(rMainTexture, GUI.skin.box))
+                            if (GUILayout.Button(rMainTexture, GUI.skin.box, IMGUIUtils.EmptyLayoutOptions))
                                 ObjectViewWindow.Instance.SetShownObject(rMainTexture, r.ToString());
                         }
                         else
                         {
-                            GUILayout.Label("Can't display texture");
+                            GUILayout.Label("Can't display texture", IMGUIUtils.EmptyLayoutOptions);
                         }
 
                         GUILayout.FlexibleSpace();
                         break;
                     case Renderer re:
                         var reMaterial = re.sharedMaterial ?? re.material;
-                        GUILayout.Label(reMaterial != null ? reMaterial.shader.name : "[No material]");
+                        GUILayout.Label(reMaterial != null ? reMaterial.shader.name : "[No material]", IMGUIUtils.EmptyLayoutOptions);
                         if (reMaterial != null && reMaterial.mainTexture != null)
                         {
-                            if (GUILayout.Button(reMaterial.mainTexture, GUI.skin.box))
+                            if (GUILayout.Button(reMaterial.mainTexture, GUI.skin.box, IMGUIUtils.EmptyLayoutOptions))
                                 ObjectViewWindow.Instance.SetShownObject(reMaterial.mainTexture, re.ToString());
                         }
                         GUILayout.FlexibleSpace();
@@ -488,13 +499,13 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                         {
                             var eventObj = b.onClick;
                             for (var i = 0; i < eventObj.GetPersistentEventCount(); ++i)
-                                GUILayout.Label(ToStringConverter.EventEntryToString(eventObj, i));
+                                GUILayout.Label(ToStringConverter.EventEntryToString(eventObj, i), IMGUIUtils.EmptyLayoutOptions);
 
                             try
                             {
                                 var calls = eventObj.GetPrivateExplicit<UnityEventBase>("m_Calls").GetPrivate("m_RuntimeCalls").CastToEnumerable();
                                 foreach (var call in calls)
-                                    GUILayout.Label(ToStringConverter.ObjectToString(call.GetPrivate("Delegate")));
+                                    GUILayout.Label(ToStringConverter.ObjectToString(call.GetPrivate("Delegate")), IMGUIUtils.EmptyLayoutOptions);
                             }
                             catch (NullReferenceException) { }
 #if IL2CPP
@@ -503,7 +514,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                             catch (Exception e) { RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, e); }
 
                             GUILayout.FlexibleSpace();
-                            if (GUILayout.Button("?"))
+                            if (GUILayout.Button("?", IMGUIUtils.EmptyLayoutOptions))
                                 ObjectViewWindow.Instance.SetShownObject(ReflectionUtils.GetEventDetails(b.onClick), $"{b} / {b.onClick} - Event details");
                             break;
                         }
@@ -511,13 +522,13 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                         {
                             var eventObj = b.onValueChanged;
                             for (var i = 0; i < eventObj.GetPersistentEventCount(); ++i)
-                                GUILayout.Label(ToStringConverter.EventEntryToString(b.onValueChanged, i));
+                                GUILayout.Label(ToStringConverter.EventEntryToString(b.onValueChanged, i), IMGUIUtils.EmptyLayoutOptions);
 
                             try
                             {
                                 var calls = b.onValueChanged.GetPrivateExplicit<UnityEventBase>("m_Calls").GetPrivate("m_RuntimeCalls").CastToEnumerable();
                                 foreach (var call in calls)
-                                    GUILayout.Label(ToStringConverter.ObjectToString(call.GetPrivate("Delegate")));
+                                    GUILayout.Label(ToStringConverter.ObjectToString(call.GetPrivate("Delegate")), IMGUIUtils.EmptyLayoutOptions);
                             }
                             catch (NullReferenceException) { }
 #if IL2CPP
@@ -526,19 +537,19 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                             catch (Exception e) { RuntimeUnityEditorCore.Logger.Log(LogLevel.Error, e); }
 
                             GUILayout.FlexibleSpace();
-                            if (GUILayout.Button("?"))
+                            if (GUILayout.Button("?", IMGUIUtils.EmptyLayoutOptions))
                                 ObjectViewWindow.Instance.SetShownObject(ReflectionUtils.GetEventDetails(b.onValueChanged), $"{b} / {b.onValueChanged} - Event details");
                             break;
                         }
                     case RectTransform rt:
-                        GUILayout.BeginVertical();
+                        GUILayout.BeginVertical(IMGUIUtils.EmptyLayoutOptions);
                         {
                             DrawVector2(nameof(RectTransform.anchorMin), rt, (t, vector2) => ((RectTransform)t).anchorMin = vector2, t => ((RectTransform)t).anchorMin, 0, 1);
                             DrawVector2(nameof(RectTransform.anchorMax), rt, (t, vector2) => ((RectTransform)t).anchorMax = vector2, t => ((RectTransform)t).anchorMax, 0, 1);
                             DrawVector2(nameof(RectTransform.offsetMin), rt, (t, vector2) => ((RectTransform)t).offsetMin = vector2, t => ((RectTransform)t).offsetMin, -1000, 1000);
                             DrawVector2(nameof(RectTransform.offsetMax), rt, (t, vector2) => ((RectTransform)t).offsetMax = vector2, t => ((RectTransform)t).offsetMax, -1000, 1000);
                             DrawVector2(nameof(RectTransform.sizeDelta), rt, (t, vector2) => ((RectTransform)t).sizeDelta = vector2, t => ((RectTransform)t).sizeDelta, -1000, 1000);
-                            GUILayout.Label("rect " + rt.rect);
+                            GUILayout.Label("rect " + rt.rect, IMGUIUtils.EmptyLayoutOptions);
                         }
                         GUILayout.EndVertical();
                         break;
@@ -554,7 +565,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         private string _searchTextComponents = string.Empty;
         private void DisplayObjectTree()
         {
-            GUILayout.BeginVertical(GUI.skin.box);
+            GUILayout.BeginVertical(GUI.skin.box, IMGUIUtils.EmptyLayoutOptions);
             {
                 DisplayTreeSearchBox();
 
@@ -597,9 +608,9 @@ namespace RuntimeUnityEditor.Core.ObjectTree
             // add info markings to list items on right
             //   scene, prefab, etc
 
-            GUILayout.BeginVertical(GUI.skin.box);
+            GUILayout.BeginVertical(GUI.skin.box, IMGUIUtils.EmptyLayoutOptions);
             {
-                GUILayout.BeginHorizontal();
+                GUILayout.BeginHorizontal(IMGUIUtils.EmptyLayoutOptions);
                 {
                     GUILayout.Label(_searchLabelContent, IMGUIUtils.LayoutOptionsExpandWidthFalse);
 
@@ -623,12 +634,12 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 }
                 GUILayout.EndHorizontal();
 
-                GUILayout.BeginHorizontal();
+                GUILayout.BeginHorizontal(IMGUIUtils.EmptyLayoutOptions);
                 {
                     GUI.changed = false;
-                    _searchNames = GUILayout.Toggle(_searchNames, _searchNamesContent);
-                    _searchComponents.Value = GUILayout.Toggle(_searchComponents.Value, _searchComponentsContent);
-                    _searchProperties.Value = GUILayout.Toggle(_searchProperties.Value, _searchPropertiesContent);
+                    _searchNames = GUILayout.Toggle(_searchNames, _searchNamesContent, IMGUIUtils.EmptyLayoutOptions);
+                    _searchComponents.Value = GUILayout.Toggle(_searchComponents.Value, _searchComponentsContent, IMGUIUtils.EmptyLayoutOptions);
+                    _searchProperties.Value = GUILayout.Toggle(_searchProperties.Value, _searchPropertiesContent, IMGUIUtils.EmptyLayoutOptions);
                     if (GUI.changed)
                         UpdateSearch();
 
@@ -683,11 +694,12 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         private readonly GUIContent _sceneLabelContent = new GUIContent("Scene: ", null, "Multiple scenes can be loaded at the same time, in which case objects that belong to them all exist at the same time." +
                                                                                    "\nThe dropdown lists all currently loaded scenes. Select one of them to only show objects that belong to it." +
                                                                                    "\n\nWhen a scene is unloaded, all of its objects are marked to be destroyed (in some cases they are not cleaned up until Resources.UnloadUnusedResources).");
+
         private void DisplaySceneControls()
         {
             if (!UnityFeatureHelper.SupportsScenes) return;
 
-            GUILayout.BeginHorizontal(GUI.skin.box);
+            GUILayout.BeginHorizontal(GUI.skin.box, IMGUIUtils.EmptyLayoutOptions);
             {
                 GUILayout.Label(_sceneLabelContent, IMGUIUtils.LayoutOptionsExpandWidthFalse);
 

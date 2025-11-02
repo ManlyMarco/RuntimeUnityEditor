@@ -138,7 +138,7 @@ namespace RuntimeUnityEditor.Core.Inspector
             {
                 for (var index = 0; index < allValues.Length;)
                 {
-                    GUILayout.BeginHorizontal();
+                    GUILayout.BeginHorizontal(IMGUIUtils.EmptyLayoutOptions);
                     {
                         var currentWidth = 0;
                         for (; index < allValues.Length; index++)
@@ -340,7 +340,7 @@ namespace RuntimeUnityEditor.Core.Inspector
             if (tex is Texture2D t2d) extraData = $"\nFormat={t2d.format} Mips={t2d.mipmapCount}";
             else if (tex is RenderTexture rt) extraData = $"\nFormat={rt.format} Mips={rt.useMipMap} AA={rt.antiAliasing} Depth={rt.depth} Cube={rt.isCubemap} Volume={rt.isVolume}";
 
-            GUILayout.Label($"Name={tex.name} Size={tex.width}x{tex.height} Filter={tex.filterMode} Wrap={tex.wrapMode} {extraData}");
+            GUILayout.Label($"Name={tex.name} Size={tex.width}x{tex.height} Filter={tex.filterMode} Wrap={tex.wrapMode} {extraData}", IMGUIUtils.EmptyLayoutOptions);
 
             GUILayout.FlexibleSpace();
 
@@ -360,7 +360,7 @@ namespace RuntimeUnityEditor.Core.Inspector
             var isNullOrDestroyed = spr.IsNullOrDestroyedStr();
             if (isNullOrDestroyed != null)
             {
-                GUILayout.Label(isNullOrDestroyed);
+                GUILayout.Label(isNullOrDestroyed, IMGUIUtils.EmptyLayoutOptions);
                 GUILayout.FlexibleSpace();
                 return;
             }
@@ -377,7 +377,7 @@ namespace RuntimeUnityEditor.Core.Inspector
             GUILayout.Label($"Name={spr.name} Rect={spr.rect} Pivot={spr.pivot} Packed={spr.packed} {extraData}");
 #else
             // pivot is not supported in Unity 4.x
-            GUILayout.Label($"Name={spr.name} Rect={spr.rect} Pivot={spr.TryGetPropertyValue(nameof(Sprite.pivot)) ?? "UNSUPPORTED"} Packed={spr.packed} {extraData}");
+            GUILayout.Label($"Name={spr.name} Rect={spr.rect} Pivot={spr.TryGetPropertyValue(nameof(Sprite.pivot)) ?? "UNSUPPORTED"} Packed={spr.packed} {extraData}", IMGUIUtils.EmptyLayoutOptions);
 #endif
 
             GUILayout.FlexibleSpace();
@@ -439,7 +439,7 @@ namespace RuntimeUnityEditor.Core.Inspector
                 //    ShowInvokeWindow(backingDelegate.DynamicInvoke(), @event.Instance);
 
                 var invocationList = backingDelegate.GetInvocationList();
-                if (GUILayout.Button(invocationList.Length + " listener(s)"))
+                if (GUILayout.Button(invocationList.Length + " listener(s)", IMGUIUtils.EmptyLayoutOptions))
                     Inspector.Instance.Push(new InstanceStackEntry(invocationList, @event.Name() + " Invocation List", @event), false);
             }
 
@@ -517,12 +517,12 @@ namespace RuntimeUnityEditor.Core.Inspector
                 GUI.FocusWindow(_currentlyInvokingWindowId);
             }
 
-            _currentlyInvokingRect = GUILayout.Window(_currentlyInvokingWindowId, _currentlyInvokingRect, (GUI.WindowFunction)DrawInvokeWindowFunc, "Invoke " + _currentlyInvoking.Name);
+            _currentlyInvokingRect = GUILayout.Window(_currentlyInvokingWindowId, _currentlyInvokingRect, (GUI.WindowFunction)DrawInvokeWindowFunc, "Invoke " + _currentlyInvoking.Name, IMGUIUtils.EmptyLayoutOptions);
         }
 
         private static void DrawInvokeWindowFunc(int id)
         {
-            GUILayout.BeginVertical();
+            GUILayout.BeginVertical(IMGUIUtils.EmptyLayoutOptions);
             {
                 _currentlyInvokingPos = GUILayout.BeginScrollView(_currentlyInvokingPos, GUI.skin.box);
                 {
@@ -531,12 +531,12 @@ namespace RuntimeUnityEditor.Core.Inspector
                     var generics = _currentlyInvokingArgs;
                     if (generics.Length > 0)
                     {
-                        GUILayout.Label("Generic arguments (Input a Type name, or pick a Type object from clipboard by typing #0, #1, #2...)");
+                        GUILayout.Label("Generic arguments (Input a Type name, or pick a Type object from clipboard by typing #0, #1, #2...)", IMGUIUtils.EmptyLayoutOptions);
                         for (var index = 0; index < generics.Length; index++)
                         {
                             var genericArg = generics[index];
 
-                            GUILayout.BeginHorizontal();
+                            GUILayout.BeginHorizontal(IMGUIUtils.EmptyLayoutOptions);
                             GUILayout.Label("#" + index, GUILayout.Width(indexColWidth));
                             GUILayout.Label(genericArg.FullDescription(), GUILayout.Width((_currentlyInvokingRect.width - indexColWidth) / 2.3f));
                             _currentlyInvokingArgsValues[index] = GUILayout.TextField(_currentlyInvokingArgsValues[index], IMGUIUtils.LayoutOptionsExpandWidthTrue);
@@ -547,12 +547,12 @@ namespace RuntimeUnityEditor.Core.Inspector
                     var parameters = _currentlyInvokingParams;
                     if (parameters.Length > 0)
                     {
-                        GUILayout.Label("Parameters (Input a value, or pick a value from clipboard by typing #0, #1, #2...)");
+                        GUILayout.Label("Parameters (Input a value, or pick a value from clipboard by typing #0, #1, #2...)", IMGUIUtils.EmptyLayoutOptions);
                         for (var index = 0; index < parameters.Length; index++)
                         {
                             var parameter = parameters[index];
 
-                            GUILayout.BeginHorizontal();
+                            GUILayout.BeginHorizontal(IMGUIUtils.EmptyLayoutOptions);
                             GUILayout.Label("#" + index, GUILayout.Width(indexColWidth));
                             GUILayout.Label(parameter.ParameterType.FullDescription() + " " + parameter.Name, GUILayout.Width((_currentlyInvokingRect.width - indexColWidth) / 2.3f));
                             _currentlyInvokingParamsValues[index] = GUILayout.TextField(_currentlyInvokingParamsValues[index], IMGUIUtils.LayoutOptionsExpandWidthTrue);
@@ -561,21 +561,21 @@ namespace RuntimeUnityEditor.Core.Inspector
                     }
 
                     if (generics.Length == 0 && parameters.Length == 0)
-                        GUILayout.Label("This method has no parameters, click Invoke to run it.");
+                        GUILayout.Label("This method has no parameters, click Invoke to run it.", IMGUIUtils.EmptyLayoutOptions);
                 }
                 GUILayout.EndScrollView();
 
-                GUILayout.BeginHorizontal(GUI.skin.box);
+                GUILayout.BeginHorizontal(GUI.skin.box, IMGUIUtils.EmptyLayoutOptions);
                 {
                     GUILayout.Label("Invoke result: ", IMGUIUtils.LayoutOptionsExpandWidthFalse);
                     GUILayout.TextArea(_currentlyInvokingException != null ? _currentlyInvokingException.GetType().Name + " - " + _currentlyInvokingException.Message : _currentlyInvokingResult == null ? "None / NULL" : _currentlyInvokingResult.ToString(), GUI.skin.label, IMGUIUtils.LayoutOptionsExpandWidthTrue);
                 }
                 GUILayout.EndHorizontal();
 
-                GUILayout.BeginHorizontal(GUI.skin.box);
+                GUILayout.BeginHorizontal(GUI.skin.box, IMGUIUtils.EmptyLayoutOptions);
                 {
                     //todo
-                    if (GUILayout.Button("Invoke"))
+                    if (GUILayout.Button("Invoke", IMGUIUtils.EmptyLayoutOptions))
                     {
                         try
                         {
@@ -655,12 +655,12 @@ namespace RuntimeUnityEditor.Core.Inspector
                     GUILayout.FlexibleSpace();
 
                     GUI.enabled = _currentlyInvokingResult != null;
-                    if (GUILayout.Button("Inspect result"))
+                    if (GUILayout.Button("Inspect result", IMGUIUtils.EmptyLayoutOptions))
                     {
                         Inspector.Instance.Push(new InstanceStackEntry(_currentlyInvokingResult, "Invoke " + _currentlyInvoking.Name), false);
                         _currentlyInvoking = null;
                     }
-                    if (GUILayout.Button("Copy result to clipboard"))
+                    if (GUILayout.Button("Copy result to clipboard", IMGUIUtils.EmptyLayoutOptions))
                     {
                         ClipboardWindow.Contents.Add(_currentlyInvokingResult);
                     }
@@ -668,7 +668,7 @@ namespace RuntimeUnityEditor.Core.Inspector
 
                     GUILayout.FlexibleSpace();
 
-                    if (GUILayout.Button("Close"))
+                    if (GUILayout.Button("Close", IMGUIUtils.EmptyLayoutOptions))
                         _currentlyInvoking = null;
                 }
                 GUILayout.EndHorizontal();

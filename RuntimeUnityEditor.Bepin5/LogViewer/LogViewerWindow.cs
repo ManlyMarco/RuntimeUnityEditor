@@ -124,7 +124,7 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
         /// <inheritdoc />
         protected override void DrawContents()
         {
-            GUILayout.BeginHorizontal();
+            GUILayout.BeginHorizontal(IMGUIUtils.EmptyLayoutOptions);
             {
                 GUILayout.BeginHorizontal(GUI.skin.box, IMGUIUtils.LayoutOptionsExpandWidthTrue);
                 {
@@ -141,11 +141,11 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
                 GUILayout.BeginHorizontal(GUI.skin.box, IMGUIUtils.LayoutOptionsExpandWidthFalse);
                 {
                     if (!Capture) GUI.color = Color.red;
-                    Capture = GUILayout.Toggle(Capture, new GUIContent("Enable log capture", "Note: This can hurt performance, especially if there is log spam."));
+                    Capture = GUILayout.Toggle(Capture, new GUIContent("Enable log capture", "Note: This can hurt performance, especially if there is log spam."), IMGUIUtils.EmptyLayoutOptions);
                     GUI.color = Color.white;
-                    CaptureOnStartup = GUILayout.Toggle(CaptureOnStartup, new GUIContent("Enable on game startup", "Warning: This can hurt performance, especially after running for a while!"));
+                    CaptureOnStartup = GUILayout.Toggle(CaptureOnStartup, new GUIContent("Enable on game startup", "Warning: This can hurt performance, especially after running for a while!"), IMGUIUtils.EmptyLayoutOptions);
 
-                    if (GUILayout.Button("Clear the list"))
+                    if (GUILayout.Button("Clear the list", IMGUIUtils.EmptyLayoutOptions))
                     {
                         _logEntries.Clear();
                         _filteredLogEntries.Clear();
@@ -155,16 +155,16 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
             }
             GUILayout.EndHorizontal();
 
-            GUILayout.BeginHorizontal();
+            GUILayout.BeginHorizontal(IMGUIUtils.EmptyLayoutOptions);
             {
-                GUILayout.BeginHorizontal(GUI.skin.box);
+                GUILayout.BeginHorizontal(GUI.skin.box, IMGUIUtils.EmptyLayoutOptions);
                 {
-                    GUILayout.Label(new GUIContent("Captured log levels:", "Only new log messages with these levels will be captured, therefore enabling levels will not show past log messages!"));
+                    GUILayout.Label(new GUIContent("Captured log levels:", "Only new log messages with these levels will be captured, therefore enabling levels will not show past log messages!"), IMGUIUtils.EmptyLayoutOptions);
                     var filter = LogLevelFilter;
                     foreach (var logLevel in new[] { LogLevel.Debug, LogLevel.Info, LogLevel.Message, LogLevel.Warning, LogLevel.Error, LogLevel.Fatal, LogLevel.All })
                     {
                         GUI.changed = false;
-                        var result = GUILayout.Toggle((filter & logLevel) != 0, logLevel.ToString());
+                        var result = GUILayout.Toggle((filter & logLevel) != 0, logLevel.ToString(), IMGUIUtils.EmptyLayoutOptions);
                         if (GUI.changed)
                             LogLevelFilter = result ? filter | logLevel : filter & ~logLevel;
                     }
@@ -173,10 +173,10 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
 
                 GUILayout.FlexibleSpace();
 
-                GUILayout.BeginHorizontal(GUI.skin.box);
+                GUILayout.BeginHorizontal(GUI.skin.box, IMGUIUtils.EmptyLayoutOptions);
                 {
-                    if (GUILayout.Button("Sources")) Inspector.Instance.Push(new InstanceStackEntry(BepInEx.Logging.Logger.Sources, "Log Sources"), true);
-                    if (GUILayout.Button("Listeners")) Inspector.Instance.Push(new InstanceStackEntry(BepInEx.Logging.Logger.Listeners, "Log Listeners"), true);
+                    if (GUILayout.Button("Sources", IMGUIUtils.EmptyLayoutOptions)) Inspector.Instance.Push(new InstanceStackEntry(BepInEx.Logging.Logger.Sources, "Log Sources"), true);
+                    if (GUILayout.Button("Listeners", IMGUIUtils.EmptyLayoutOptions)) Inspector.Instance.Push(new InstanceStackEntry(BepInEx.Logging.Logger.Listeners, "Log Listeners"), true);
                 }
                 GUILayout.EndHorizontal();
             }
@@ -184,7 +184,7 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
 
             var heightMeasured = _itemHeight != 0;
 
-            _scrollPosition = GUILayout.BeginScrollView(_scrollPosition, false, true);
+            _scrollPosition = GUILayout.BeginScrollView(_scrollPosition, false, true, IMGUIUtils.EmptyLayoutOptions);
             {
                 var logEntries = _filteredLogEntries;
 
@@ -197,7 +197,7 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
                 for (var i = skipped; i < skipped + visible; i++)
                 {
                     var entry = logEntries[logEntries.Count - 1 - i];
-                    GUILayout.BeginHorizontal(GUI.skin.box);
+                    GUILayout.BeginHorizontal(GUI.skin.box, IMGUIUtils.EmptyLayoutOptions);
                     {
                         if (entry.DrawEntry())
                         {
