@@ -141,7 +141,7 @@ namespace RuntimeUnityEditor.Bepin5.LogViewer
                 GUILayout.BeginHorizontal(GUI.skin.box, IMGUIUtils.LayoutOptionsExpandWidthFalse);
                 {
                     if (!Capture) GUI.color = Color.red;
-                    Capture = GUILayout.Toggle(Capture, new GUIContent("Enable log capture", "Note: This can hurt performance, especially if there is log spam."),IMGUIUtils.EmptyLayoutOptions);
+                    Capture = GUILayout.Toggle(Capture, new GUIContent("Enable log capture", "Note: This can hurt performance, especially if there is log spam."), IMGUIUtils.EmptyLayoutOptions);
                     GUI.color = Color.white;
                     CaptureOnStartup = GUILayout.Toggle(CaptureOnStartup, new GUIContent("Enable on game startup", "Warning: This can hurt performance, especially after running for a while!"), IMGUIUtils.EmptyLayoutOptions);
 
