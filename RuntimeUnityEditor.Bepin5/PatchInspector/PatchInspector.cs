@@ -86,7 +86,7 @@ namespace RuntimeUnityEditor.Bepin5.PatchInspector
         /// <inheritdoc />
         protected override void DrawContents()
         {
-            GUILayout.BeginHorizontal(GUI.skin.box,IMGUIUtils.EmptyLayoutOptions);
+            GUILayout.BeginHorizontal(GUI.skin.box, IMGUIUtils.EmptyLayoutOptions);
             {
                 GUILayout.Label("Search: ", IMGUIUtils.LayoutOptionsExpandWidthFalse);
 
