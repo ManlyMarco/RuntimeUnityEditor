@@ -51,7 +51,7 @@ IL2CPP bug reports will be largely ignored, while PRs to fix issues will be grea
 - The C# REPL console is only available in a subset of games. This is because mcs (the current REPL backend) does not work with `.NET Standard` runtime used by default in more recent versions of Unity (because of missing features). There is no fix, the backend will have to be changed, possibly to Lua.
 - The wireframe toggle might not work in some games because of an incompatible rendering setup.
 - The IL2CPP version is broken in `insert your game name here`. At the moment the main issue is stripped IMGUI assemblies, see https://github.com/ManlyMarco/RuntimeUnityEditor/issues/97
-
+- In some games the BepInEx5 / Mono version can be seen loading in log but not react to the hotkey. If this happens, try setting `HideManagerGameObject = true` in `BepInEx.cfg`.
 
 ## How to build
 1. Get Visual Studio 2019 (or later).
