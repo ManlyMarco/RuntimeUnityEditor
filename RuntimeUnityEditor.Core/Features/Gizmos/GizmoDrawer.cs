@@ -145,9 +145,9 @@ namespace RuntimeUnityEditor.Core.Gizmos
             if (obj != null && obj is Transform tr)
             {
                 //todo configurable scale
-                lib.Gizmos.Line(tr.position, tr.position + tr.forward * 0.05f, Color.green);
-                lib.Gizmos.Line(tr.position, tr.position + tr.right * 0.05f, Color.red);
-                lib.Gizmos.Line(tr.position, tr.position + tr.up * 0.05f, Color.blue);
+                lib.Gizmos.Line(tr.position, tr.position + tr.right * 0.05f, Color.red); // X-axis
+                lib.Gizmos.Line(tr.position, tr.position + tr.up * 0.05f, Color.green); // Y-axis
+                lib.Gizmos.Line(tr.position, tr.position + tr.forward * 0.05f, Color.blue); // Z-axis
             }
         }
 
