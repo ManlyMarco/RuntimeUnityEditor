@@ -179,7 +179,7 @@ namespace RuntimeUnityEditor.Core.Gizmos
 #endif
             var color = mBound == 0 ? Color.yellow : Color.red; // 0 = Bound.Outside
             var radius = mRadius * Mathf.Abs(transform.lossyScale.z);
-            var height = (mHeight - mRadius) * 0.5f;
+            var height = mHeight * 0.5f - mRadius;
             if (height <= 0f)
             {
                 lib.Gizmos.Sphere(transform.TransformPoint(mCenter), radius, color);
