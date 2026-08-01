@@ -111,7 +111,7 @@ namespace RuntimeUnityEditor.Core.Gizmos
                 offset[cc.direction] = (height - radiusScaled) / 2f;
                 // take rotation into account
                 offset = cc.transform.rotation * offset;
-                var center = Vector3.Scale(cc.center, lossyScale);
+                var center = Vector3.Scale(cc.transform.rotation * cc.center, lossyScale);
                 DrawWireCapsule(cc.transform.position + center + offset, cc.transform.position + center - offset, radiusScaled, Color.cyan);
             }
             else if (obj is BoxCollider bc)
