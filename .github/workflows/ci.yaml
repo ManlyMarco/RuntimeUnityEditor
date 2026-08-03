@@ -9,6 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
       - uses: actions/setup-dotnet@v4
       - run: dotnet build RuntimeUnityEditor.sln --configuration Release
       - uses: actions/upload-artifact@v4
