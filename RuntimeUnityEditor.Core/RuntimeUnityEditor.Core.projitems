@@ -74,6 +74,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Windows\Clipboard\ClipboardWindow.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\CacheEntryBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\Fake\CallbackCacheEntey.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\Fake\IFakeCacheEntry.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\IL2CPP\IL2CPPEventCacheEntry.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\IL2CPP\IL2CPPFieldCacheEntry.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\IL2CPP\IL2CPPMethodCacheEntry.cs" />
@@ -116,8 +117,5 @@
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\Fake\" />
     <Folder Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\Real\" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)windows\inspector\entries\contents\fake\IFakeCacheEntry.cs" />
   </ItemGroup>
 </Project>
