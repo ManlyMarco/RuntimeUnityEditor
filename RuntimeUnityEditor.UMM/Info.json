@@ -2,7 +2,7 @@
   "Id": "RuntimeUnityEditor",
   "DisplayName": "Runtime Unity Editor",
   "Author": "Vanguard, ManlyMarco",
-  "Version": "0.0.0.0",
+  "Version": "6.3.1",
   "ManagerVersion": "0.27.2",
   "AssemblyName": "RuntimeUnityEditor.UMM.dll",
   "EntryMethod": "RuntimeUnityEditor.UMM.RuntimeUnityEditorUMM.Load",
