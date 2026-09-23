@@ -101,8 +101,7 @@ namespace RuntimeUnityEditor.Core.Utils.ObjectDumper
         /// <param name="builder">The StringBuilder object to append the vertex data to.</param>
         /// <param name="mesh">The Mesh object containing the vertex data to export.</param>
         /// <param name="renderer">The Renderer associated with the mesh, used for transformations.</param>
-        /// <param name="bakedMesh">Indicates whether the mesh is baked.</param>
-        /// <param name="bakedWorldPosition">Indicates whether to apply world position transformations to the vertices.</param>
+        /// <param name="baked">Indicates whether the mesh is baked.</param>
         /// <returns>Returns true if vertex data was successfully appended, otherwise false.</returns>
         private static bool AppendVertices(StringBuilder builder, Mesh mesh, Renderer renderer, bool baked)
         {
@@ -143,8 +142,7 @@ namespace RuntimeUnityEditor.Core.Utils.ObjectDumper
         /// <param name="builder">The StringBuilder to which the normal data will be appended.</param>
         /// <param name="mesh">The mesh whose normals will be processed and appended.</param>
         /// <param name="renderer">The renderer associated with the mesh, used for transforming normals if needed.</param>
-        /// <param name="bakedMesh">Indicates if the mesh should be treated as baked.</param>
-        /// <param name="bakedWorldPosition">Indicates if the normals should be transformed to world position when the mesh is baked.</param>
+        /// <param name="baked">Indicates if the mesh should be treated as baked.</param>
         /// <returns>True if normals are successfully appended; false if the mesh contains no normals.</returns>
         private static bool AppendNormals(StringBuilder builder, Mesh mesh, Renderer renderer, bool baked)
         {

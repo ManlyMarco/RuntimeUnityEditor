@@ -1,27 +1,33 @@
 #if IL2CPP
-using HarmonyLib;
 using Il2CppInterop.Runtime.InteropTypes;
 using RuntimeUnityEditor.Core.Inspector.Entries;
 using RuntimeUnityEditor.Core.Utils;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 
 namespace RuntimeUnityEditor.Core.Inspector.IL2CPP;
 
+/// <summary>
+/// Utilities for making interacting with IL2CPP types easier and faster.
+/// </summary>
 public class IL2CPPCacheEntryHelper
 {
-    private static readonly Dictionary<Type, Dictionary<MemberInfo, FieldInfo>> _ptrLookup = new();
+    private static readonly Dictionary<Type, Dictionary<MemberInfo, FieldInfo>> PtrLookup = new();
 
+    /// <summary>
+    /// Creates a lookup table mapping method and field information to their corresponding pointers for a specified type.
+    /// </summary>
+    /// <param name="type">The type for which the pointer lookup table is created. If not a Il2CppObjectBase, empty collection is returned.</param>
+    /// <returns>A dictionary containing the mapping of MemberInfo to FieldInfo pointers.</returns>
     public static Dictionary<MemberInfo, FieldInfo> GetPtrLookupTable(Type type)
     {
         // todo some way to clean up old entries?
-        if (_ptrLookup.TryGetValue(type, out var lookup))
+        if (PtrLookup.TryGetValue(type, out var lookup))
             return lookup;
 
         lookup = new Dictionary<MemberInfo, FieldInfo>();
-        _ptrLookup[type] = lookup;
+        PtrLookup[type] = lookup;
 
         if (!type.IsAssignableTo(typeof(Il2CppObjectBase)))
             return lookup;
@@ -39,6 +45,15 @@ public class IL2CPPCacheEntryHelper
         return lookup;
     }
 
+    /// <summary>
+    /// Attempts to retrieve the IL2CPP cache entry for the specified event.
+    /// </summary>
+    /// <param name="instance">The instance of the object associated with the event.</param>
+    /// <param name="type">The type of the event's declaring class.</param>
+    /// <param name="p">The member information for which the cache entry is being retrieved.</param>
+    /// <param name="lookup">A dictionary mapping member information to field information for lookup.</param>
+    /// <param name="result">The resulting cache entry if found; otherwise, null.</param>
+    /// <returns>True if the cache entry was successfully retrieved; otherwise, false.</returns>
     public static bool TryGetIl2CppCacheEntry(object instance, Type type, EventInfo p, Dictionary<MemberInfo, FieldInfo> lookup, out ICacheEntry result)
     {
         FieldInfo ptrAdd = null;
@@ -60,6 +75,7 @@ public class IL2CPPCacheEntryHelper
         return false;
     }
 
+    /// <inheritdoc cref="TryGetIl2CppCacheEntry(object,System.Type,System.Reflection.EventInfo,System.Collections.Generic.Dictionary{System.Reflection.MemberInfo,System.Reflection.FieldInfo},out RuntimeUnityEditor.Core.Inspector.Entries.ICacheEntry)" />
     public static bool TryGetIl2CppCacheEntry(object instance, Type type, PropertyInfo p, Dictionary<MemberInfo, FieldInfo> lookup, out ICacheEntry result)
     {
         if (lookup.TryGetValue(p, out var ptr))
@@ -84,6 +100,12 @@ public class IL2CPPCacheEntryHelper
         return false;
     }
 
+    /// <summary>
+    /// Safely retrieve value of an interop pointer field from a specified type, handling potential exceptions and special cases.
+    /// Either returns the pointer value or a string. For use in inspector.
+    /// </summary>
+    /// <param name="owner">The type that contains the static field.</param>
+    /// <param name="ptrField">The ptr field to retrieve.</param>
     public static object SafeGetPtr(Type owner, FieldInfo ptrField)
     {
         if (ptrField == null) return "null";

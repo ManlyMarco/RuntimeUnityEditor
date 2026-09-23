@@ -6,7 +6,7 @@ using System.Text;
 
 namespace RuntimeUnityEditor.Bepin5.PatchInspector
 {
-	public class IL
+    internal class IL
 	{
 		internal static string DisassembleMethod(MethodBase method)
 		{

@@ -25,14 +25,32 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         private bool _lastSearchComponents;
         private bool _lastSearchNames;
 
+        /// <summary>
+        /// Specifies the available options for searching objects within the Unity runtime environment.
+        /// </summary>
         public enum SearchType
         {
+            /// <summary>
+            /// Search within all scenes, including active and inactive GameObjects.
+            /// </summary>
             AllScenes,
+            /// <summary>
+            /// Search only within GameObjects that are marked as "Don't Destroy On Load" (persistent across scene changes).
+            /// </summary>
             DontDestroyOnLoad,
+            /// <summary>
+            /// Search only within GameObjects that are currently inactive in the scene hierarchy.
+            /// </summary>
             Inactive,
+            /// <summary>
+            /// Search objects within a specific scene index. Add scene index to this value.
+            /// </summary>
             SceneIndex,
         }
 
+        /// <summary>
+        /// Current search type being used. Setting this value does not automatically refresh the search results.
+        /// </summary>
         public SearchType CurrentSearchType { get; set; } = SearchType.AllScenes;
 
         private int _sceneIndexFilter = -1;
@@ -124,7 +142,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         /// <summary>
         /// Refresh the list of GameObjects currently in the scene.
         /// </summary>
-        /// <param name="full">Gather root Transforms again, slow. Otherwise use tricks to approximate the same result but much faster.</param>
+        /// <param name="full">Gather root Transforms again, slow. Otherwise, use tricks to approximate the same result but much faster.</param>
         /// <param name="objectFilter">Optional filter to exclude some GameObjects from the results.</param>
         public void Refresh(bool full, Predicate<GameObject> objectFilter)
         {
@@ -226,7 +244,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         private static readonly HashSet<string> _searchMemberBlacklist = new HashSet<string>
         {
             "parent", "parentInternal", "root", "transform", "gameObject",
-            // Animator properties inaccessible outside of OnAnimatorIK
+            // Animator properties inaccessible outside OnAnimatorIK
             "bodyPosition", "bodyRotation",
             // AudioSource obsolete properties
             "minVolume", "maxVolume", "rolloffFactor",
@@ -256,7 +274,8 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 {
                     try
                     {
-                        if (prop.GetValue(c, null).ToString().Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
+                        var value = prop.GetValue(c, null)?.ToString();
+                        if (value != null && value.Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
                             return true;
                     }
                     catch
@@ -272,7 +291,8 @@ namespace RuntimeUnityEditor.Core.ObjectTree
                 {
                     try
                     {
-                        if (field.GetValue(c).ToString().Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
+                        var value = field.GetValue(c)?.ToString();
+                        if (value != null && value.Contains(searchString, StringComparison.InvariantCultureIgnoreCase))
                             return true;
                     }
                     catch
@@ -286,7 +306,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         }
 
         /// <summary>
-        /// Search for references to an object inside of all components currently instantiated.
+        /// Search for references to an object inside all components currently instantiated.
         /// Only top-level properties and fields are searched inside the component.
         /// </summary>
         /// <param name="objInstance">Instance to search for.</param>
@@ -315,7 +335,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         }
 
         /// <summary>
-        /// Search for references to an object inside of all components currently instantiated.
+        /// Search for references to an object inside all components currently instantiated.
         /// Only top-level properties and fields are searched inside the component.
         /// </summary>
         /// <param name="c">Component to search in.</param>
@@ -508,7 +528,7 @@ namespace RuntimeUnityEditor.Core.ObjectTree
         private static readonly HashSet<string> _nameBlacklist = new HashSet<string>
         {
             "parent", "parentInternal", "root", "transform", "gameObject",
-            // Animator properties inaccessible outside of OnAnimatorIK
+            // Animator properties inaccessible outside OnAnimatorIK
             "bodyPosition", "bodyRotation",
             // AudioSource obsolete properties
             "minVolume", "maxVolume", "rolloffFactor",

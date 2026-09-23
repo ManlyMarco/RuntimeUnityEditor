@@ -8,6 +8,9 @@ namespace RuntimeUnityEditor.Core.Inspector.IL2CPP;
 /// <inheritdoc />
 public class IL2CPPFieldCacheEntry : PropertyCacheEntry
 {
+    /// <summary>
+    /// Field information for the field pointer
+    /// </summary>
     public FieldInfo PtrField { get; }
 
     /// <inheritdoc />

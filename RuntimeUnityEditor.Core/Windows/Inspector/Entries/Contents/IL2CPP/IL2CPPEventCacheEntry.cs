@@ -6,12 +6,22 @@ using RuntimeUnityEditor.Core.Inspector.Entries;
 namespace RuntimeUnityEditor.Core.Inspector.IL2CPP;
 
 /// <inheritdoc />
-/// TODO: This does nothing so far because events are not implemented in il2cpp interop (they show up as separate add/remove/raise methods). Maybe combine them back into events?
+/// TODO: This does nothing so far because events are not implemented in IL2CPP interop (they show up as separate add/remove/raise methods). Maybe combine them back into events?
 public class IL2CPPEventCacheEntry : EventCacheEntry
 {
+    /// <summary>
+    /// Field information for the event pointer
+    /// </summary>
     public FieldInfo PtrFieldAdd { get; }
+    /// <summary>
+    /// Field information for the event pointer
+    /// </summary>
     public FieldInfo PtrFieldRaise { get; }
+    /// <summary>
+    /// Field information for the event pointer
+    /// </summary>
     public FieldInfo PtrFieldRemove { get; }
+
     /// <inheritdoc />
     public IL2CPPEventCacheEntry(object ins, EventInfo e, Type owner, FieldInfo ptrFieldAdd, FieldInfo ptrFieldRaise, FieldInfo ptrFieldRemove) : base(ins, e, owner)
     {
