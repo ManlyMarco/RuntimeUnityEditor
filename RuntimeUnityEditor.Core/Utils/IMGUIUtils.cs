@@ -98,9 +98,19 @@ namespace RuntimeUnityEditor.Core.Utils
         /// <param name="eatRect"></param>
         public static void EatInputInRect(Rect eatRect)
         {
-            var mousePos = UnityInput.Current.mousePosition;
-            if (eatRect.Contains(new Vector2(mousePos.x, Screen.height - mousePos.y)))
+            var containsMouse = RectContainsMousePosition(eatRect);
+            if (containsMouse)
                 UnityInput.Current.ResetInputAxes();
+        }
+
+        /// <summary>
+        /// Check if IMGUI window rect contains the current mouse position.
+        /// </summary>
+        public static bool RectContainsMousePosition(Rect rect)
+        {
+            var mousePos = UnityInput.Current.mousePosition;
+            var containsMouse = rect.Contains(new Vector2(mousePos.x, Screen.height - mousePos.y));
+            return containsMouse;
         }
 
         /// <summary>

@@ -136,39 +136,42 @@ namespace RuntimeUnityEditor.Core
 
         private void DrawTooltip(Rect area)
         {
-            if (!string.IsNullOrEmpty(GUI.tooltip))
+            if (string.IsNullOrEmpty(GUI.tooltip)) return;
+
+            // HACK: In some games (usually IL2CPP) the tooltip is never cleared and so is drawn in every window
+            // This could be fixed more properly by clearing GUI.tooltip before drawing the window, but it's often broken in these games (likely the same issue)
+            if (!IMGUIUtils.RectContainsMousePosition(WindowRect)) return;
+
+            if (_tooltipBackground == null)
             {
-                if (_tooltipBackground == null)
+                _tooltipBackground = new Texture2D(1, 1, TextureFormat.ARGB32, false);
+                _tooltipBackground.SetPixel(0, 0, Color.black);
+                _tooltipBackground.Apply();
+
+                _tooltipStyle = new GUIStyle
                 {
-                    _tooltipBackground = new Texture2D(1, 1, TextureFormat.ARGB32, false);
-                    _tooltipBackground.SetPixel(0, 0, Color.black);
-                    _tooltipBackground.Apply();
-
-                    _tooltipStyle = new GUIStyle
-                    {
-                        normal = new GUIStyleState { textColor = Color.white, background = _tooltipBackground },
-                        wordWrap = true,
-                        alignment = TextAnchor.MiddleCenter
-                    };
-                    _tooltipContent = new GUIContent();
-                }
-
-                _tooltipContent.text = GUI.tooltip;
-                var tooltipWidth = Mathf.Min(TooltipWidth, WindowRect.width);
-                var height = _tooltipStyle.CalcHeight(_tooltipContent, tooltipWidth) + 10;
-
-                var currentEvent = Event.current;
-
-                var x = currentEvent.mousePosition.x + tooltipWidth > area.width
-                    ? area.width - tooltipWidth
-                    : currentEvent.mousePosition.x;
-
-                var y = currentEvent.mousePosition.y + 25 + height > area.height
-                    ? currentEvent.mousePosition.y - height
-                    : currentEvent.mousePosition.y + 25;
-
-                GUI.Box(new Rect(x, y, tooltipWidth, height), GUI.tooltip, _tooltipStyle);
+                    normal = new GUIStyleState { textColor = Color.white, background = _tooltipBackground },
+                    wordWrap = true,
+                    alignment = TextAnchor.MiddleCenter
+                };
+                _tooltipContent = new GUIContent();
             }
+
+            _tooltipContent.text = GUI.tooltip;
+            var tooltipWidth = Mathf.Min(TooltipWidth, WindowRect.width);
+            var height = _tooltipStyle.CalcHeight(_tooltipContent, tooltipWidth) + 10;
+
+            var currentEvent = Event.current;
+
+            var x = currentEvent.mousePosition.x + tooltipWidth > area.width
+                ? area.width - tooltipWidth
+                : currentEvent.mousePosition.x;
+
+            var y = currentEvent.mousePosition.y + 25 + height > area.height
+                ? currentEvent.mousePosition.y - height
+                : currentEvent.mousePosition.y + 25;
+
+            GUI.Box(new Rect(x, y, tooltipWidth, height), GUI.tooltip, _tooltipStyle);
         }
 
         /// <inheritdoc cref="FeatureBase{T}.OnVisibleChanged"/>
