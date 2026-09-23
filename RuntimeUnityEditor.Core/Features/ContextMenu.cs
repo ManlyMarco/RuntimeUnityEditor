@@ -256,10 +256,15 @@ namespace RuntimeUnityEditor.Core
         /// <summary>
         /// Draw a GUILayout button that opens the context menu when clicked. It's only shown if the object is not null.
         /// </summary>
-        public void DrawContextButton(object obj, ICacheEntry objEntry)
+        public void DrawContextButton(object obj, ICacheEntry objEntry = null)
         {
             if (obj != null && GUILayout.Button("...", IMGUIUtils.LayoutOptionsExpandWidthFalse))
-                Show(obj, objEntry);
+            {
+                if (objEntry == null) 
+                    Show(obj); 
+                else 
+                    Show(obj, objEntry);
+            }
         }
         /// <summary>
         /// Draw a GUILayout button that opens the context menu when clicked. It's only shown if the object is not null.
