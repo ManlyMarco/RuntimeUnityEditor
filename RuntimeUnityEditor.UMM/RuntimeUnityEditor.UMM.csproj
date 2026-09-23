@@ -13,11 +13,24 @@
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
 	</PropertyGroup>
 
-	<ItemGroup>
-		<None Update="Info.json">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-	</ItemGroup>
+	<Target Name="GenerateInfoJson" AfterTargets="Build" BeforeTargets="CreateReleaseZip">
+		<PropertyGroup>
+			<InfoJsonContent>
+{
+	"Id": "RuntimeUnityEditor",
+	"DisplayName": "Runtime Unity Editor",
+	"Author": "Vanguard, ManlyMarco",
+	"Version": "$(Version)",
+	"ManagerVersion": "0.27.2",
+	"AssemblyName": "RuntimeUnityEditor.UMM.dll",
+	"EntryMethod": "RuntimeUnityEditor.UMM.RuntimeUnityEditorUMM.Load",
+	"Repository": "https://raw.githubusercontent.com/ManlyMarco/RuntimeUnityEditor/master/RuntimeUnityEditor.UMM/Repository.json",
+	"HomePage": "https://github.com/ManlyMarco/RuntimeUnityEditor"
+}
+			</InfoJsonContent>
+		</PropertyGroup>
+		<WriteLinesToFile File="$(OutputPath)Info.json" Lines="$(InfoJsonContent)" Overwrite="true" />
+	</Target>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 		<Delete Files="$(OutputPath)\mcs.pdb" />
@@ -44,8 +57,7 @@
 	<Target Name="_ResolveCopyLocalNuGetPkgXmls" AfterTargets="ResolveReferences">
 		<ItemGroup>
 			<!-- Copy XML files from all PackageReferences to output dir -->
-			<ReferenceCopyLocalPaths Include="@(ReferenceCopyLocalPaths->'%(RootDir)%(Directory)%(Filename).xml')"
-			                         Condition="'%(ReferenceCopyLocalPaths.NuGetPackageId)'!='' and Exists('%(RootDir)%(Directory)%(Filename).xml')" />
+			<ReferenceCopyLocalPaths Include="@(ReferenceCopyLocalPaths->'%(RootDir)%(Directory)%(Filename).xml')" Condition="'%(ReferenceCopyLocalPaths.NuGetPackageId)'!='' and Exists('%(RootDir)%(Directory)%(Filename).xml')" />
 		</ItemGroup>
 	</Target>
 
