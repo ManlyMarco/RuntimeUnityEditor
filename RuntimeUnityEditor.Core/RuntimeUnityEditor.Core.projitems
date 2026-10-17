@@ -73,6 +73,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Windows\ChangeHistory\IChange.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\Clipboard\ClipboardWindow.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\CacheEntryBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\Fake\ArrayCacheEntry.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\Fake\CallbackCacheEntey.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\Fake\IFakeCacheEntry.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows\Inspector\Entries\Contents\IL2CPP\IL2CPPEventCacheEntry.cs" />

@@ -86,6 +86,11 @@ namespace RuntimeUnityEditor.Core.Inspector
                 {
                     // Prevent the list overloads from listing subcomponents
                 }
+                else if (objectToOpen is Array arr)
+                {
+                    for (var i = 0; i < arr.Length; i++)
+                        fieldCache.Add(new ArrayCacheEntry(arr, i));
+                }
                 else if (objectToOpen is IList list)
                 {
                     for (var i = 0; i < list.Count; i++)
